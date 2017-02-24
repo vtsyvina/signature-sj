@@ -23,7 +23,7 @@ public class DirichletMethod {
         public static List<Pair> run(Sample sample1, Sample sample2, KMerDict dict1, KMerDict dict2, int k){
             List<Pair> result = new ArrayList<>();
             int comps = 0;
-            Set<Pair> pairsToCompare = new HashSet<>(1000);
+            Set<Pair> pairsToCompare = new HashSet<>();
 
             int kMerCoincidences = 0;
             for (LongSet positionHashes : dict1.wholeSampleFixedPositionHashesList){
@@ -74,7 +74,6 @@ public class DirichletMethod {
                             possibleSequences.putOrAdd(possibleSeq.value, 1, 1);
                         }
                     } else {
-                        //TODO create new or update existing?
                         IntIntMap tmp = new IntIntHashMap(possibleSequences.size());
                         for (IntIntCursor entry : possibleSequences){
                             long hash = dict1.sequenceFixedPositionHashesList.get(seqEntity.getKey())[tuplesToSort.get(i).l];
