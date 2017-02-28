@@ -185,7 +185,7 @@ public class Start {
         runPointsWithTime(k, query);
 
         System.out.println();
-        query = new Sample("query_medium", FasReader.readList(Paths.get("test_data/query3/far.fas")));
+        query = new Sample("query_far", FasReader.readList(Paths.get("test_data/query3/far.fas")));
         runBruteWithTime(k, query);
         runDirWithTime(k, l, query);
         runPointsWithTime(k, query);
@@ -193,26 +193,56 @@ public class Start {
         System.out.println();
         query = new Sample("db1", FasReader.readList(Paths.get("test_data/db1/1000.fas")));
         runDirWithTime(k, l, query);
-        runPointsWithTime(k, query);
+        //runPointsWithTime(k, query);
         runBruteWithTime(k, query);
 
         System.out.println();
         query = new Sample("db2", FasReader.readList(Paths.get("test_data/db2/2000.fas")));
         runDirWithTime(k, l, query);
-        runPointsWithTime(k, query);
+        //runPointsWithTime(k, query);
         runBruteWithTime(k, query);
 
         System.out.println();
         query = new Sample("db3", FasReader.readList(Paths.get("test_data/db3/4000.fas")));
         runDirWithTime(k, l, query);
-        runPointsWithTime(k, query);
+        //runPointsWithTime(k, query);
         runBruteWithTime(k, query);
 
 
         System.out.println();
         query = new Sample("db4", FasReader.readList(Paths.get("test_data/db4/8000.fas")));
         runDirWithTime(k, l, query);
-        runPointsWithTime(k, query);
+        //runPointsWithTime(k, query);
+        runBruteWithTime(k, query);
+
+        System.out.println();
+        query = new Sample("db5", FasReader.readList(Paths.get("test_data/db5/16000.fas")));
+        runDirWithTime(k, l, query);
+        //runPointsWithTime(k, query);
+        runBruteWithTime(k, query);
+
+        System.out.println();
+        query = new Sample("db6", FasReader.readList(Paths.get("test_data/db6/32000.fas")));
+        runDirWithTime(k, l, query);
+        //runPointsWithTime(k, query);
+        runBruteWithTime(k, query);
+
+        System.out.println();
+        Map<Integer, String > seq = FasReader.readList(Paths.get("test_data/db7/32000 (1).fas"));
+        seq.putAll(FasReader.readList(Paths.get("test_data/db7/32000 (2).fas")));
+        query = new Sample("db6", seq);
+        runDirWithTime(k, l, query);
+        //runPointsWithTime(k, query);
+        runBruteWithTime(k, query);
+
+        System.out.println();
+        seq = FasReader.readList(Paths.get("test_data/db7/32000.fas"));
+        seq.putAll(FasReader.readList(Paths.get("test_data/db7/32000 (2).fas")));
+        seq.putAll(FasReader.readList(Paths.get("test_data/db7/32000 (3).fas")));
+        seq.putAll(FasReader.readList(Paths.get("test_data/db7/32000 (4).fas")));
+        query = new Sample("db6", seq);
+        runDirWithTime(k, l, query);
+        //runPointsWithTime(k, query);
         runBruteWithTime(k, query);
     }
 
