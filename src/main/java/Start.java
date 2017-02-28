@@ -42,8 +42,19 @@ public class Start {
     public static void main(String[] args) throws IOException, RunnerException, InterruptedException, ExecutionException {
 //        Main.main(args);
 //        testPointsAlgorithm();
-//        testLargeRelatedSamples();
-        testDitichletAlgorithm();
+        //testLargeRelatedSamples();
+        //testDitichletAlgorithm();
+        int cores = 4;
+        List<List<Integer>> parts = new ArrayList<>();
+        List<Integer> whole = new ArrayList<>();
+        for (int i = 0; i < 38; i++) {
+            whole.add(i);
+        }
+        for (int i = 0; i < cores; i++) {
+            int max = i == cores-1 ? whole.size() :(i+1)*((whole.size()+1)/cores)  ;
+            parts.add(whole.subList(i*((whole.size()+1)/cores),max));
+        }
+        testBigDataSet();
     }
 
     private static void testLargeRelatedSamples() {
@@ -105,6 +116,14 @@ public class Start {
     private static void testDitichletAlgorithm() throws IOException, InterruptedException, ExecutionException {
 
         long start = System.currentTimeMillis();
+        allFiles = new ArrayList<>();
+        for (File file : folder.toFile().listFiles()) {
+            try {
+                allFiles.add(new Sample(file.getName(), FasReader.readList(file.toPath())));
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+        }
         KMerDict[] kdicts = new KMerDict[allFiles.size()];
         ExecutorService executor = Executors.newFixedThreadPool(4);
         List<Callable<Void>> kmerTaskList = new ArrayList<>();
@@ -150,4 +169,71 @@ public class Start {
         System.out.println("END !!!" + (System.currentTimeMillis() - start));
         System.out.println();
     }
+
+    private static void testBigDataSet() throws IOException {
+        int k = 10;
+        int l = 11;
+        Sample query = new Sample("query_close", FasReader.readList(Paths.get("test_data/query1/close.fas")));
+        runBruteWithTime(k, query);
+        runDirWithTime(k, l, query);
+        runPointsWithTime(k, query);
+
+        System.out.println();
+        query = new Sample("query_medium", FasReader.readList(Paths.get("test_data/query2/medium.fas")));
+        runBruteWithTime(k, query);
+        runDirWithTime(k, l, query);
+        runPointsWithTime(k, query);
+
+        System.out.println();
+        query = new Sample("query_medium", FasReader.readList(Paths.get("test_data/query3/far.fas")));
+        runBruteWithTime(k, query);
+        runDirWithTime(k, l, query);
+        runPointsWithTime(k, query);
+
+        System.out.println();
+        query = new Sample("db1", FasReader.readList(Paths.get("test_data/db1/1000.fas")));
+        runDirWithTime(k, l, query);
+        runPointsWithTime(k, query);
+        runBruteWithTime(k, query);
+
+        System.out.println();
+        query = new Sample("db2", FasReader.readList(Paths.get("test_data/db2/2000.fas")));
+        runDirWithTime(k, l, query);
+        runPointsWithTime(k, query);
+        runBruteWithTime(k, query);
+
+        System.out.println();
+        query = new Sample("db3", FasReader.readList(Paths.get("test_data/db3/4000.fas")));
+        runDirWithTime(k, l, query);
+        runPointsWithTime(k, query);
+        runBruteWithTime(k, query);
+
+
+        System.out.println();
+        query = new Sample("db4", FasReader.readList(Paths.get("test_data/db4/8000.fas")));
+        runDirWithTime(k, l, query);
+        runPointsWithTime(k, query);
+        runBruteWithTime(k, query);
+    }
+
+    private static void runDirWithTime(int k, int l, Sample query) {
+        long start;
+        start = System.currentTimeMillis();
+        DirichletMethod.run(query, KMerDictBuilder.getDict(query, l),k);
+        System.out.println("Diri "+(System.currentTimeMillis()-start));
+    }
+
+    private static void runPointsWithTime(int k, Sample query) {
+        long start;
+        start = System.currentTimeMillis();
+        PointsMethod.run(query, PointsBuilder.buildPoints(query), k);
+        System.out.println("Points "+(System.currentTimeMillis()-start));
+    }
+
+    private static void runBruteWithTime(int k, Sample query) {
+        long start = System.currentTimeMillis();
+        BruteForce.run(query, k);
+        System.out.println("Brute "+(System.currentTimeMillis()-start));
+    }
+
 }

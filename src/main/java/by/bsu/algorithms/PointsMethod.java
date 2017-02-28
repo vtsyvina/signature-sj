@@ -51,6 +51,41 @@ public class PointsMethod {
         return closePairs;
     }
 
+    public static List<Pair> run(Sample sample, Points points, int k){
+        List<Pair> closePairs = new ArrayList<>();
+        LevenshteinDistance distance = new LevenshteinDistance(k);
+        HammingDistance hammingDistance = new HammingDistance();
+        int comps = 0;
+        Points toProcess = new Points(points);
+        for (Map.Entry<Point, IntSet> point1 : points.pointSeqMap.entrySet()){
+            for (Map.Entry<Point, IntSet> point2 : toProcess.pointSeqMap.entrySet()){
+                if (lowerBoundEstimate(point1.getKey().arr, point2.getKey().arr) <= k){
+                    for ( IntCursor s1 : point1.getValue()){
+                        for (IntCursor s2 : point2.getValue()){
+                            if (s1.value == s2.value){
+                                continue;
+                            }
+                            comps++;
+                            if (hammingDistance.apply(sample.sequences.get(s1.value),
+                                    sample.sequences.get(s2.value)) <= k){
+                                closePairs.add(new Pair(s1.value, s2.value));
+                                continue;
+                            }
+                            if (distance.apply(sample.sequences.get(s1.value),
+                                    sample.sequences.get(s2.value)) != -1){
+                                closePairs.add(new Pair(s1.value, s2.value));
+                            }
+                        }
+                    }
+                }
+            }
+            toProcess.pointSeqMap.remove(point1.getKey());
+        }
+        System.out.println("comps = "+comps);
+        System.out.println("length = "+closePairs.size());
+        return closePairs;
+    }
+
     private static int lowerBoundEstimate(int[] c1, int[] c2){
         int positive = 0;
         int negative = 0;

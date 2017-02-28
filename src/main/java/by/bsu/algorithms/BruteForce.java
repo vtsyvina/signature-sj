@@ -27,4 +27,22 @@ public class BruteForce {
         System.out.println("length = " +result.size());
         return result;
     }
+
+    public static List<Pair> run(Sample sample, int k){
+        List<Pair> result = new ArrayList<>();
+        LevenshteinDistance distance = new LevenshteinDistance(k);
+        for (Map.Entry<Integer, String> entry1 : sample.sequences.entrySet()){
+            for (Map.Entry<Integer, String> entry2 : sample.sequences.entrySet()){
+                if (entry1.getKey().equals(entry2.getKey())){
+                    continue;
+                }
+                int d = distance.apply(entry1.getValue(), entry2.getValue());
+                if (d != -1 && d<=k){
+                    result.add(new Pair(entry1.getKey(), entry2.getKey()));
+                }
+            }
+        }
+        System.out.println("length = " +result.size());
+        return result;
+    }
 }

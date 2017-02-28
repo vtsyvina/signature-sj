@@ -17,8 +17,16 @@ public class FasReader {
     public static Map<Integer, String> readList(Path filePath) throws IOException {
         List<String> raw =  Files.readAllLines(filePath);
         Map<Integer, String> result = new HashMap<>();
-        for (int i = 0; i < raw.size() / 2; i++) {
-            result.put(i, raw.get(i*2+1));
+        int i = 0;
+        StringBuilder seq = new StringBuilder();
+        for(String str : raw){
+            if (str.startsWith(">") && seq.length() > 0 || str.length() == 0){
+                result.put(i, seq.toString());
+                i++;
+                seq.setLength(0);
+            }else if (!str.startsWith(">")) {
+                seq.append(str);
+            }
         }
         return result;
     }

@@ -2,6 +2,7 @@ package by.bsu.model;
 
 import com.carrotsearch.hppc.IntSet;
 
+import java.util.HashMap;
 import java.util.Map;
 import java.util.Objects;
 
@@ -27,6 +28,12 @@ public class Points {
         this.sampleName = sampleName;
         this.pointSeqMap = sequencePoints;
     }
+
+    public Points(Points points){
+        this.sampleName = points.sampleName;
+        this.pointSeqMap = new HashMap<>(points.pointSeqMap);
+    }
+
 
     @Override
     public boolean equals(Object o) {
