@@ -19,13 +19,18 @@ public class FasReader {
         Map<Integer, String> result = new HashMap<>();
         int i = 0;
         StringBuilder seq = new StringBuilder();
-        for(String str : raw){
+        for (int j = 0; j < raw.size(); j++) {
+            String str = raw.get(j);
             if (str.startsWith(">") && seq.length() > 0 || str.length() == 0){
                 result.put(i, seq.toString());
                 i++;
                 seq.setLength(0);
             }else if (!str.startsWith(">")) {
                 seq.append(str);
+                //workaround for for cases when file doesn't cantain last empty string
+                if (j+1 == raw.size()){
+                    result.put(i, seq.toString());
+                }
             }
         }
         return result;

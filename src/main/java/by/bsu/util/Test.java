@@ -1,10 +1,9 @@
 package by.bsu.util;
 
-import org.apache.commons.text.beta.similarity.*;
-import org.apache.commons.text.beta.similarity.HammingDistance;
 import org.openjdk.jmh.annotations.*;
 
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicInteger;
 
 /**
  * Created by c5239200 on 2/3/17.
@@ -17,9 +16,10 @@ import java.util.concurrent.TimeUnit;
 public class Test {
     LevenshteinDistance defaultLev = LevenshteinDistance.getDefaultInstance();
     LevenshteinDistance limitedLev = new LevenshteinDistance(0);
-    org.apache.commons.text.beta.similarity.HammingDistance hamUnlimited = new HammingDistance();
+    HammingDistance hammingDistance = new HammingDistance();
     String str1 = "CACCGACTGCGGCGCTGGTTATGGCACAAGTGCTCCGGATCCCGGAAGCTATCGTGGATATGGTAGCTGGAGCCCACTGGGGAGTCCTAGCGGGGCTAGCTTACTATTCCATGGTTGGCAACTGGGCGAAGGTGCTAGTCGTGCTGCTCCTGTTCGCGGGGGTTGATGCTGATACCAAGACCATCGGCGGTAAGGCTACGCAGCAAACCGCGCGCCTCACCAGCTTCTTTAGCCCGGGTCCCCAGCAGAACATCGCGCTTATCA";
     String str2 = "CACCGACTGCGGCACTGGTTATGGCACAAGTGCTCCGGATCCCGGAAGCTATCGTGGATATGGTAGCTGGAGCCCACTGGGGAGTCCTAGCGGGGCTAGCTTACTATTCCATGGTTGGCAACTGGGCGAAGGTGCTAGTCGTGCTGCTCCTGTTCGCGGGGGTTGATGCTGATACCAAGACCATCGGCGGTAAGGCTACGCAGCAAACCGCGCGCCTCACCAGCTTCTTTAGCCCGGGTCCCCAGCAGGACATCGCGCTTATCA";
+    AtomicInteger i = new AtomicInteger(0);
     @Benchmark
     @Fork(1)
     public void testLevenshtein() {
@@ -35,12 +35,13 @@ public class Test {
     @Benchmark
     @Fork(1)
     public void testHammingLimited() {
-        by.bsu.util.HammingDistance.apply(str1, str2, 10);
+        hammingDistance.apply(str1, str2);
     }
+
 
     @Benchmark
     @Fork(1)
-    public void testHammingUnimited() {
-        hamUnlimited.apply(str1, str2);
+    public void testAtomic() {
+        i.incrementAndGet();
     }
 }

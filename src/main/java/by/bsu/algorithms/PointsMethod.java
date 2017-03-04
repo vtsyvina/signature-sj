@@ -5,10 +5,10 @@ import by.bsu.model.Point;
 import by.bsu.model.Points;
 import by.bsu.model.Sample;
 
+import by.bsu.util.HammingDistance;
+import by.bsu.util.LevenshteinDistance;
 import com.carrotsearch.hppc.IntSet;
 import com.carrotsearch.hppc.cursors.IntCursor;
-import org.apache.commons.text.beta.similarity.HammingDistance;
-import org.apache.commons.text.beta.similarity.LevenshteinDistance;
 
 import java.util.ArrayList;
 import java.util.List;

@@ -2,7 +2,8 @@ package by.bsu.algorithms;
 
 import by.bsu.model.Sample;
 import by.bsu.model.Pair;
-import org.apache.commons.text.beta.similarity.LevenshteinDistance;
+import by.bsu.util.LevenshteinDistance;
+
 
 import java.util.ArrayList;
 import java.util.List;
