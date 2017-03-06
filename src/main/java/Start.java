@@ -1,6 +1,7 @@
 import by.bsu.algorithms.BruteForce;
 import by.bsu.algorithms.DirichletMethod;
 import by.bsu.algorithms.PointsMethod;
+import by.bsu.algorithms.TreeMethod;
 import by.bsu.model.*;
 import by.bsu.model.Pair;
 import by.bsu.util.*;
@@ -24,13 +25,13 @@ public class Start {
     private static List<Sample> allFiles = new ArrayList<>();
 
     static {
-        for (File file : folder.toFile().listFiles()) {
-            try {
-                allFiles.add(new Sample(file.getName(), FasReader.readList(file.toPath())));
-            } catch (IOException e) {
-                e.printStackTrace();
-            }
-        }
+//        for (File file : folder.toFile().listFiles()) {
+//            try {
+//                allFiles.add(new Sample(file.getName(), FasReader.readList(file.toPath())));
+//            } catch (IOException e) {
+//                e.printStackTrace();
+//            }
+//        }
     }
 
     public static void main(String[] args) throws IOException, RunnerException, InterruptedException, ExecutionException {
@@ -38,38 +39,6 @@ public class Start {
 //        testPointsAlgorithm();
         //testLargeRelatedSamples();
         //testDitichletAlgorithm();
-//        Sample t = new Sample("test", FasReader.readList("some.fas"));
-//        FasReader.readList(Paths.get("test_data/query1/close.fas"));
-//        //SequencesTreeBuilder.build(t);
-//        int cores = 4;
-//
-//        List<List<Integer>> parts = new ArrayList<>();
-//        List<Integer> whole = new ArrayList<>();
-//        for (int i = 0; i < 38; i++) {
-//            whole.add(i);
-//        }
-//        for (int i = 0; i < cores; i++) {
-//            int max = i == cores-1 ? whole.size() :(i+1)*((whole.size()+1)/cores)  ;
-//            parts.add(whole.subList(i*((whole.size()+1)/cores),max));
-//        }
-//        long start = System.currentTimeMillis();
-//        Map<Integer, String > seq = FasReader.readList(Paths.get("test_data/db8/32000.fas"));
-//        Map<Integer, String > tmp = FasReader.readList(Paths.get("test_data/db8/32000 (2).fas"));
-//        tmp = tmp.entrySet().stream().collect(toMap(e -> e.getKey() + 32000, Map.Entry::getValue));
-//        seq.putAll(tmp);
-//        tmp = FasReader.readList(Paths.get("test_data/db8/32000 (3).fas"));
-//        tmp = tmp.entrySet().stream().collect(toMap(e -> e.getKey() + 64000, Map.Entry::getValue));
-//        seq.putAll(tmp);
-//        tmp = FasReader.readList(Paths.get("test_data/db8/32000 (4).fas"));
-//        tmp = tmp.entrySet().stream().collect(toMap(e -> e.getKey() + 96000, Map.Entry::getValue));
-//        seq.putAll(tmp);
-//        System.out.println(System.currentTimeMillis()-start);
-//        List<com.sun.tools.javac.util.Pair<Integer, String>> sequences = new ArrayList<>();
-//        seq.entrySet().forEach( s-> sequences.add(new com.sun.tools.javac.util.Pair<>(s.getKey(), s.getValue())));
-//        System.out.println(sequences.size());
-//        System.out.println(System.currentTimeMillis()-start);
-//        sequences.sort(Comparator.comparing(c -> c.snd));
-//        System.out.println(System.currentTimeMillis()-start);
         testBigDataSet();
     }
 
@@ -190,81 +159,80 @@ public class Start {
         int k = 10;
         int l = 11;
         Sample query = new Sample("query_close", FasReader.readList(Paths.get("test_data/query1/close.fas")));
-//        runBruteWithTime(k, query);
-//        runDirWithTime(k, l, query);
-//        runPointsWithTime(k, query);
-//
-//        System.out.println();
-//        query = new Sample("query_medium", FasReader.readList(Paths.get("test_data/query2/medium.fas")));
-//        runBruteWithTime(k, query);
-//        runDirWithTime(k, l, query);
-//        runPointsWithTime(k, query);
-//
-//        System.out.println();
-//        query = new Sample("query_far", FasReader.readList(Paths.get("test_data/query3/far.fas")));
-//        runBruteWithTime(k, query);
-//        runDirWithTime(k, l, query);
-//        runPointsWithTime(k, query);
+        runBruteWithTime(k, query);
+        runTreeWithTime(k, query);
+        runDirWithTime(k, l, query);
+        runPointsWithTime(k, query);
+
+        System.out.println();
+        query = new Sample("query_medium", FasReader.readList(Paths.get("test_data/query2/medium.fas")));
+        runBruteWithTime(k, query);
+        runDirWithTime(k, l, query);
+        runPointsWithTime(k, query);
+
+        System.out.println();
+        query = new Sample("query_far", FasReader.readList(Paths.get("test_data/query3/far.fas")));
+        runBruteWithTime(k, query);
+        runDirWithTime(k, l, query);
+        runPointsWithTime(k, query);
+
         System.out.println();
         query = new Sample("db1", FasReader.readList(Paths.get("test_data/db1/1000.fas")));
-        //runDirWithTime(k, l, query);
-         
-        //runPointsWithTime(k, query);
-        //runBruteWithTime(k, query);
+        runDirWithTime(k, l, query);
+        runTreeWithTime(k, query);
 
         System.out.println();
         query = new Sample("db2", FasReader.readList(Paths.get("test_data/db2/2000.fas")));
-        //runDirWithTime(k, l, query);
-
-        //runPointsWithTime(k, query);
-        //runBruteWithTime(k, query);
+        runDirWithTime(k, l, query);
+        runTreeWithTime(k, query);
 
         System.out.println();
         query = new Sample("db3", FasReader.readList(Paths.get("test_data/db3/4000.fas")));
-        //runDirWithTime(k, l, query);
-
-        //runPointsWithTime(k, query);
-        //runBruteWithTime(k, query);
+        runDirWithTime(k, l, query);
+        runTreeWithTime(k, query);
 
 
         System.out.println();
         query = new Sample("db4", FasReader.readList(Paths.get("test_data/db4/8000.fas")));
-        //runDirWithTime(k, l, query);
-
-        //runPointsWithTime(k, query);
-        //runBruteWithTime(k, query);
+        runDirWithTime(k, l, query);
+        runTreeWithTime(k, query);
 
         System.out.println();
         query = new Sample("db5", FasReader.readList(Paths.get("test_data/db5/16000.fas")));
         runDirWithTime(k, l, query);
-
-        //runPointsWithTime(k, query);
-        //runBruteWithTime(k, query);
+        runTreeWithTime(k, query);
 
         System.out.println();
         query = new Sample("db6", FasReader.readList(Paths.get("test_data/db6/32000.fas")));
         runDirWithTime(k, l, query);
-        //runPointsWithTime(k, query);
-        runBruteWithTime(k, query);
 
-//        System.out.println();
-//        Map<Integer, String > seq = FasReader.readList(Paths.get("test_data/db7/32000 (1).fas"));
-//        seq.putAll(FasReader.readList(Paths.get("test_data/db7/32000 (2).fas")));
-//        query = new Sample("db6", seq);
-//        runDirWithTime(k, l, query);
-//        //runPointsWithTime(k, query);
-//        runBruteWithTime(k, query);
-//
-//        System.out.println();
-//        seq = FasReader.readList(Paths.get("test_data/db7/32000.fas"));
-//        seq.putAll(FasReader.readList(Paths.get("test_data/db7/32000 (2).fas")));
-//        seq.putAll(FasReader.readList(Paths.get("test_data/db7/32000 (3).fas")));
-//        seq.putAll(FasReader.readList(Paths.get("test_data/db7/32000 (4).fas")));
-//
-//        query = new Sample("db6", seq);
-//        runDirWithTime(k, l, query);
-//        //runPointsWithTime(k, query);
-//        runBruteWithTime(k, query);
+        System.out.println();
+        Map<Integer, String > seq = FasReader.readList(Paths.get("test_data/db7/32000 (1).fas"));
+        Map<Integer, String > tmp = FasReader.readList(Paths.get("test_data/db7/32000 (2).fas"));
+        int[] size = new int[1];
+        size[0] = seq.size();
+        tmp = tmp.entrySet().stream().collect(toMap(e -> e.getKey() + size[0], Map.Entry::getValue));
+        seq.putAll(tmp);
+        query = new Sample("db7", seq);
+        runDirWithTime(k, l, query);
+
+        System.out.println();
+        seq = FasReader.readList(Paths.get("test_data/db8/32000.fas"));
+        tmp = FasReader.readList(Paths.get("test_data/db8/32000 (2).fas"));
+        size[0] = seq.size();
+        tmp = tmp.entrySet().stream().collect(toMap(e -> e.getKey() + size[0], Map.Entry::getValue));
+        seq.putAll(tmp);
+        tmp = FasReader.readList(Paths.get("test_data/db8/32000 (3).fas"));
+        size[0] = seq.size();
+        tmp = tmp.entrySet().stream().collect(toMap(e -> e.getKey() + size[0], Map.Entry::getValue));
+        seq.putAll(tmp);
+        tmp = FasReader.readList(Paths.get("test_data/db8/32000 (4).fas"));
+        size[0] = seq.size();
+        tmp = tmp.entrySet().stream().collect(toMap(e -> e.getKey() + size[0], Map.Entry::getValue));
+        seq.putAll(tmp);
+        query = new Sample("db8", seq);
+
+        runDirWithTime(k, l, query);
     }
 
     private static void runDirWithTime(int k, int l, Sample query) throws ExecutionException, InterruptedException {
@@ -272,8 +240,8 @@ public class Start {
         start = System.currentTimeMillis();
         KMerDict k1 = KMerDictBuilder.getDict(query, l);
         Set<Pair> r = DirichletMethod.runParallel(query, k1 ,k);
-
         System.out.println("Diri "+(System.currentTimeMillis()-start));
+        r.clear();
     }
 
     private static void runPointsWithTime(int k, Sample query) {
@@ -289,4 +257,9 @@ public class Start {
         System.out.println("Brute "+(System.currentTimeMillis()-start));
     }
 
+    private static void runTreeWithTime(int k, Sample query) {
+        long start = System.currentTimeMillis();
+        TreeMethod.run(query, SequencesTreeBuilder.build(query), k);
+        System.out.println("Tree "+(System.currentTimeMillis()-start));
+    }
 }

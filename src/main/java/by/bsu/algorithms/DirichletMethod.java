@@ -275,6 +275,7 @@ public class DirichletMethod {
                     pairsToCompare.add(new Pair(seqEntity.getKey(), s.key));
                 }
             }
+            possibleSequences.clear();
         });
         LevenshteinDistance distance = new LevenshteinDistance(k);
         HammingDistance hammingDistance = new HammingDistance();
@@ -292,7 +293,7 @@ public class DirichletMethod {
                 }
             }
         });
-
+        pairsToCompare.clear();
         if (DEBUG) {
             System.out.println("reduce = " + reduce);
         }
