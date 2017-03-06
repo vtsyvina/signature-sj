@@ -267,7 +267,6 @@ public class DirichletMethod {
                         }
                     }
                     possibleSequences = tmp;
-
                 }
             }
             for (IntIntCursor s : possibleSequences) {
@@ -277,7 +276,6 @@ public class DirichletMethod {
                 }
 
             }
-            possibleSequences.clear();
             seqPassed.incrementAndGet();
             if (seqPassed.intValue() % 1000 == 0){
                 System.out.print("\r"+seqPassed.intValue());

@@ -241,7 +241,7 @@ public class Start {
         long start;
         start = System.currentTimeMillis();
         KMerDict k1 = KMerDictBuilder.getDict(query, l);
-        Set<Pair> r = DirichletMethod.run(query, k1 ,k);
+        Set<Pair> r = DirichletMethod.runParallel(query, k1 ,k);
         System.out.println("Diri "+(System.currentTimeMillis()-start));
         r.clear();
     }

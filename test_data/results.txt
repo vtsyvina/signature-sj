@@ -167,3 +167,66 @@ Found db8
 comps = 98789030
 length = 69770336
 Diri 762796
+
+k = 10
+length = 784
+Brute 100
+
+Pairs to compare 837
+comps = 837
+length = 784
+Diri 63
+
+length = 3196
+Brute 88
+comps = 4429
+length = 3196
+Diri 92
+
+length = 59
+Brute 92
+comps = 86
+length = 59
+Diri 20
+
+length = 60421
+Brute 6654
+Start db1
+comps = 65937
+length = 60421
+Diri 463
+
+length = 370262
+Brute 25886
+Start db2
+comps = 388987
+length = 370262
+Diri 1036
+
+length = 1800945
+Brute 101611
+Start db3
+comps = 1873268
+length = 1800945
+Diri 4170
+
+Start db4
+comps = 6256934
+length = 5848556
+Diri 16979
+length = 5848556
+Brute 412982
+
+Start db5
+comps = 21028890
+length = 18570536
+Diri 72746
+
+Start db6
+32000
+Pairs to compare 46744915
+46000000
+Found db6
+comps = 46744915
+length = 38835302
+Diri 249648
