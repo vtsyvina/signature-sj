@@ -146,7 +146,7 @@ public class DirichletMethod {
         for (Map.Entry<Integer, String> seqEntity : sample.sequences.entrySet()) {
             iter[0]++;
             if (iter[0] % 1000 == 0) {
-                System.out.println(iter);
+                System.out.print("\r"+iter[0]);
             }
             IntIntMap possibleSequences = new IntIntHashMap(dict.sequencesNumber);
             int seq = seqEntity.getKey();
@@ -202,7 +202,7 @@ public class DirichletMethod {
         pairsToCompare.stream().forEach(pair -> {
             iter[0]++;
             if (iter[0] % 1_000_000 == 0){
-                System.out.println("\r"+ iter[0]);
+                System.out.print("\r"+ iter[0]);
             }
             if (hammingDistance.apply(sample.sequences.get(pair.l), sample.sequences.get(pair.r)) <= k) {
                 result.add(pair);
