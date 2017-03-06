@@ -41,7 +41,7 @@ public class TreeMethod {
             if (node.sequences != null) {
                 node.sequences.entrySet().forEach(s ->
                 {
-                    if (!s.getKey().equals(entry.getKey())) {
+                    if (!(entry.getKey() <= s.getKey())) {
                         if (hammingDistance.apply(entry.getValue(), s.getValue()) <= k) {
                             result.add(new Pair(entry.getKey(), s.getKey()));
                         } else {
@@ -53,17 +53,6 @@ public class TreeMethod {
                     }
                 });
             }
-        } else {
-            //c(node, reduce);
-        }
-    }
-
-    private static void c(SequencesTree.Node node, AtomicInteger reduce){
-        if (node.children != null && !node.children.isEmpty()) {
-            node.children.forEach(n -> c(n, reduce));
-        }
-        if (node.sequences != null) {
-            reduce.addAndGet(node.sequences.size());
         }
     }
 }

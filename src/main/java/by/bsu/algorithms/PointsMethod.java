@@ -11,16 +11,18 @@ import com.carrotsearch.hppc.IntSet;
 import com.carrotsearch.hppc.cursors.IntCursor;
 
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 /**
  * Algorithm use points info to filter sequences from comparing
  */
 public class PointsMethod {
 
-    public static List<Pair> run(Sample sample1, Sample sample2, Points points1, Points points2, int k){
-        List<Pair> closePairs = new ArrayList<>();
+    public static Set<Pair> run(Sample sample1, Sample sample2, Points points1, Points points2, int k){
+        Set<Pair> closePairs = new HashSet<>();
         LevenshteinDistance distance = new LevenshteinDistance(k);
         HammingDistance hammingDistance = new HammingDistance();
         int comps = 0;

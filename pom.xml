@@ -53,7 +53,7 @@
                 <configuration>
                     <archive>
                         <manifest>
-                            <mainClass>Start</mainClass>
+                            <mainClass>start.Start</mainClass>
                         </manifest>
                     </archive>
                     <descriptorRefs>

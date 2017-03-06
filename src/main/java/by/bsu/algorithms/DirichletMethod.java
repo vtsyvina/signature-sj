@@ -22,8 +22,8 @@ public class DirichletMethod {
 
     public static boolean DEBUG = false;
 
-    public static List<Pair> run(Sample sample1, Sample sample2, KMerDict dict1, KMerDict dict2, int k) {
-        List<Pair> result = new ArrayList<>();
+    public static Set<Pair> run(Sample sample1, Sample sample2, KMerDict dict1, KMerDict dict2, int k) {
+        Set<Pair> result = new HashSet<>();
         int comps = 0;
         Set<Pair> pairsToCompare = new HashSet<>();
         long start = System.currentTimeMillis();
@@ -139,13 +139,13 @@ public class DirichletMethod {
     }
 
     public static Set<Pair> run(Sample sample, KMerDict dict, int k) {
+        System.out.println("Start "+sample.name);
         Set<Pair> result = new HashSet<>();
         Set<Pair> pairsToCompare = new HashSet<>();
-        AtomicInteger comps = new AtomicInteger(0);
-        int iter = 0;
+        int[] iter = {0};
         for (Map.Entry<Integer, String> seqEntity : sample.sequences.entrySet()) {
-            iter++;
-            if (iter % 1000 == 0) {
+            iter[0]++;
+            if (iter[0] % 1000 == 0) {
                 System.out.println(iter);
             }
             IntIntMap possibleSequences = new IntIntHashMap(dict.sequencesNumber);
@@ -186,50 +186,52 @@ public class DirichletMethod {
                 }
             }
             for (IntIntCursor s : possibleSequences) {
-                if (!seqEntity.getKey().equals(s.key)
-                        && !pairsToCompare.contains(new Pair(seqEntity.getKey(), s.key))
+                if (seqEntity.getKey() <= s.key
                         && s.value >= dict.fixedkMersCount - k) {
                     pairsToCompare.add(new Pair(seqEntity.getKey(), s.key));
                 }
             }
         }
+        System.out.println();
         LevenshteinDistance distance = new LevenshteinDistance(k);
         HammingDistance hammingDistance = new HammingDistance();
         AtomicInteger reduce = new AtomicInteger(0);
-        iter = 0;
+        iter[0] = 0;
         System.out.println("pairs " + pairsToCompare.size());
-
+        int[] comps = {0};
         pairsToCompare.stream().forEach(pair -> {
-
+            iter[0]++;
+            if (iter[0] % 1_000_000 == 0){
+                System.out.println("\r"+ iter[0]);
+            }
             if (hammingDistance.apply(sample.sequences.get(pair.l), sample.sequences.get(pair.r)) <= k) {
                 result.add(pair);
             } else {
-                comps.incrementAndGet();
-                if (comps.get() % 100000 == 0) {
-                    System.out.println(comps.get());
-                }
+                comps[0]++;
                 int d = distance.apply(sample.sequences.get(pair.l), sample.sequences.get(pair.r));
                 if (d != -1) {
                     result.add(pair);
                 }
             }
         });
+        System.out.println();
         if (DEBUG) {
             System.out.println("reduce = " + reduce);
         }
         if (!result.isEmpty()) {
             System.out.printf("Found %s%n", sample.name);
-            System.out.println("comps = " + comps);
+            System.out.println("comps = " + comps[0]);
             System.out.println("length = " + result.size());
         }
         return result;
     }
 
     public static Set<Pair> runParallel(Sample sample, KMerDict dict, int k) {
+        System.out.println("Start "+sample.name);
         Set<Pair> result = ConcurrentHashMap.newKeySet();
         Set<Pair> pairsToCompare = ConcurrentHashMap.newKeySet();
         AtomicInteger comps = new AtomicInteger(0);
-
+        AtomicInteger seqPassed = new AtomicInteger(0);
         sample.sequences.entrySet().parallelStream().forEach(seqEntity -> {
             IntIntMap possibleSequences = new IntIntHashMap(dict.sequencesNumber);
             int seq = seqEntity.getKey();
@@ -269,17 +271,23 @@ public class DirichletMethod {
                 }
             }
             for (IntIntCursor s : possibleSequences) {
-                if (!seqEntity.getKey().equals(s.key)
-                        && !pairsToCompare.contains(new Pair(seqEntity.getKey(), s.key))
+                if (seqEntity.getKey() <= s.key
                         && s.value >= dict.fixedkMersCount - k) {
                     pairsToCompare.add(new Pair(seqEntity.getKey(), s.key));
                 }
+
             }
             possibleSequences.clear();
+            seqPassed.incrementAndGet();
+            if (seqPassed.intValue() % 1000 == 0){
+                System.out.print("\r"+seqPassed.intValue());
+            }
         });
+        System.out.println();
         LevenshteinDistance distance = new LevenshteinDistance(k);
         HammingDistance hammingDistance = new HammingDistance();
         AtomicInteger reduce = new AtomicInteger(0);
+        System.out.println("Pairs to compare "+pairsToCompare.size());
         pairsToCompare.parallelStream().forEach(pair -> {
             comps.incrementAndGet();
             if (hammingDistance.apply(sample.sequences.get(pair.l), sample.sequences.get(pair.r)) <= k) {
@@ -292,7 +300,11 @@ public class DirichletMethod {
                     result.add(pair);
                 }
             }
+            if (comps.intValue() % 1_000_000 == 0){
+                System.out.print("\r"+comps.intValue());
+            }
         });
+        System.out.println();
         pairsToCompare.clear();
         if (DEBUG) {
             System.out.println("reduce = " + reduce);

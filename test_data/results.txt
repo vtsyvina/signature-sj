@@ -88,3 +88,82 @@ comps = 12513868
 length = 11697112
 Diri 15773
 
+k = 10 l = 11
+
+length = 1568
+Brute 178
+length = 1568
+comps = 7310
+reduce = 0
+Tree 376
+Found query_close
+comps = 1674
+length = 1568
+Diri 90
+
+length = 6392
+Brute 150
+Found query_medium
+comps = 8858
+length = 6392
+Diri 75
+
+length = 118
+Brute 165
+Found query_far
+comps = 172
+length = 118
+Diri 8
+
+Found db1
+comps = 131874
+length = 120842
+Diri 527
+
+Found db2
+comps = 777974
+length = 740524
+Diri 784
+
+Found db3
+comps = 3746536
+length = 3601890
+Diri 3679
+
+Found db4
+comps = 12513868
+length = 11697112
+Diri 16885
+
+Found db5
+comps = 42057780
+length = 37141072
+Diri 116431
+
+Start db6
+32000
+Pairs to compare 46744915
+46000000
+Found db6
+comps = 46744915
+length = 38835302
+Diri 162684
+
+k=3
+Start db7
+64000
+Pairs to compare 24681241
+24000000
+Found db7
+comps = 24681241
+length = 17426584
+Diri 164883
+
+Start db8
+128000
+Pairs to compare 98789030
+98000000
+Found db8
+comps = 98789030
+length = 69770336
+Diri 762796
