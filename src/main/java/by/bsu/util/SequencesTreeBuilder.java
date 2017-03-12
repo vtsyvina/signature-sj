@@ -1,13 +1,13 @@
 package by.bsu.util;
 
+import by.bsu.model.IntStrPair;
 import by.bsu.model.Sample;
 import by.bsu.model.SequencesTree;
-import com.sun.tools.javac.util.Pair;
 
 import java.util.*;
 
 /**
- * Created by c5239200 on 2/28/17.
+ * Builds SequencesTree by given sample
  */
 public class SequencesTreeBuilder {
 
@@ -18,23 +18,23 @@ public class SequencesTreeBuilder {
         tree.root.parent = null;
         tree.root.children = new HashSet<>();
 
-        List<Pair<Integer, String>> sequences = new ArrayList<>();
-        sample.sequences.entrySet().forEach(s -> sequences.add(new Pair<>(s.getKey(), s.getValue())));
-        sequences.sort(Comparator.comparing(c -> c.snd));
+        List<IntStrPair> sequences = new ArrayList<>();
+        sample.sequences.entrySet().forEach(s -> sequences.add(new IntStrPair(s.getKey(), s.getValue())));
+        sequences.sort(Comparator.comparing(c -> c.r));
         recursiveFillTree(0, sequences.size()-1, 0, tree.root, sequences);
         return tree;
     }
 
     private static void recursiveFillTree(int start, int end, int position,
-                                          SequencesTree.Node currentNode, List<Pair<Integer, String>> sequences) {
+                                          SequencesTree.Node currentNode, List<IntStrPair> sequences) {
         int left = start;
         while (left <= end) {
             int max = 0;
             int maxBorder = -1;
             int maxI = 0;
-            for (int i = 1; i < sequences.get(0).snd.length() - position +1; i++) {
+            for (int i = 1; i < sequences.get(0).r.length() - position +1; i++) {
                 int border = left;
-                while (border < end && sequences.get(border+1).snd.startsWith(sequences.get(left).snd.substring(0,position+i))){
+                while (border < end && sequences.get(border+1).r.startsWith(sequences.get(left).r.substring(0,position+i))){
                     border++;
                 }
                 if (i*(border-left+1) >= max){
@@ -45,12 +45,12 @@ public class SequencesTreeBuilder {
             }
             SequencesTree.Node node = new SequencesTree.Node();
             node.parent = currentNode;
-            node.key = currentNode.key+sequences.get(left).snd.substring(position,position+maxI);
+            node.key = currentNode.key+sequences.get(left).r.substring(position,position+maxI);
             currentNode.children.add(node);
-            if (position+maxI == sequences.get(0).snd.length()){
+            if (position+maxI == sequences.get(0).r.length()){
                 node.sequences = new HashMap<>();
                 for (int i = left; i <= maxBorder; i++) {
-                    node.sequences.put(sequences.get(i).fst, sequences.get(i).snd);
+                    node.sequences.put(sequences.get(i).l, sequences.get(i).r);
                 }
             }else{
                 node.children = new HashSet<>();

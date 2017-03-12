@@ -1,6 +1,6 @@
 package by.bsu.algorithms;
 
-import by.bsu.model.Pair;
+import by.bsu.model.IntIntPair;
 import by.bsu.model.Sample;
 import by.bsu.util.LevenshteinDistance;
 
@@ -9,18 +9,18 @@ import java.util.Map;
 import java.util.Set;
 
 /**
- * Created by c5239200 on 2/3/17.
+ * Brute force algorithm that campares all possible sequence pairs
  */
 public class BruteForce {
 
-    public static Set<Pair> run(Sample sample1, Sample sample2, int k){
-        Set<Pair> result = new HashSet<>();
+    public static Set<IntIntPair> run(Sample sample1, Sample sample2, int k){
+        Set<IntIntPair> result = new HashSet<>();
         LevenshteinDistance distance = new LevenshteinDistance(k);
         for (Map.Entry<Integer, String> entry1 : sample1.sequences.entrySet()){
             for (Map.Entry<Integer, String> entry2 : sample2.sequences.entrySet()){
                 int d = distance.apply(entry1.getValue(), entry2.getValue());
                 if (d != -1 && d<=k){
-                    result.add(new Pair(entry1.getKey(), entry2.getKey()));
+                    result.add(new IntIntPair(entry1.getKey(), entry2.getKey()));
                 }
             }
         }
@@ -28,8 +28,8 @@ public class BruteForce {
         return result;
     }
 
-    public static Set<Pair> run(Sample sample, int k){
-        Set<Pair> result = new HashSet<>();
+    public static Set<IntIntPair> run(Sample sample, int k){
+        Set<IntIntPair> result = new HashSet<>();
         LevenshteinDistance distance = new LevenshteinDistance(k);
         for (Map.Entry<Integer, String> entry1 : sample.sequences.entrySet()){
             for (Map.Entry<Integer, String> entry2 : sample.sequences.entrySet()){
@@ -38,7 +38,7 @@ public class BruteForce {
                 }
                 int d = distance.apply(entry1.getValue(), entry2.getValue());
                 if (d != -1 && d<=k){
-                    result.add(new Pair(entry1.getKey(), entry2.getKey()));
+                    result.add(new IntIntPair(entry1.getKey(), entry2.getKey()));
                 }
             }
         }

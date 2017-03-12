@@ -4,7 +4,19 @@ import java.util.Map;
 import java.util.Set;
 
 /**
- * Created by c5239200 on 2/28/17.
+ * Structure to store sequence tree, where node key is prefix
+ * Example:
+ * sequences - AAAB, AAAC, AABA, CABA, CABA
+ * one of tree options:
+ *           ---------------root (key = '')---------------
+ *           |                                           |
+ *  -----node( key = 'AA')---------------            node(key = 'CABA', seq = 'CABA, CABA')
+ *  |                                   |
+ * node (key = 'AAA')----               node (key = 'AABA', seq = 'AABA')
+ * |                     |
+ * |                     node (key = 'AAAC', seq = 'AAAC')
+ * |
+ * node (key = 'AAAB', seq = 'AAAB')
  */
 public class SequencesTree {
     public Node root;

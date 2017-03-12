@@ -1,6 +1,6 @@
 package by.bsu.algorithms;
 
-import by.bsu.model.Pair;
+import by.bsu.model.IntIntPair;
 import by.bsu.model.Point;
 import by.bsu.model.Points;
 import by.bsu.model.Sample;
@@ -18,11 +18,12 @@ import java.util.Set;
 
 /**
  * Algorithm use points info to filter sequences from comparing
+ * @deprecated Need to fix. Wrong output for some samples
  */
 public class PointsMethod {
 
-    public static Set<Pair> run(Sample sample1, Sample sample2, Points points1, Points points2, int k){
-        Set<Pair> closePairs = new HashSet<>();
+    public static Set<IntIntPair> run(Sample sample1, Sample sample2, Points points1, Points points2, int k){
+        Set<IntIntPair> closePairs = new HashSet<>();
         LevenshteinDistance distance = new LevenshteinDistance(k);
         HammingDistance hammingDistance = new HammingDistance();
         int comps = 0;
@@ -36,12 +37,12 @@ public class PointsMethod {
                             comps++;
                             if (sameLength && hammingDistance.apply(sample1.sequences.get(s1.value),
                                     sample2.sequences.get(s2.value)) <= k){
-                                closePairs.add(new Pair(s1.value, s2.value));
+                                closePairs.add(new IntIntPair(s1.value, s2.value));
                                 continue;
                             }
                             if (distance.apply(sample1.sequences.get(s1.value),
                                     sample2.sequences.get(s2.value)) != -1){
-                                closePairs.add(new Pair(s1.value, s2.value));
+                                closePairs.add(new IntIntPair(s1.value, s2.value));
                             }
                         }
                     }
@@ -53,8 +54,8 @@ public class PointsMethod {
         return closePairs;
     }
 
-    public static List<Pair> run(Sample sample, Points points, int k){
-        List<Pair> closePairs = new ArrayList<>();
+    public static List<IntIntPair> run(Sample sample, Points points, int k){
+        List<IntIntPair> closePairs = new ArrayList<>();
         LevenshteinDistance distance = new LevenshteinDistance(k);
         HammingDistance hammingDistance = new HammingDistance();
         int comps = 0;
@@ -70,12 +71,12 @@ public class PointsMethod {
                             comps++;
                             if (hammingDistance.apply(sample.sequences.get(s1.value),
                                     sample.sequences.get(s2.value)) <= k){
-                                closePairs.add(new Pair(s1.value, s2.value));
+                                closePairs.add(new IntIntPair(s1.value, s2.value));
                                 continue;
                             }
                             if (distance.apply(sample.sequences.get(s1.value),
                                     sample.sequences.get(s2.value)) != -1){
-                                closePairs.add(new Pair(s1.value, s2.value));
+                                closePairs.add(new IntIntPair(s1.value, s2.value));
                             }
                         }
                     }

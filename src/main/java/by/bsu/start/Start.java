@@ -5,10 +5,8 @@ import by.bsu.algorithms.DirichletMethod;
 import by.bsu.algorithms.PointsMethod;
 import by.bsu.algorithms.TreeMethod;
 import by.bsu.model.*;
-import by.bsu.model.Pair;
+import by.bsu.model.IntIntPair;
 import by.bsu.util.*;
-import com.sun.tools.javac.util.*;
-import org.openjdk.jmh.Main;
 import org.openjdk.jmh.runner.RunnerException;
 
 import java.io.File;
@@ -26,25 +24,67 @@ public class Start {
     private static Path folder = Paths.get("cleaned_independent_264");
     private static List<Sample> allFiles = new ArrayList<>();
 
-    static {
-//        for (File file : folder.toFile().listFiles()) {
-//            try {
-//                allFiles.add(new Sample(file.getName(), FasReader.readList(file.toPath())));
-//            } catch (IOException e) {
-//                e.printStackTrace();
-//            }
-//        }
+    private static void loadAllFiles(Path folder) {
+        if (allFiles.isEmpty()) {
+            for (File file : folder.toFile().listFiles()) {
+                try {
+                    allFiles.add(new Sample(file.getName(), FasReader.readList(file.toPath())));
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+            }
+        }
     }
 
     public static void main(String[] args) throws IOException, RunnerException, InterruptedException, ExecutionException {
-//        Main.main(args);
-//        testPointsAlgorithm();
-        //testLargeRelatedSamples();
-        //testDitichletAlgorithm();
-        testBigDataSet();
+        Map<String, String> settings = new HashMap<>();
+        String key = null;
+        for (String arg : args){
+            if (arg.startsWith("-") && arg.length() > 1){
+                key = arg;
+            } else {
+                if (key == null){
+                    wrongArgumentList(arg);
+                }
+                settings.put(key, arg);
+                key = null;
+            }
+        }
+        int k = Integer.parseInt(settings.getOrDefault("-k", "10"));
+        int l = Integer.parseInt(settings.getOrDefault("-l", "11"));
+        folder = Paths.get(settings.getOrDefault("-dir", "cleaned_independent_264"));
+        if (settings.get("-m") != null){
+            switch (settings.get("-m")){
+                case "bigData":
+                    testBigDataSet(k, l);
+                    break;
+                case "largeRelated":
+                    testLargeRelatedSamples(folder);
+                    break;
+                case "dirichletTest":
+                    testDitichletAlgorithm(folder, k, l);
+                    break;
+                default:
+                    wrongArgumentList(settings.get("-m"));
+            }
+        } else {
+            testBigDataSet(k, l);
+        }
     }
 
-    private static void testLargeRelatedSamples() {
+    private static void wrongArgumentList(String arg) {
+        System.out.println("Error! Wrong argument value: "+arg+" . No argument name in for of -key");
+        System.out.println("How to set arguments:");
+        System.out.println("-k 10 -- threshold for sequence similarity(10 is default value)");
+        System.out.println("-l 11 -- l-mer length for Dirichlet method(11 is default value)");
+        System.out.println("-dir /usr/name/tmp/ -- folder with input. (cleaned_independent_264 is default value)");
+        System.out.println("-m bigData -- run one of predefined methods. Methods are: bigData, largeRelated, dirichletTest. bigData is default");
+        System.exit(1);
+    }
+
+    private static void testLargeRelatedSamples(Path folder) {
+        System.out.println("Start testLargeRelatedSamples");
+        loadAllFiles(folder);
         Sample sample = allFiles.get(165);
         Sample s1 = new Sample();
         Sample s2 = new Sample();
@@ -66,60 +106,34 @@ public class Start {
         KMerDict k2 = KMerDictBuilder.getDict(s2, 11);
         long start = System.currentTimeMillis();
         System.out.println(s1.sequences.size()*s2.sequences.size());
-        Set<Pair> res = DirichletMethod.run(s1, s2, k1 , k2, 3);
+        DirichletMethod.run(s1, s2, k1 , k2, 3);
+        System.out.println("DirichletMethod time:");
         System.out.println(System.currentTimeMillis()-start);
         start = System.currentTimeMillis();
-        res = PointsMethod.run(s1,s2, PointsBuilder.buildPoints(s1), PointsBuilder.buildPoints(s2), 3);
+        PointsMethod.run(s1,s2, PointsBuilder.buildPoints(s1), PointsBuilder.buildPoints(s2), 3);
+        System.out.println("PointsMethod time:");
         System.out.println(System.currentTimeMillis()-start);
         start = System.currentTimeMillis();
-        res = BruteForce.run(s1,s2, 3);
+        BruteForce.run(s1,s2, 3);
+        System.out.println("BruteForce time:");
         System.out.println(System.currentTimeMillis()-start);
     }
 
-    private static void testPointsAlgorithm() {
+
+    private static void testDitichletAlgorithm(Path folder, int k, int l) throws IOException, InterruptedException, ExecutionException {
+        System.out.println("Start testDitichletAlgorithm with k="+k+" l="+l);
         long start = System.currentTimeMillis();
-        List<Points> points = new ArrayList<>();
-        for (Sample sample : allFiles){
-            points.add(PointsBuilder.buildPoints(sample));
-        }
-        long runStart1 = System.currentTimeMillis();
-//        System.out.println("by.bsu.start.Start "+allFiles.get(0).name+" "+allFiles.get(40).name
-//                +" pairs "+allFiles.get(0).sequences.size()*allFiles.get(40).sequences.size());
-//        PointsMethod.run(allFiles.get(0), allFiles.get(40), points.get(0), points.get(40), 8);
-//        System.out.println(System.currentTimeMillis() - runStart1);
-        for (int j = 0; j < allFiles.size(); j++) {
-            for (int k = j + 1; k < allFiles.size(); k++) {
-                long runStart = System.currentTimeMillis();
-                System.out.println("by.bsu.start.Start "+allFiles.get(j).name+" "+allFiles.get(k).name
-                        +" pairs "+allFiles.get(j).sequences.size()*allFiles.get(k).sequences.size());
-                PointsMethod.run(allFiles.get(j), allFiles.get(k), points.get(j), points.get(k), 8);
-                System.out.println(System.currentTimeMillis() - runStart);
-            }
-        }
-        System.out.println(System.currentTimeMillis() - start);
-    }
-
-
-    private static void testDitichletAlgorithm() throws IOException, InterruptedException, ExecutionException {
-
-        long start = System.currentTimeMillis();
-        allFiles = new ArrayList<>();
-        for (File file : folder.toFile().listFiles()) {
-            try {
-                allFiles.add(new Sample(file.getName(), FasReader.readList(file.toPath())));
-            } catch (IOException e) {
-                e.printStackTrace();
-            }
-        }
+        loadAllFiles(folder);
         KMerDict[] kdicts = new KMerDict[allFiles.size()];
-        ExecutorService executor = Executors.newFixedThreadPool(4);
+        int threads = Runtime.getRuntime().availableProcessors();
+        ExecutorService executor = Executors.newFixedThreadPool(threads);
         List<Callable<Void>> kmerTaskList = new ArrayList<>();
         for (int j = 0; j < allFiles.size(); j++) {
             int finalJ = j;
             kmerTaskList.add(new Callable<Void>() {
                 @Override
                 public Void call() throws Exception {
-                    k1[index] = KMerDictBuilder.getDict(s1, 11);
+                    k1[index] = KMerDictBuilder.getDict(s1, l);
                     return null;
                 }
 
@@ -138,44 +152,43 @@ public class Start {
         for (Future<Void> f : future){
            f.get();
         }
-        System.out.println(System.currentTimeMillis() - start);
+        System.out.println("Time to build dictionaties = " + (System.currentTimeMillis() - start));
         executor.shutdown();
-        ExecutorService executor1 = Executors.newFixedThreadPool(4);
-        List<Callable<Set<Pair>>> taskList = new ArrayList<>();
+        executor = Executors.newFixedThreadPool(threads);
+        List<Callable<Set<IntIntPair>>> taskList = new ArrayList<>();
         for (int j = 0; j < allFiles.size(); j++) {
-            for (int k = j + 1; k < allFiles.size(); k++) {
-                taskList.add(new CallDir(allFiles.get(j), allFiles.get(k), kdicts[j], kdicts[k], 10));
+            for (int fIndex = j + 1; fIndex < allFiles.size(); fIndex++) {
+                taskList.add(new CallDir(allFiles.get(j), allFiles.get(fIndex), kdicts[j], kdicts[fIndex], k));
             }
         }
-        List<Future<Set<Pair>>> l = executor1.invokeAll(taskList);
+        List<Future<Set<IntIntPair>>> futures = executor.invokeAll(taskList);
 
-        for (Future<Set<Pair>> fut : l) {
+        for (Future<Set<IntIntPair>> fut : futures) {
             fut.get();
         }
-        executor1.shutdown();
-        System.out.println("END !!!" + (System.currentTimeMillis() - start));
+        executor.shutdown();
+        System.out.println("testDitichletAlgorithm has ended with time = " + (System.currentTimeMillis() - start));
         System.out.println();
     }
 
-    private static void testBigDataSet() throws IOException, ExecutionException, InterruptedException {
-        int k = 3;
-        int l = 11;
+    private static void testBigDataSet(int k, int l) throws IOException, ExecutionException, InterruptedException {
+
         Sample query = new Sample("query_close", FasReader.readList(Paths.get("test_data/query1/close.fas")));
         runBruteWithTime(k, query);
-        runTreeWithTime(k, query);
-        //runDirWithTime(k, l, query);
+        //runTreeWithTime(k, query);
+        runDirWithTime(k, l, query);
         //runPointsWithTime(k, query);
 
         System.out.println();
         query = new Sample("query_medium", FasReader.readList(Paths.get("test_data/query2/medium.fas")));
         runBruteWithTime(k, query);
-        //runDirWithTime(k, l, query);
+        runDirWithTime(k, l, query);
         //runPointsWithTime(k, query);
 
         System.out.println();
         query = new Sample("query_far", FasReader.readList(Paths.get("test_data/query3/far.fas")));
         runBruteWithTime(k, query);
-        //runDirWithTime(k, l, query);
+        runDirWithTime(k, l, query);
         //runPointsWithTime(k, query);
 
         System.out.println();
@@ -241,7 +254,7 @@ public class Start {
         long start;
         start = System.currentTimeMillis();
         KMerDict k1 = KMerDictBuilder.getDict(query, l);
-        Set<Pair> r = DirichletMethod.runParallel(query, k1 ,k);
+        Set<IntIntPair> r = DirichletMethod.runParallel(query, k1 ,k);
         System.out.println("Diri "+(System.currentTimeMillis()-start));
         r.clear();
     }
@@ -255,7 +268,7 @@ public class Start {
 
     private static void runBruteWithTime(int k, Sample query) {
         long start = System.currentTimeMillis();
-        Set<Pair> r = BruteForce.run(query, k);
+        Set<IntIntPair> r = BruteForce.run(query, k);
         System.out.println("Brute "+(System.currentTimeMillis()-start));
     }
 

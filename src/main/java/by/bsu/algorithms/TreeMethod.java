@@ -1,6 +1,6 @@
 package by.bsu.algorithms;
 
-import by.bsu.model.Pair;
+import by.bsu.model.IntIntPair;
 import by.bsu.model.Sample;
 import by.bsu.model.SequencesTree;
 import by.bsu.util.HammingDistance;
@@ -16,8 +16,8 @@ import java.util.concurrent.atomic.AtomicInteger;
  */
 public class TreeMethod {
 
-    public static Set<Pair> run(Sample sample, SequencesTree tree, int k) {
-        Set<Pair> result = ConcurrentHashMap.newKeySet();
+    public static Set<IntIntPair> run(Sample sample, SequencesTree tree, int k) {
+        Set<IntIntPair> result = ConcurrentHashMap.newKeySet();
         AtomicInteger count = new AtomicInteger(0);
         AtomicInteger reduce = new AtomicInteger(0);
         sample.sequences.entrySet().parallelStream().forEach(seq -> {
@@ -29,7 +29,7 @@ public class TreeMethod {
         return result;
     }
 
-    private static void recursiveDescent(Map.Entry<Integer, String> entry, SequencesTree.Node node, int k, Set<Pair> result, AtomicInteger count, AtomicInteger reduce) {
+    private static void recursiveDescent(Map.Entry<Integer, String> entry, SequencesTree.Node node, int k, Set<IntIntPair> result, AtomicInteger count, AtomicInteger reduce) {
         LevenshteinDistance levenshteinDistance = new LevenshteinDistance(k);
         HammingDistance hammingDistance = new HammingDistance();
         count.incrementAndGet();
@@ -43,11 +43,11 @@ public class TreeMethod {
                 {
                     if (!(entry.getKey() <= s.getKey())) {
                         if (hammingDistance.apply(entry.getValue(), s.getValue()) <= k) {
-                            result.add(new Pair(entry.getKey(), s.getKey()));
+                            result.add(new IntIntPair(entry.getKey(), s.getKey()));
                         } else {
                             //count.incrementAndGet();
                             if (levenshteinDistance.apply(entry.getValue(), s.getValue()) != -1) {
-                                result.add(new Pair(entry.getKey(), s.getKey()));
+                                result.add(new IntIntPair(entry.getKey(), s.getKey()));
                             }
                         }
                     }
