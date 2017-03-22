@@ -13,16 +13,19 @@ import com.carrotsearch.hppc.cursors.IntCursor;
 import com.carrotsearch.hppc.cursors.IntIntCursor;
 import com.carrotsearch.hppc.cursors.LongCursor;
 
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Paths;
+import java.nio.file.StandardOpenOption;
 import java.util.*;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.atomic.AtomicInteger;
+import java.util.concurrent.atomic.AtomicLong;
 
 /**
  * Algorithm use Dirichlet method to filter pairs on sequences from sample/samples
  */
 public class DirichletMethod {
 
-    public static boolean DEBUG = false;
+    public static boolean DEBUG = true;
 
     public static Set<IntIntPair> run(Sample sample1, Sample sample2, KMerDict dict1, KMerDict dict2, int k) {
         Set<IntIntPair> result = new HashSet<>();
@@ -110,70 +113,77 @@ public class DirichletMethod {
         return result;
     }
 
-    public static Set<IntIntPair> run(Sample sample, KMerDict dict, int k) {
-        System.out.println("Start Dirihlet method for "+sample.name);
-        Set<IntIntPair> result = new HashSet<>();
-        Set<IntIntPair> pairsToCompare = new HashSet<>();
-        int[] iter = {0};
+    public static long run(Sample sample, KMerDict dict, int k) throws IOException {
+        System.out.println("Start Dirihlet method for " + sample.name + " k=" + k + " l=" + dict.l);
+        Set<Integer> processed = new HashSet<>();
+        long[] iter = {0, 0};
+
+        LevenshteinDistance distance = new LevenshteinDistance(k);
+        HammingDistance hammingDistance = new HammingDistance();
+        StringBuilder str = new StringBuilder();
+        String outputFilename = sample.name + "-output.txt";
+        Files.deleteIfExists(Paths.get(outputFilename));
+        Files.createFile(Paths.get(outputFilename));
+        long length = 0;
+        iter[0] = 0;
         for (Map.Entry<Integer, String> seqEntity : sample.sequences.entrySet()) {
             iter[0]++;
-            if (iter[0] % 1000 == 0) {
-                System.out.print("\r"+iter[0]);
+            //write to file each 400 iterations
+            if (iter[0] % 400 == 0) {
+                Files.write(Paths.get(outputFilename), str.toString().getBytes(), StandardOpenOption.APPEND);
+                str = new StringBuilder();
+                System.out.print("\r" + iter[0]);
             }
             IntIntMap possibleSequences = new IntIntHashMap(dict.sequencesNumber);
             int seq = seqEntity.getKey();
             List<IntIntPair> sortedTuples = getSortedTuplesOneSample(dict, seqEntity);
             for (int i = 0; i < sortedTuples.size(); i++) {
                 if (i <= sortedTuples.size() - (dict.fixedkMersCount - k)) {
-                    fillPossiblePairs(dict, possibleSequences, seq, sortedTuples, i);
+                    fillPossiblePairs(dict, possibleSequences, seq, sortedTuples, processed, i);
                 } else {
                     possibleSequences = filterPossibleSequences(dict, possibleSequences, seq, k, sortedTuples, i);
                 }
             }
             for (IntIntCursor s : possibleSequences) {
-                if (seqEntity.getKey() <= s.key
+                if (seq <= s.key
                         && s.value >= dict.fixedkMersCount - k) {
-                    pairsToCompare.add(new IntIntPair(seqEntity.getKey(), s.key));
+                    iter[1]++;
+                    if (hammingDistance.apply(sample.sequences.get(seq), sample.sequences.get(s.key)) <= k) {
+                        length++;
+                        str.append(seq).append(" ").append(s.key).append("\n");
+
+                    } else if (distance.apply(sample.sequences.get(seq), sample.sequences.get(s.key)) != -1) {
+                        length++;
+                        str.append(seq).append(" ").append(s.key).append("\n");
+                    }
+
                 }
             }
+            processed.add(seq);
         }
+        //write the rest of computed pairs
+        Files.write(Paths.get(outputFilename), str.toString().getBytes(), StandardOpenOption.APPEND);
         System.out.println();
-        LevenshteinDistance distance = new LevenshteinDistance(k);
-        HammingDistance hammingDistance = new HammingDistance();
-        AtomicInteger reduce = new AtomicInteger(0);
-        iter[0] = 0;
-        System.out.println("pairs to compare lenght = " + pairsToCompare.size());
-        int[] comps = {0};
-        pairsToCompare.stream().forEach(pair -> {
-            iter[0]++;
-            if (iter[0] % 1_000_000 == 0){
-                System.out.print("\r"+ iter[0]);
-            }
-            if (hammingDistance.apply(sample.sequences.get(pair.l), sample.sequences.get(pair.r)) <= k) {
-                result.add(pair);
-            } else {
-                comps[0]++;
-                int d = distance.apply(sample.sequences.get(pair.l), sample.sequences.get(pair.r));
-                if (d != -1) {
-                    result.add(pair);
-                }
-            }
-        });
-        System.out.println();
-        if (!result.isEmpty()) {
+        if (length != 0) {
             System.out.printf("Found %s%n", sample.name);
-            System.out.println("comps = " + comps[0]);
-            System.out.println("length = " + result.size());
+            System.out.println("comps = " + iter[1]);
+            System.out.println("length = " + length);
         }
-        return result;
+        return length;
     }
 
-    public static Set<IntIntPair> runParallel(Sample sample, KMerDict dict, int k) {
-        System.out.println("Start Dirihlet method parallel for "+sample.name);
-        Set<IntIntPair> result = ConcurrentHashMap.newKeySet();
-        Set<IntIntPair> pairsToCompare = ConcurrentHashMap.newKeySet();
-        AtomicInteger comps = new AtomicInteger(0);
-        AtomicInteger seqPassed = new AtomicInteger(0);
+    public static Long runParallel(Sample sample, KMerDict dict, int k) throws IOException {
+        System.out.println("Start Dirihlet method parallel for " + sample.name + " k= " + k + " l= " + dict.l);
+        AtomicLong comps = new AtomicLong(0);
+        AtomicLong length = new AtomicLong(0);
+        AtomicLong seqPassed = new AtomicLong(0);
+        final StringBuffer[] str = {new StringBuffer()};
+        LevenshteinDistance distance = new LevenshteinDistance(k);
+        HammingDistance hammingDistance = new HammingDistance();
+        //TODO add configuration and option not to write result but only return length
+        String outputFilename = sample.name + "-output.txt";
+        Files.deleteIfExists(Paths.get(outputFilename));
+        Files.createFile(Paths.get(outputFilename));
         sample.sequences.entrySet().parallelStream().forEach(seqEntity -> {
             IntIntMap possibleSequences = new IntIntHashMap(dict.sequencesNumber);
             int seq = seqEntity.getKey();
@@ -188,51 +198,67 @@ public class DirichletMethod {
             for (IntIntCursor s : possibleSequences) {
                 if (seqEntity.getKey() <= s.key
                         && s.value >= dict.fixedkMersCount - k) {
-                    pairsToCompare.add(new IntIntPair(seqEntity.getKey(), s.key));
+                    comps.incrementAndGet();
+                    if (hammingDistance.apply(sample.sequences.get(seq), sample.sequences.get(s.key)) <= k) {
+                        length.incrementAndGet();
+                        str[0].append(seq + " " + s.key + "\n");
+
+                    } else if (distance.apply(sample.sequences.get(seq), sample.sequences.get(s.key)) != -1) {
+                        length.incrementAndGet();
+                        str[0].append(seq + " " + s.key + "\n");
+                    }
+
                 }
 
             }
             seqPassed.incrementAndGet();
-            if (seqPassed.intValue() % 1000 == 0){
-                System.out.print("\r"+seqPassed.intValue());
+            //write each 400 iterations
+            if (seqPassed.intValue() % 400 == 0) {
+                writeToFileSynchronized(str, outputFilename);
+                System.out.print("\r" + seqPassed.intValue());
             }
         });
+        writeToFileSynchronized(str, outputFilename);
         System.out.println();
-        LevenshteinDistance distance = new LevenshteinDistance(k);
-        HammingDistance hammingDistance = new HammingDistance();
-        AtomicInteger reduce = new AtomicInteger(0);
-        System.out.println("Pairs to compare "+pairsToCompare.size());
-        pairsToCompare.parallelStream().forEach(pair -> {
-            comps.incrementAndGet();
-            if (hammingDistance.apply(sample.sequences.get(pair.l), sample.sequences.get(pair.r)) <= k) {
-                result.add(pair);
-                reduce.incrementAndGet();
-
-            } else {
-                int d = distance.apply(sample.sequences.get(pair.l), sample.sequences.get(pair.r));
-                if (d != -1) {
-                    result.add(pair);
-                }
-            }
-            if (comps.intValue() % 1_000_000 == 0){
-                System.out.print("\r"+comps.intValue());
-            }
-        });
-        System.out.println();
-        pairsToCompare.clear();
-        if (DEBUG) {
-            System.out.println("reduce = " + reduce);
-        }
-        if (!result.isEmpty()) {
+        if (length.get() > 0) {
             System.out.printf("Found %s%n", sample.name);
             System.out.println("comps = " + comps);
-            System.out.println("length = " + result.size());
+            System.out.println("length = " + length);
         }
-        return result;
+        return length.get();
+    }
+
+    private static void writeToFileSynchronized(StringBuffer[] str, String outputFilename) {
+        synchronized (str[0]) {
+            try {
+                Files.write(Paths.get(outputFilename), str[0].toString().getBytes(), StandardOpenOption.APPEND);
+            } catch (IOException e) {
+                System.out.println("IOException for file "+outputFilename);
+                e.printStackTrace();
+            }
+            str[0].delete(0, str[0].length());
+        }
     }
 
     /**
      * Fills possibleSequences with appearing sequences for given position(tuples.get(iter))
+     * only for non parallel run
+     */
+    private static void fillPossiblePairs(KMerDict dict, IntIntMap possibleSequences, int seq, List<IntIntPair> tuples, Set<Integer> processed, int iter) {
+        for (IntCursor possibleSeq :
+                dict.hashToSequencesMap
+                        .get(dict.sequenceFixedPositionHashesList.get(seq)[tuples.get(iter).l])
+                ) {
+            //avoid equal pairs, do not add already processed sequences
+            if (possibleSeq.value == seq || processed.contains(possibleSeq.value)) {
+                continue;
+            }
+            possibleSequences.putOrAdd(possibleSeq.value, 1, 1);
+        }
+    }
+
+    /**
+     * For parallel
      */
     private static void fillPossiblePairs(KMerDict dict, IntIntMap possibleSequences, int seq, List<IntIntPair> tuples, int iter) {
         for (IntCursor possibleSeq :
@@ -251,8 +277,8 @@ public class DirichletMethod {
      * Filters possibleSequences by removing all sequences that doesn't contain necessary amount of equal l-mers
      * with current sequence (seq)
      */
-    private static IntIntMap filterPossibleSequences(KMerDict dict, IntIntMap possibleSequences, int seq, int k, List<IntIntPair> tuples, int iter ){
-        IntIntMap tmp = new IntIntHashMap(possibleSequences.size());
+    private static IntIntMap filterPossibleSequences(KMerDict dict, IntIntMap possibleSequences, int seq, int k, List<IntIntPair> tuples, int iter) {
+        IntIntMap tmp = new IntIntHashMap();
         for (IntIntCursor entry : possibleSequences) {
             long hash = dict.sequenceFixedPositionHashesList.get(seq)[tuples.get(iter).l];
             boolean isInDict = dict.hashToSequencesMap.get(hash).contains(entry.key);

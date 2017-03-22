@@ -16,7 +16,7 @@ public class SequencesTreeBuilder {
         tree.root = new SequencesTree.Node();
         tree.root.key = "";
         tree.root.parent = null;
-        tree.root.children = new HashSet<>();
+        tree.root.children = new LinkedList<>();
 
         List<IntStrPair> sequences = new ArrayList<>();
         sample.sequences.entrySet().forEach(s -> sequences.add(new IntStrPair(s.getKey(), s.getValue())));
@@ -53,7 +53,7 @@ public class SequencesTreeBuilder {
                     node.sequences.put(sequences.get(i).l, sequences.get(i).r);
                 }
             }else{
-                node.children = new HashSet<>();
+                node.children = new LinkedList<>();
                 recursiveFillTree(left, maxBorder, position+maxI, node, sequences);
             }
             left = maxBorder + 1;

@@ -230,3 +230,60 @@ Found db6
 comps = 46744915
 length = 38835302
 Diri 249648
+
+k=10 write to file
+Start Dirihlet method parallel for db1
+1000
+Found db1
+comps = 65937
+length = 60421
+Diri 652
+
+Start Dirihlet method parallel for db2
+2000
+Found db2
+comps = 388987
+length = 370262
+Diri 763
+
+Start Dirihlet method parallel for db3
+4000
+Found db3
+comps = 1873268
+length = 1800945
+Diri 1815
+
+Start Dirihlet method parallel for db4
+8000
+Found db4
+comps = 6256934
+length = 5848556
+Diri 6634
+
+Start Dirihlet method parallel for db5
+16000
+Found db5
+comps = 21028890
+length = 18570536
+Diri 24189
+
+Start Dirihlet method parallel for db6
+32000
+Found db6
+comps = 46744915
+length = 38835302
+Diri 68663
+
+Start Dirihlet method parallel for db7
+64000
+Found db7
+comps = 187011650
+length = 155373208
+Diri 273372
+
+Start Dirihlet method parallel for db8
+128000
+Found db8
+comps = 748110580
+length = 621556832
+Diri 1071656

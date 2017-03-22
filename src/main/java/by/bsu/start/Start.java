@@ -175,9 +175,9 @@ public class Start {
 
         Sample query = new Sample("query_close", FasReader.readList(Paths.get("test_data/query1/close.fas")));
         query = new Sample("query_close", FasReader.readList(Paths.get("some.fas")));
-        runBruteWithTime(2, query);
-        runDirWithTime(2, 1, query);
-        runTreeWithTime(2, query);
+//        runBruteWithTime(2, query);
+//        runDirWithTime(2, 1, query);
+//        runTreeWithTime(2, query);
 
         SequencesTreeBuilder.build(query);
         //runPointsWithTime(k, query);
@@ -191,46 +191,46 @@ public class Start {
 
         System.out.println();
         query = new Sample("query_far", FasReader.readList(Paths.get("test_data/query3/far.fas")));
-        runBruteWithTime(k, query);
-        runDirWithTime(k, l, query);
-        runTreeWithTime(k, query);
-        SequencesTreeBuilder.build(query);
+//        runBruteWithTime(k, query);
+//        runDirWithTime(k, l, query);
+//        runTreeWithTime(k, query);
+//        SequencesTreeBuilder.build(query);
         //runPointsWithTime(k, query);
 
         System.out.println();
         query = new Sample("db1", FasReader.readList(Paths.get("test_data/db1/1000.fas")));
-        SequencesTreeBuilder.build(query);
+        //SequencesTreeBuilder.build(query);
         //runDirWithTime(k, l, query);
         //runTreeWithTime(k, query);
 
         System.out.println();
         query = new Sample("db2", FasReader.readList(Paths.get("test_data/db2/2000.fas")));
-        SequencesTreeBuilder.build(query);
+        //SequencesTreeBuilder.build(query);
         //runDirWithTime(k, l, query);
         //runTreeWithTime(k, query);
 
         System.out.println();
         query = new Sample("db3", FasReader.readList(Paths.get("test_data/db3/4000.fas")));
-        SequencesTreeBuilder.build(query);
+        //SequencesTreeBuilder.build(query);
         //runDirWithTime(k, l, query);
         //runTreeWithTime(k, query);
 
 
         System.out.println();
         query = new Sample("db4", FasReader.readList(Paths.get("test_data/db4/8000.fas")));
-        SequencesTreeBuilder.build(query);
+        //SequencesTreeBuilder.build(query);
         //runDirWithTime(k, l, query);
         //runTreeWithTime(k, query);
 
         System.out.println();
         query = new Sample("db5", FasReader.readList(Paths.get("test_data/db5/16000.fas")));
-        SequencesTreeBuilder.build(query);
+        //SequencesTreeBuilder.build(query);
         //runDirWithTime(k, l, query);
         //runTreeWithTime(k, query);
 
         System.out.println();
         query = new Sample("db6", FasReader.readList(Paths.get("test_data/db6/32000.fas")));
-        SequencesTreeBuilder.build(query);
+        //SequencesTreeBuilder.build(query);
         //runDirWithTime(k, l, query);
 
         System.out.println();
@@ -241,10 +241,11 @@ public class Start {
         tmp = tmp.entrySet().stream().collect(toMap(e -> e.getKey() + size[0], Map.Entry::getValue));
         seq.putAll(tmp);
         query = new Sample("db7", seq);
-        SequencesTreeBuilder.build(query);
+        //SequencesTreeBuilder.build(query);
         //runDirWithTime(k, l, query);
 
         System.out.println();
+        // TODO create method for such samples
         seq = FasReader.readList(Paths.get("test_data/db8/32000.fas"));
         tmp = FasReader.readList(Paths.get("test_data/db8/32000 (2).fas"));
         size[0] = seq.size();
@@ -260,19 +261,17 @@ public class Start {
         seq.putAll(tmp);
         query = new Sample("db8", seq);
         long start = System.currentTimeMillis();
-        SequencesTreeBuilder.build(query);
+        //SequencesTreeBuilder.build(query);
         System.out.println("BUILD "+(System.currentTimeMillis() - start));
-        //runDirWithTime(k, l, query);
+        runDirWithTime(k, l, query);
     }
 
-    private static void runDirWithTime(int k, int l, Sample query) throws ExecutionException, InterruptedException {
+    private static void runDirWithTime(int k, int l, Sample query) throws ExecutionException, InterruptedException, IOException {
         long start;
         start = System.currentTimeMillis();
         KMerDict k1 = KMerDictBuilder.getDict(query, l);
-        Set<IntIntPair> r = DirichletMethod.runParallel(query, k1 ,k);
+        DirichletMethod.runParallel(query, k1 ,k);
         System.out.println("Diri "+(System.currentTimeMillis()-start));
-        r.forEach(System.out::println);
-        r.clear();
     }
 
     private static void runPointsWithTime(int k, Sample query) {

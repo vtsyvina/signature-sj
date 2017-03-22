@@ -6,11 +6,7 @@ import by.bsu.model.SequencesTree;
 import by.bsu.util.HammingDistance;
 import by.bsu.util.LevenshteinDistance;
 
-import java.util.HashSet;
-import java.util.LinkedList;
-import java.util.Map;
-import java.util.Queue;
-import java.util.Set;
+import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicInteger;
 
@@ -19,7 +15,11 @@ import java.util.concurrent.atomic.AtomicInteger;
  */
 public class TreeMethod {
 
+    public static int comps = 0;
+    public static int comps2 = 0;
+
     public static Set<IntIntPair> run(Sample sample, SequencesTree tree, int k) {
+
         Set<IntIntPair> result = ConcurrentHashMap.newKeySet();
         AtomicInteger count = new AtomicInteger(0);
         sample.sequences.entrySet().parallelStream().forEach(seq -> {
@@ -31,13 +31,18 @@ public class TreeMethod {
     }
 
     public static Set<IntIntPair> runV2(Sample sample, SequencesTree tree, int k){
+        comps = 0;
+        comps2 = 0;
         Set<IntIntPair> result = ConcurrentHashMap.newKeySet();
         LevenshteinDistance levenshteinDistance = new LevenshteinDistance(k);
         HammingDistance hammingDistance = new HammingDistance();
-
-        tree.root.children.forEach(node -> recursiveDescentV2(node,
-                tree.root.children,
-                k, result, levenshteinDistance, hammingDistance));
+        while (!tree.root.children.isEmpty()) {
+            recursiveDescentV2(tree.root.children.peek(),
+                    tree.root.children,
+                    k, result, levenshteinDistance, hammingDistance);
+        }
+        System.out.println("comps = " + (comps+comps2));
+        System.out.println("length = " + result.size());
         return result;
     }
 
@@ -68,13 +73,16 @@ public class TreeMethod {
         }
     }
 
-    private static void recursiveDescentV2(SequencesTree.Node node, Set<SequencesTree.Node> toCheck, int k,
+    private static void recursiveDescentV2(SequencesTree.Node node, Queue<SequencesTree.Node> toCheck, int k,
                                            Set<IntIntPair> result, LevenshteinDistance levenshtein, HammingDistance hamming){
         if (node.sequences == null){
-            Set<SequencesTree.Node> newToCheck = new HashSet<>();
+            Queue<SequencesTree.Node> newToCheck = new LinkedList<>();
             toCheck.forEach( check -> newToCheck.addAll(calculateToCheckForGivenNode(node, check, k , levenshtein, hamming)));
             if (node.children != null){
-                node.children.forEach( child -> recursiveDescentV2(child, newToCheck, k, result, levenshtein, hamming));
+                while (!node.children.isEmpty()){
+                    recursiveDescentV2(node.children.peek(), newToCheck, k, result, levenshtein, hamming);
+                }
+
             }
         } else {
             Queue<SequencesTree.Node> nodesToVisit = new LinkedList<>(toCheck);
@@ -82,15 +90,15 @@ public class TreeMethod {
                 SequencesTree.Node currentNode = nodesToVisit.poll();
                 if (currentNode.children != null){
                     int min = currentNode.key.length() < node.key.length() ? currentNode.key.length() : node.key.length();
-                    int h = hamming.apply(currentNode.key.substring(0, min), node.key.substring(0, min));
-                    int l = levenshtein.apply(currentNode.key.substring(0, min), node.key.substring(0, min));
-                    if ( h <= k ||  l != -1) {
+                    comps2++;
+                    if ( hamming.apply(currentNode.key.substring(0, min), node.key.substring(0, min)) <= k
+                            ||  levenshtein.apply(currentNode.key.substring(0, min), node.key.substring(0, min)) != -1) {
                         nodesToVisit.addAll(currentNode.children);
                     }
                 } else if (currentNode != node){
-                    int h = hamming.apply(currentNode.key, node.key);
-                    int l = levenshtein.apply(currentNode.key, node.key);
-                    if ( h <= k ||  l != -1){
+                    comps2++;
+                    if ( hamming.apply(currentNode.key, node.key) <= k
+                            ||  levenshtein.apply(currentNode.key, node.key) != -1){
                         node.sequences.keySet().forEach( index ->
                                 currentNode.sequences.keySet().forEach(
                                         index2 -> result.add(new IntIntPair(index, index2))));
@@ -99,14 +107,14 @@ public class TreeMethod {
                     node.sequences.keySet().forEach( index ->
                             currentNode.sequences.keySet().forEach(
                                     index2 -> {
-                                        if (index != index2)
+                                        if (index < index2)
                                             result.add(new IntIntPair(index, index2));
                                     }));
 
                 }
             }
         }
-        //node.parent.children.remove(node);
+        node.parent.children.remove(node);
     }
 
     /**
@@ -121,9 +129,9 @@ public class TreeMethod {
     private static Set<SequencesTree.Node> calculateToCheckForGivenNode(SequencesTree.Node currentNode, SequencesTree.Node toCheck, int k, LevenshteinDistance levenshtein, HammingDistance hamming){
         Set<SequencesTree.Node> result = new HashSet<>();
         int min = currentNode.key.length() < toCheck.key.length() ? currentNode.key.length() : toCheck.key.length();
-        int h = hamming.apply(currentNode.key.substring(0, min), toCheck.key.substring(0, min));
-        int l = levenshtein.apply(currentNode.key.substring(0, min), toCheck.key.substring(0, min));
-        if ( h <= k ||  l != -1){
+        comps++;
+        if ( hamming.apply(currentNode.key.substring(0, min), toCheck.key.substring(0, min)) <= k
+                ||  levenshtein.apply(currentNode.key.substring(0, min), toCheck.key.substring(0, min)) != -1){
             if (currentNode.key.length() <= toCheck.key.length()){
                 result.add(toCheck);
             } else{

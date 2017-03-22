@@ -1,7 +1,7 @@
 package by.bsu.model;
 
 import java.util.Map;
-import java.util.Set;
+import java.util.Queue;
 
 /**
  * Structure to store sequence tree, where node key is prefix
@@ -22,7 +22,7 @@ public class SequencesTree {
     public Node root;
     public static class Node{
         public String key;
-        public Set<Node> children;
+        public Queue<Node> children;
         public Node parent;
         public Map<Integer, String> sequences;
     }
