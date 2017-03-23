@@ -145,8 +145,7 @@ public class DirichletMethod {
                 }
             }
             for (IntIntCursor s : possibleSequences) {
-                if (seq <= s.key
-                        && s.value >= dict.fixedkMersCount - k) {
+                if (s.value >= dict.fixedkMersCount - k) {
                     iter[1]++;
                     if (hammingDistance.apply(sample.sequences.get(seq), sample.sequences.get(s.key)) <= k) {
                         length++;
@@ -196,8 +195,7 @@ public class DirichletMethod {
                 }
             }
             for (IntIntCursor s : possibleSequences) {
-                if (seqEntity.getKey() <= s.key
-                        && s.value >= dict.fixedkMersCount - k) {
+                if (s.value >= dict.fixedkMersCount - k) {
                     comps.incrementAndGet();
                     if (hammingDistance.apply(sample.sequences.get(seq), sample.sequences.get(s.key)) <= k) {
                         length.incrementAndGet();
@@ -233,7 +231,7 @@ public class DirichletMethod {
             try {
                 Files.write(Paths.get(outputFilename), str[0].toString().getBytes(), StandardOpenOption.APPEND);
             } catch (IOException e) {
-                System.out.println("IOException for file "+outputFilename);
+                System.out.println("IOException for file " + outputFilename);
                 e.printStackTrace();
             }
             str[0].delete(0, str[0].length());
@@ -250,7 +248,7 @@ public class DirichletMethod {
                         .get(dict.sequenceFixedPositionHashesList.get(seq)[tuples.get(iter).l])
                 ) {
             //avoid equal pairs, do not add already processed sequences
-            if (possibleSeq.value == seq || processed.contains(possibleSeq.value)) {
+            if (possibleSeq.value < seq || processed.contains(possibleSeq.value)) {
                 continue;
             }
             possibleSequences.putOrAdd(possibleSeq.value, 1, 1);
@@ -266,7 +264,7 @@ public class DirichletMethod {
                         .get(dict.sequenceFixedPositionHashesList.get(seq)[tuples.get(iter).l])
                 ) {
             //avoid equal pairs
-            if (possibleSeq.value == seq) {
+            if (possibleSeq.value < seq) {
                 continue;
             }
             possibleSequences.putOrAdd(possibleSeq.value, 1, 1);
