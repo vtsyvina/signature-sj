@@ -19,7 +19,7 @@ public class BruteForce {
         for (Map.Entry<Integer, String> entry1 : sample1.sequences.entrySet()){
             for (Map.Entry<Integer, String> entry2 : sample2.sequences.entrySet()){
                 int d = distance.apply(entry1.getValue(), entry2.getValue());
-                if (d != -1 && d<=k){
+                if (d != -1){
                     result.add(new IntIntPair(entry1.getKey(), entry2.getKey()));
                 }
             }
@@ -37,7 +37,7 @@ public class BruteForce {
                     continue;
                 }
                 int d = distance.apply(entry1.getValue(), entry2.getValue());
-                if (d != -1 && d<=k){
+                if (d != -1){
                     result.add(new IntIntPair(entry1.getKey(), entry2.getKey()));
                 }
             }

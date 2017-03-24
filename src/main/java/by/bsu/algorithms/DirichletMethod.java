@@ -8,6 +8,7 @@ import by.bsu.util.KMerDictBuilder;
 import by.bsu.util.LevenshteinDistance;
 import com.carrotsearch.hppc.IntIntHashMap;
 import com.carrotsearch.hppc.IntIntMap;
+import com.carrotsearch.hppc.IntSet;
 import com.carrotsearch.hppc.LongSet;
 import com.carrotsearch.hppc.cursors.IntCursor;
 import com.carrotsearch.hppc.cursors.IntIntCursor;
@@ -24,6 +25,14 @@ import java.util.concurrent.atomic.AtomicLong;
  * Algorithm use Dirichlet method to filter pairs on sequences from sample/samples
  */
 public class DirichletMethod {
+
+    private static List<String> numbers = new ArrayList<>();
+
+    static {
+        for (int i = 0; i < 100_000; i++) {
+            numbers.add(String .valueOf(i));
+        }
+    }
 
     public static boolean DEBUG = true;
 
@@ -115,8 +124,9 @@ public class DirichletMethod {
 
     public static long run(Sample sample, KMerDict dict, int k) throws IOException {
         System.out.println("Start Dirihlet method for " + sample.name + " k=" + k + " l=" + dict.l);
+        expandNumbers(sample.sequences.size());
         Set<Integer> processed = new HashSet<>();
-        long[] iter = {0, 0};
+        long[] iter = {0, 0, 0};
 
         LevenshteinDistance distance = new LevenshteinDistance(k);
         HammingDistance hammingDistance = new HammingDistance();
@@ -149,11 +159,13 @@ public class DirichletMethod {
                     iter[1]++;
                     if (hammingDistance.apply(sample.sequences.get(seq), sample.sequences.get(s.key)) <= k) {
                         length++;
-                        str.append(seq).append(" ").append(s.key).append("\n");
-
-                    } else if (distance.apply(sample.sequences.get(seq), sample.sequences.get(s.key)) != -1) {
-                        length++;
-                        str.append(seq).append(" ").append(s.key).append("\n");
+                        iter[2]++;
+                        str.append(numbers.get(seq)).append(" ").append(numbers.get(s.key)).append("\n");
+                    } else{
+                        if (distance.apply(sample.sequences.get(seq), sample.sequences.get(s.key)) != -1) {
+                            length++;
+                            str.append(numbers.get(seq)).append(" ").append(numbers.get(s.key)).append("\n");
+                        }
                     }
 
                 }
@@ -166,6 +178,7 @@ public class DirichletMethod {
         if (length != 0) {
             System.out.printf("Found %s%n", sample.name);
             System.out.println("comps = " + iter[1]);
+            System.out.println("reduce = " + iter[2]);
             System.out.println("length = " + length);
         }
         return length;
@@ -173,6 +186,7 @@ public class DirichletMethod {
 
     public static Long runParallel(Sample sample, KMerDict dict, int k) throws IOException {
         System.out.println("Start Dirihlet method parallel for " + sample.name + " k= " + k + " l= " + dict.l);
+        expandNumbers(sample.sequences.size());
         AtomicLong comps = new AtomicLong(0);
         AtomicLong length = new AtomicLong(0);
         AtomicLong seqPassed = new AtomicLong(0);
@@ -199,11 +213,11 @@ public class DirichletMethod {
                     comps.incrementAndGet();
                     if (hammingDistance.apply(sample.sequences.get(seq), sample.sequences.get(s.key)) <= k) {
                         length.incrementAndGet();
-                        str[0].append(seq + " " + s.key + "\n");
+                        str[0].append(numbers.get(seq) + " " + numbers.get(s.key) + "\n");
 
                     } else if (distance.apply(sample.sequences.get(seq), sample.sequences.get(s.key)) != -1) {
                         length.incrementAndGet();
-                        str[0].append(seq + " " + s.key + "\n");
+                        str[0].append(numbers.get(seq) + " " + numbers.get(s.key) + "\n");
                     }
 
                 }
@@ -248,7 +262,7 @@ public class DirichletMethod {
                         .get(dict.sequenceFixedPositionHashesList.get(seq)[tuples.get(iter).l])
                 ) {
             //avoid equal pairs, do not add already processed sequences
-            if (possibleSeq.value < seq || processed.contains(possibleSeq.value)) {
+            if (possibleSeq.value <= seq || processed.contains(possibleSeq.value)) {
                 continue;
             }
             possibleSequences.putOrAdd(possibleSeq.value, 1, 1);
@@ -276,10 +290,11 @@ public class DirichletMethod {
      * with current sequence (seq)
      */
     private static IntIntMap filterPossibleSequences(KMerDict dict, IntIntMap possibleSequences, int seq, int k, List<IntIntPair> tuples, int iter) {
-        IntIntMap tmp = new IntIntHashMap();
+        IntIntMap tmp = new IntIntHashMap(possibleSequences.size());
+        long hash = dict.sequenceFixedPositionHashesList.get(seq)[tuples.get(iter).l];
+        IntSet sequencesWithHashSet= dict.hashToSequencesMap.get(hash);
         for (IntIntCursor entry : possibleSequences) {
-            long hash = dict.sequenceFixedPositionHashesList.get(seq)[tuples.get(iter).l];
-            boolean isInDict = dict.hashToSequencesMap.get(hash).contains(entry.key);
+            boolean isInDict = sequencesWithHashSet.contains(entry.key);
             // put if sequence hash l-mer for current fixed position or if it already has enough equal l-mers
             if (isInDict ||
                     dict.fixedkMersCount - k <= entry.value + tuples.size() - iter) {
@@ -361,4 +376,13 @@ public class DirichletMethod {
         }
         return kMerCoincidences;
     }
+
+    private static void expandNumbers(int size){
+        if (size > numbers.size()){
+            for (int i = numbers.size(); i < size; i++) {
+                numbers.add(String.valueOf(i));
+            }
+        }
+    }
+
 }

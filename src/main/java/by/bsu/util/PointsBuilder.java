@@ -18,10 +18,7 @@ public class PointsBuilder {
         points.sampleName = sample.name;
         points.pointSeqMap = new HashMap<>();
         for (Map.Entry<Integer, String> entry : sample.sequences.entrySet()){
-            int[] coordinates = new int[4];
-            for (char c : entry.getValue().toCharArray()){
-                coordinates[convertLetterToDigit(c)]++;
-            }
+            int[] coordinates = getCoordinates(entry.getValue());
             Point point = new Point(coordinates[0],
                     coordinates[1],
                     coordinates[2],
@@ -32,6 +29,14 @@ public class PointsBuilder {
             points.pointSeqMap.get(point).add(entry.getKey());
         }
         return points;
+    }
+
+    public static int[] getCoordinates(String sequence) {
+        int[] coordinates = new int[4];
+        for (char c : sequence.toCharArray()){
+            coordinates[convertLetterToDigit(c)]++;
+        }
+        return coordinates;
     }
 
     private static int convertLetterToDigit(char c){

@@ -54,6 +54,7 @@
                         <descriptorRef>jar-with-dependencies</descriptorRef>
                     </descriptorRefs>
                     <appendAssemblyId>false</appendAssemblyId>
+                    <outputDirectory>../sequence-comparison</outputDirectory>
                 </configuration>
                 <executions>
                     <execution>

@@ -7,6 +7,7 @@ import by.bsu.algorithms.TreeMethod;
 import by.bsu.model.*;
 import by.bsu.model.IntIntPair;
 import by.bsu.util.*;
+import org.openjdk.jmh.Main;
 import org.openjdk.jmh.runner.RunnerException;
 
 import java.io.File;
@@ -219,7 +220,7 @@ public class Start {
         System.out.println();
         query = new Sample("db4", FasReader.readList(Paths.get("test_data/db4/8000.fas")));
         //SequencesTreeBuilder.build(query);
-        //runDirWithTime(k, l, query);
+        runDirWithTime(k, l, query);
         //runTreeWithTime(k, query);
 
         System.out.println();
@@ -263,14 +264,14 @@ public class Start {
         long start = System.currentTimeMillis();
         //SequencesTreeBuilder.build(query);
         System.out.println("BUILD "+(System.currentTimeMillis() - start));
-        runDirWithTime(k, l, query);
+        //runDirWithTime(k, l, query);
     }
 
     private static void runDirWithTime(int k, int l, Sample query) throws ExecutionException, InterruptedException, IOException {
         long start;
         start = System.currentTimeMillis();
         KMerDict k1 = KMerDictBuilder.getDict(query, l);
-        DirichletMethod.runParallel(query, k1 ,k);
+        DirichletMethod.run(query, k1 ,k);
         System.out.println("Diri "+(System.currentTimeMillis()-start));
     }
 

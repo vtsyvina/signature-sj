@@ -89,7 +89,7 @@ public class PointsMethod {
         return closePairs;
     }
 
-    private static int lowerBoundEstimate(int[] c1, int[] c2){
+    public static int lowerBoundEstimate(int[] c1, int[] c2){
         int positive = 0;
         int negative = 0;
         for (int i = 0; i < 4; i++) {

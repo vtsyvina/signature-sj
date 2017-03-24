@@ -1,7 +1,14 @@
 package by.bsu.util;
 
+import by.bsu.model.KMerDict;
+import by.bsu.model.Sample;
 import org.openjdk.jmh.annotations.*;
 
+import java.io.IOException;
+import java.nio.file.Paths;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Random;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 
@@ -15,7 +22,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 @Measurement(iterations = 20, time = 200, timeUnit = TimeUnit.MILLISECONDS)
 public class Test {
     LevenshteinDistance defaultLev = LevenshteinDistance.getDefaultInstance();
-    LevenshteinDistance limitedLev = new LevenshteinDistance(0);
+    LevenshteinDistance limitedLev = new LevenshteinDistance(10);
     HammingDistance hammingDistance = new HammingDistance();
     String str1 = "CACCGACTGCGGCGCTGGTTATGGCACAAGTGCTCCGGATCCCGGAAGCTATCGTGGATATGGTAGCTGGAGCCCACTGGGGAGTCCTAGCGGGGCTAGCTTACTATTCCATGGTTGGCAACTGGGCGAAGGTGCTAGTCGTGCTGCTCCTGTTCGCGGGGGTTGATGCTGATACCAAGACCATCGGCGGTAAGGCTACGCAGCAAACCGCGCGCCTCACCAGCTTCTTTAGCCCGGGTCCCCAGCAGAACATCGCGCTTATCA";
     String str2 = "CACCGACTGCGGCACTGGTTATGGCACAAGTGCTCCGGATCCCGGAAGCTATCGTGGATATGGTAGCTGGAGCCCACTGGGGAGTCCTAGCGGGGCTAGCTTACTATTCCATGGTTGGCAACTGGGCGAAGGTGCTAGTCGTGCTGCTCCTGTTCGCGGGGGTTGATGCTGATACCAAGACCATCGGCGGTAAGGCTACGCAGCAAACCGCGCGCCTCACCAGCTTCTTTAGCCCGGGTCCCCAGCAGGACATCGCGCTTATCA";
