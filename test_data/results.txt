@@ -287,3 +287,61 @@ Found db8
 comps = 748110580
 length = 621556832
 Diri 1071656
+
+Executor service k=10 l =11
+Start Dirihlet method parallel for db1 k= 10 l= 11
+
+Found db1
+comps = 65937
+length = 60421
+Diri 5800
+
+Start Dirihlet method parallel for db2 k= 10 l= 11
+
+Found db2
+comps = 388987
+length = 370262
+Diri 5263
+
+Start Dirihlet method parallel for db3 k= 10 l= 11
+3474
+Found db3
+comps = 1873268
+length = 1800945
+Diri 930
+
+Start Dirihlet method parallel for db4 k= 10 l= 11
+6709
+Found db4
+comps = 6256934
+length = 5848556
+Diri 3025
+
+Start Dirihlet method parallel for db5 k= 10 l= 11
+15998
+Found db5
+comps = 21028890
+length = 18570536
+Diri 13461
+
+Start Dirihlet method parallel for db6 k= 10 l= 11
+31997
+Found db6
+comps = 46744915
+length = 38835302
+Diri 38240
+
+Start Dirihlet method parallel for db7 k= 10 l= 11
+64000
+Found db7
+comps = 187011650
+length = 155373208
+Diri 149715
+
+BUILD 0
+Start Dirihlet method parallel for db8 k= 10 l= 11
+127999
+Found db8
+comps = 748110580
+length = 621556832
+Diri 627427

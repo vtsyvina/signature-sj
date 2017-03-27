@@ -16,25 +16,26 @@ import com.carrotsearch.hppc.cursors.LongCursor;
 
 import java.io.IOException;
 import java.nio.file.Files;
+import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.nio.file.StandardOpenOption;
 import java.util.*;
-import java.util.concurrent.atomic.AtomicLong;
+import java.util.concurrent.*;
 
 /**
  * Algorithm use Dirichlet method to filter pairs on sequences from sample/samples
  */
 public class DirichletMethod {
 
+    public static boolean DEBUG = true;
     private static List<String> numbers = new ArrayList<>();
+    private static volatile long tasksIteration = 0;
 
     static {
         for (int i = 0; i < 100_000; i++) {
-            numbers.add(String .valueOf(i));
+            numbers.add(String.valueOf(i));
         }
     }
-
-    public static boolean DEBUG = true;
 
     public static Set<IntIntPair> run(Sample sample1, Sample sample2, KMerDict dict1, KMerDict dict2, int k) {
         Set<IntIntPair> result = new HashSet<>();
@@ -161,7 +162,7 @@ public class DirichletMethod {
                         length++;
                         iter[2]++;
                         str.append(numbers.get(seq)).append(" ").append(numbers.get(s.key)).append("\n");
-                    } else{
+                    } else {
                         if (distance.apply(sample.sequences.get(seq), sample.sequences.get(s.key)) != -1) {
                             length++;
                             str.append(numbers.get(seq)).append(" ").append(numbers.get(s.key)).append("\n");
@@ -187,69 +188,60 @@ public class DirichletMethod {
     public static Long runParallel(Sample sample, KMerDict dict, int k) throws IOException {
         System.out.println("Start Dirihlet method parallel for " + sample.name + " k= " + k + " l= " + dict.l);
         expandNumbers(sample.sequences.size());
-        AtomicLong comps = new AtomicLong(0);
-        AtomicLong length = new AtomicLong(0);
-        AtomicLong seqPassed = new AtomicLong(0);
-        final StringBuffer[] str = {new StringBuffer()};
-        LevenshteinDistance distance = new LevenshteinDistance(k);
-        HammingDistance hammingDistance = new HammingDistance();
         //TODO add configuration and option not to write result but only return length
         String outputFilename = sample.name + "-output.txt";
-        Files.deleteIfExists(Paths.get(outputFilename));
-        Files.createFile(Paths.get(outputFilename));
-        sample.sequences.entrySet().parallelStream().forEach(seqEntity -> {
-            IntIntMap possibleSequences = new IntIntHashMap(dict.sequencesNumber);
-            int seq = seqEntity.getKey();
-            List<IntIntPair> sortedTuples = getSortedTuplesOneSample(dict, seqEntity);
-            for (int i = 0; i < sortedTuples.size(); i++) {
-                if (i <= sortedTuples.size() - (dict.fixedkMersCount - k)) {
-                    fillPossiblePairs(dict, possibleSequences, seq, sortedTuples, i);
-                } else {
-                    possibleSequences = filterPossibleSequences(dict, possibleSequences, seq, k, sortedTuples, i);
-                }
-            }
-            for (IntIntCursor s : possibleSequences) {
-                if (s.value >= dict.fixedkMersCount - k) {
-                    comps.incrementAndGet();
-                    if (hammingDistance.apply(sample.sequences.get(seq), sample.sequences.get(s.key)) <= k) {
-                        length.incrementAndGet();
-                        str[0].append(numbers.get(seq) + " " + numbers.get(s.key) + "\n");
-
-                    } else if (distance.apply(sample.sequences.get(seq), sample.sequences.get(s.key)) != -1) {
-                        length.incrementAndGet();
-                        str[0].append(numbers.get(seq) + " " + numbers.get(s.key) + "\n");
-                    }
-
-                }
-
-            }
-            seqPassed.incrementAndGet();
-            //write each 400 iterations
-            if (seqPassed.intValue() % 400 == 0) {
-                writeToFileSynchronized(str, outputFilename);
-                System.out.print("\r" + seqPassed.intValue());
-            }
+        Path path = Paths.get(outputFilename);
+        Files.deleteIfExists(path);
+        Files.createFile(path);
+        //divide sequences into parts for executor service
+        int cores = Runtime.getRuntime().availableProcessors();
+        ExecutorService service = Executors.newFixedThreadPool(cores);
+        List<Map<Integer, String>> parts = new ArrayList<>();
+        tasksIteration = 0;
+        int partsCount = Math.min(cores, sample.sequences.size() / 400 + 1);
+        for (int i = 0; i < partsCount; i++) {
+            parts.add(new HashMap<>());
+        }
+        final int[] i = {0};
+        sample.sequences.entrySet().forEach(entity -> {
+            parts.get(i[0] % partsCount).put(entity.getKey(), entity.getValue());
+            i[0]++;
         });
-        writeToFileSynchronized(str, outputFilename);
+        List<Callable<long[]>> tasks = new ArrayList<>();
+        //create tasks with parts of sequences
+        parts.forEach(part -> tasks.add(new ParallelTask(sample, part, dict, k, path)));
+        long[] results = {0, 0, 0, 0};
+        try {
+            List<Future<long[]>> futures = service.invokeAll(tasks);
+            service.shutdown();
+            futures.forEach(future -> {
+                try {
+                    long[] f = future.get();
+                    /*
+                      0 -> iteration
+                      1 -> comparisons
+                      2 -> hamming
+                      3 -> total length
+                     */
+                    results[0] += f[0];
+                    results[1] += f[1];
+                    results[2] += f[2];
+                    results[3] += f[3];
+                } catch (InterruptedException | ExecutionException e) {
+                    System.err.println("Error! Parallel tasks were not successful");
+                }
+            });
+        } catch (InterruptedException e) {
+            System.err.println("Error! Parallel tasks were not successful");
+        }
         System.out.println();
-        if (length.get() > 0) {
+        if (results[3] > 0) {
             System.out.printf("Found %s%n", sample.name);
-            System.out.println("comps = " + comps);
-            System.out.println("length = " + length);
+            System.out.println("comps = " + results[1]);
+            System.out.println("reduced = " + results[2]);
+            System.out.println("length = " + results[3]);
         }
-        return length.get();
-    }
-
-    private static void writeToFileSynchronized(StringBuffer[] str, String outputFilename) {
-        synchronized (str[0]) {
-            try {
-                Files.write(Paths.get(outputFilename), str[0].toString().getBytes(), StandardOpenOption.APPEND);
-            } catch (IOException e) {
-                System.out.println("IOException for file " + outputFilename);
-                e.printStackTrace();
-            }
-            str[0].delete(0, str[0].length());
-        }
+        return results[0];
     }
 
     /**
@@ -278,7 +270,7 @@ public class DirichletMethod {
                         .get(dict.sequenceFixedPositionHashesList.get(seq)[tuples.get(iter).l])
                 ) {
             //avoid equal pairs
-            if (possibleSeq.value < seq) {
+            if (possibleSeq.value <= seq) {
                 continue;
             }
             possibleSequences.putOrAdd(possibleSeq.value, 1, 1);
@@ -292,7 +284,7 @@ public class DirichletMethod {
     private static IntIntMap filterPossibleSequences(KMerDict dict, IntIntMap possibleSequences, int seq, int k, List<IntIntPair> tuples, int iter) {
         IntIntMap tmp = new IntIntHashMap(possibleSequences.size());
         long hash = dict.sequenceFixedPositionHashesList.get(seq)[tuples.get(iter).l];
-        IntSet sequencesWithHashSet= dict.hashToSequencesMap.get(hash);
+        IntSet sequencesWithHashSet = dict.hashToSequencesMap.get(hash);
         for (IntIntCursor entry : possibleSequences) {
             boolean isInDict = sequencesWithHashSet.contains(entry.key);
             // put if sequence hash l-mer for current fixed position or if it already has enough equal l-mers
@@ -377,11 +369,91 @@ public class DirichletMethod {
         return kMerCoincidences;
     }
 
-    private static void expandNumbers(int size){
-        if (size > numbers.size()){
+    private static void expandNumbers(int size) {
+        if (size > numbers.size()) {
             for (int i = numbers.size(); i < size; i++) {
                 numbers.add(String.valueOf(i));
             }
+        }
+    }
+
+    /**
+     * Class runs almost the same code as sequential run, but on different sequences set
+     */
+    private static class ParallelTask implements Callable<long[]> {
+        private Sample sample;
+        private Map<Integer, String> sequences;
+        private KMerDict dict;
+        private int k;
+        private Path path;
+
+        ParallelTask(Sample sample, Map<Integer, String> sequences, KMerDict dict, int k, Path path) {
+            this.sample = sample;
+            this.sequences = sequences;
+            this.dict = dict;
+            this.k = k;
+            this.path = path;
+        }
+
+        @Override
+        public long[] call() throws Exception {
+            LevenshteinDistance distance = new LevenshteinDistance(k);
+            HammingDistance hammingDistance = new HammingDistance();
+            StringBuilder str = new StringBuilder();
+            /*
+              0 -> iteration
+              1 -> comparisons
+              2 -> hamming
+              3 -> total length
+             */
+            long[] iters = {0, 0, 0, 0};
+            String outputFilename = sample.name + "-output.txt";
+
+            int fileWriteThreshold = Math.min(sequences.size() / 10, 400);
+            for (Map.Entry<Integer, String> seqEntity : sequences.entrySet()) {
+                iters[0]++;
+                tasksIteration++;
+                //write to file each fileWriteThreshold iterations
+                if (iters[0] % fileWriteThreshold == 0) {
+                    synchronized (path) {
+                        Files.write(Paths.get(outputFilename), str.toString().getBytes(), StandardOpenOption.APPEND);
+                    }
+                    str = new StringBuilder();
+                    System.out.print("\r" + tasksIteration);
+                }
+                IntIntMap possibleSequences = new IntIntHashMap();
+                int seq = seqEntity.getKey();
+                List<IntIntPair> sortedTuples = getSortedTuplesOneSample(dict, seqEntity);
+                for (int i = 0; i < sortedTuples.size(); i++) {
+                    if (i <= sortedTuples.size() - (dict.fixedkMersCount - k)) {
+                        fillPossiblePairs(dict, possibleSequences, seq, sortedTuples, i);
+                    } else {
+                        possibleSequences = filterPossibleSequences(dict, possibleSequences, seq, k, sortedTuples, i);
+                    }
+                }
+                String s1 = sample.sequences.get(seq);
+                for (IntIntCursor s : possibleSequences) {
+                    if (s.value >= dict.fixedkMersCount - k) {
+                        iters[1]++;
+                        String s2 = sample.sequences.get(s.key);
+                        if (hammingDistance.apply(s1, s2) <= k) {
+                            iters[3]++;
+                            iters[2]++;
+                            str.append(numbers.get(seq)).append(" ").append(numbers.get(s.key)).append("\n");
+                        } else {
+                            if (distance.apply(s1, s2) != -1) {
+                                iters[3]++;
+                                str.append(numbers.get(seq)).append(" ").append(numbers.get(s.key)).append("\n");
+                            }
+                        }
+                    }
+                }
+            }
+            //write the rest of computed pairs
+            synchronized (path) {
+                Files.write(Paths.get(outputFilename), str.toString().getBytes(), StandardOpenOption.APPEND);
+            }
+            return iters;
         }
     }
 

@@ -38,6 +38,11 @@ public class Start {
     }
 
     public static void main(String[] args) throws IOException, RunnerException, InterruptedException, ExecutionException {
+        System.out.println("Waiting for start");
+        int c = System.in.read();
+        if (c == 113){
+            System.exit(1);
+        }
         Map<String, String> settings = new HashMap<>();
         String key = null;
         for (String arg : args){
@@ -175,9 +180,9 @@ public class Start {
     private static void testBigDataSet(int k, int l) throws IOException, ExecutionException, InterruptedException {
 
         Sample query = new Sample("query_close", FasReader.readList(Paths.get("test_data/query1/close.fas")));
-        query = new Sample("query_close", FasReader.readList(Paths.get("some.fas")));
+        //query = new Sample("query_close", FasReader.readList(Paths.get("some.fas")));
 //        runBruteWithTime(2, query);
-//        runDirWithTime(2, 1, query);
+//        runDirWithTime(k, l, query);
 //        runTreeWithTime(2, query);
 
         SequencesTreeBuilder.build(query);
@@ -201,19 +206,19 @@ public class Start {
         System.out.println();
         query = new Sample("db1", FasReader.readList(Paths.get("test_data/db1/1000.fas")));
         //SequencesTreeBuilder.build(query);
-        //runDirWithTime(k, l, query);
+        runDirWithTime(k, l, query);
         //runTreeWithTime(k, query);
 
         System.out.println();
         query = new Sample("db2", FasReader.readList(Paths.get("test_data/db2/2000.fas")));
         //SequencesTreeBuilder.build(query);
-        //runDirWithTime(k, l, query);
+        runDirWithTime(k, l, query);
         //runTreeWithTime(k, query);
 
         System.out.println();
         query = new Sample("db3", FasReader.readList(Paths.get("test_data/db3/4000.fas")));
         //SequencesTreeBuilder.build(query);
-        //runDirWithTime(k, l, query);
+        runDirWithTime(k, l, query);
         //runTreeWithTime(k, query);
 
 
@@ -226,13 +231,13 @@ public class Start {
         System.out.println();
         query = new Sample("db5", FasReader.readList(Paths.get("test_data/db5/16000.fas")));
         //SequencesTreeBuilder.build(query);
-        //runDirWithTime(k, l, query);
+        runDirWithTime(k, l, query);
         //runTreeWithTime(k, query);
 
         System.out.println();
         query = new Sample("db6", FasReader.readList(Paths.get("test_data/db6/32000.fas")));
         //SequencesTreeBuilder.build(query);
-        //runDirWithTime(k, l, query);
+        runDirWithTime(k, l, query);
 
         System.out.println();
         Map<Integer, String > seq = FasReader.readList(Paths.get("test_data/db7/32000 (1).fas"));
@@ -271,7 +276,7 @@ public class Start {
         long start;
         start = System.currentTimeMillis();
         KMerDict k1 = KMerDictBuilder.getDict(query, l);
-        DirichletMethod.run(query, k1 ,k);
+        DirichletMethod.runParallel(query, k1 ,k);
         System.out.println("Diri "+(System.currentTimeMillis()-start));
     }
 

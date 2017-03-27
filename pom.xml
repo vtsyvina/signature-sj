@@ -47,7 +47,7 @@
                     <finalName>sequence-comparison</finalName>
                     <archive>
                         <manifest>
-                            <mainClass>start.Start</mainClass>
+                            <mainClass>by.bsu.start.Start</mainClass>
                         </manifest>
                     </archive>
                     <descriptorRefs>
