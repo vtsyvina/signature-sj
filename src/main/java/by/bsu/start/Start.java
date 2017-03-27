@@ -206,7 +206,7 @@ public class Start {
         System.out.println();
         query = new Sample("db1", FasReader.readList(Paths.get("test_data/db1/1000.fas")));
         //SequencesTreeBuilder.build(query);
-        runDirWithTime(k, l, query);
+        //runDirWithTime(k, l, query);
         //runTreeWithTime(k, query);
 
         System.out.println();
@@ -278,6 +278,7 @@ public class Start {
         KMerDict k1 = KMerDictBuilder.getDict(query, l);
         DirichletMethod.runParallel(query, k1 ,k);
         System.out.println("Diri "+(System.currentTimeMillis()-start));
+        //System.out.println(DirichletMethod.max);
     }
 
     private static void runPointsWithTime(int k, Sample query) {

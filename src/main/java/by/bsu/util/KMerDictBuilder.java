@@ -45,7 +45,7 @@ public class KMerDictBuilder {
             result.hashToSequencesMap.get(hashValue).add(entry.getKey());
             result.allHashesSet.add(hashValue);
             for (int j = 1; j < entry.getValue().length() - l +1; j++) {
-                hashValue -= convertLetterToDigit(entry.getValue().charAt(j-1)) << 2 * (l-1);
+                hashValue -= ((long)convertLetterToDigit(entry.getValue().charAt(j-1))) << 2 * (l-1);
                 hashValue <<= 2;
                 hashValue += convertLetterToDigit(entry.getValue().charAt(j+l -1));
                 if (!result.hashToSequencesMap.containsKey(hashValue)){

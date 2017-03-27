@@ -78,8 +78,8 @@ public class DirichletMethod {
                     }
                 } else {
                     IntIntMap tmp = new IntIntHashMap(possibleSequences.size());
+                    long hash = dict1.sequenceFixedPositionHashesList.get(seqEntity.getKey())[tuples.get(i).l];
                     for (IntIntCursor entry : possibleSequences) {
-                        long hash = dict1.sequenceFixedPositionHashesList.get(seqEntity.getKey())[tuples.get(i).l];
                         boolean isInSecondDict = dict2.hashToSequencesMap.get(hash).contains(entry.key);
                         if (isInSecondDict ||
                                 dict1.fixedkMersCount - k <= entry.value + tuples.size() - i) {
@@ -239,6 +239,7 @@ public class DirichletMethod {
             System.out.printf("Found %s%n", sample.name);
             System.out.println("comps = " + results[1]);
             System.out.println("reduced = " + results[2]);
+            System.out.println("leven = " + (results[1]-results[2]));
             System.out.println("length = " + results[3]);
         }
         return results[0];
@@ -262,7 +263,7 @@ public class DirichletMethod {
     }
 
     /**
-     * For parallel
+     * For parallel(processed is buggy in this case)
      */
     private static void fillPossiblePairs(KMerDict dict, IntIntMap possibleSequences, int seq, List<IntIntPair> tuples, int iter) {
         for (IntCursor possibleSeq :
@@ -385,7 +386,7 @@ public class DirichletMethod {
         private Map<Integer, String> sequences;
         private KMerDict dict;
         private int k;
-        private Path path;
+        private final Path path;
 
         ParallelTask(Sample sample, Map<Integer, String> sequences, KMerDict dict, int k, Path path) {
             this.sample = sample;
