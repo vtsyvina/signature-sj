@@ -25,6 +25,27 @@ public class SequencesTreeBuilder {
         return tree;
     }
 
+    public static void printTree(SequencesTree tree){
+        recursivePass(tree.root, 0);
+    }
+
+    private static void recursivePass( SequencesTree.Node node, int level){
+        if (node.children == null || node.children.isEmpty()){
+            StringBuilder str = new StringBuilder();
+            for (int i = 0; i < level; i++) {
+                str.append("   ");
+            }
+            System.out.println(str.toString()+node.key.length());
+        } else {
+            node.children.forEach( c -> recursivePass(c, level+1));
+            StringBuilder str = new StringBuilder();
+            for (int i = 0; i < level; i++) {
+                str.append("   ");
+            }
+            System.out.println(str.toString()+node.key.length()+" "+node.children.size());
+        }
+    }
+
     private static void recursiveFillTree(int start, int end, int position,
                                           SequencesTree.Node currentNode, List<IntStrPair> sequences) {
         int left = start;

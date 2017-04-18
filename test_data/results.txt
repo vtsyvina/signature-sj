@@ -290,58 +290,215 @@ Diri 1071656
 
 Executor service k=10 l =11
 Start Dirihlet method parallel for db1 k= 10 l= 11
-
+997
 Found db1
-comps = 65937
+comparisons = 65937
+passed hamming distance = 60420
+levenshtein = 5517
 length = 60421
-Diri 5800
+Dirichlet time 459
 
 Start Dirihlet method parallel for db2 k= 10 l= 11
-
+1996
 Found db2
-comps = 388987
+comparisons = 388987
+passed hamming distance = 370233
+levenshtein = 18754
 length = 370262
-Diri 5263
+Dirichlet time 414
 
 Start Dirihlet method parallel for db3 k= 10 l= 11
-3474
+4000
 Found db3
-comps = 1873268
+comparisons = 1873268
+passed hamming distance = 1800448
+levenshtein = 72820
 length = 1800945
-Diri 930
+Dirichlet time 1124
 
 Start Dirihlet method parallel for db4 k= 10 l= 11
-6709
+8000
 Found db4
-comps = 6256934
+comparisons = 6256934
+passed hamming distance = 5845274
+levenshtein = 411660
 length = 5848556
-Diri 3025
+Dirichlet time 3561
 
 Start Dirihlet method parallel for db5 k= 10 l= 11
-15998
+15999
 Found db5
-comps = 21028890
+comparisons = 21028890
+passed hamming distance = 18551359
+levenshtein = 2477531
 length = 18570536
-Diri 13461
+Dirichlet time 14207
 
 Start Dirihlet method parallel for db6 k= 10 l= 11
-31997
+32000
 Found db6
-comps = 46744915
+comparisons = 46744915
+passed hamming distance = 38792420
+levenshtein = 7952495
 length = 38835302
-Diri 38240
+Dirichlet time 42710
 
 Start Dirihlet method parallel for db7 k= 10 l= 11
-64000
+63999
 Found db7
-comps = 187011650
+comparisons = 187011650
+passed hamming distance = 155201680
+levenshtein = 31809970
 length = 155373208
-Diri 149715
+Dirichlet time 180985
 
-BUILD 0
 Start Dirihlet method parallel for db8 k= 10 l= 11
-127999
+127995
 Found db8
-comps = 748110580
+comparisons = 748110580
+passed hamming distance = 620870720
+levenshtein = 127239860
 length = 621556832
-Diri 627427
+Dirichlet time 723501
+
+qHits - фильтруют лишь крохи
+R hamming filter -  вообще ничего не фильтрует
+distances for db 5
+[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1167321, 502321, 182697, 78002, 57999, 48411, 46771, 50030, 53833, 46347, 39358, 41164, 41128, 33906, 22044, 12312, 8012, 5777, 5940, 6178, 4701, 2673, 1043, 279, 70, 16, 3, 1, 1, 4, 6, 5, 1, 0,
+Arrays.stream(distances).sum() 2458354
+Arrays.stream(distances).sum() - distances[11] - distances[12] - distances[3] 788712
+Found db5
+comps = 21028890
+reduce = 18551359
+length = 18570536
+Diri 441163
+
+
+Illimina
+Start brute for Illumina k=10
+10400
+length = 51453578
+Brute 746550
+Start Dirihlet method parallel for Illumina k= 10 l= 11
+
+Start Dirihlet method parallel for Illumina k= 10 l= 11
+10458
+Found Illumina
+comps = 54640978
+reduced = 47337860
+leven = 7303118
+length = 51453578
+Diri 41018
+distances = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1754821, 809086, 338297, 139737, 60586, 34251, 22267, 13806, 8001, 4068, 1705, 556, 156, 51, 10, 2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+
+
+Tree
+comps = 72860484
+length = 52042855
+Tree 226389
+
+Инверсированные последовательности
+Start Tree method for db4 k=10
+comps = 3001011
+travel comps = 2430602
+length = 5848556
+Tree time 17389
+
+Start Tree method for db5 k=10
+comps = 11650723
+travel comps = 9603030
+length = 18570536
+Tree time 69453
+
+Обычные последовательности
+Start Tree method for db4 k=10
+comps = 9338103
+length = 5848556
+Tree time 43457
+
+Start Tree method for db5 k=10
+comps = 35709124
+length = 18570536
+Tree time 173059
+
+misspositions + l=7
+/Library/Java/JavaVirtualMachines/jdk1.8.0_111.jdk/Contents/Home/bin/java -Xmx14000m -Didea.launcher.port=7537 "-Didea.launcher.bin.path=/Applications/IntelliJ IDEA CE.app/Contents/bin" -Dfile.encoding=UTF-8 -classpath "/Library/Java/JavaVirtualMachines/jdk1.8.0_111.jdk/Contents/Home/jre/lib/charsets.jar:/Library/Java/JavaVirtualMachines/jdk1.8.0_111.jdk/Contents/Home/jre/lib/deploy.jar:/Library/Java/JavaVirtualMachines/jdk1.8.0_111.jdk/Contents/Home/jre/lib/ext/cldrdata.jar:/Library/Java/JavaVirtualMachines/jdk1.8.0_111.jdk/Contents/Home/jre/lib/ext/dnsns.jar:/Library/Java/JavaVirtualMachines/jdk1.8.0_111.jdk/Contents/Home/jre/lib/ext/jaccess.jar:/Library/Java/JavaVirtualMachines/jdk1.8.0_111.jdk/Contents/Home/jre/lib/ext/jfxrt.jar:/Library/Java/JavaVirtualMachines/jdk1.8.0_111.jdk/Contents/Home/jre/lib/ext/localedata.jar:/Library/Java/JavaVirtualMachines/jdk1.8.0_111.jdk/Contents/Home/jre/lib/ext/nashorn.jar:/Library/Java/JavaVirtualMachines/jdk1.8.0_111.jdk/Contents/Home/jre/lib/ext/sunec.jar:/Library/Java/JavaVirtualMachines/jdk1.8.0_111.jdk/Contents/Home/jre/lib/ext/sunjce_provider.jar:/Library/Java/JavaVirtualMachines/jdk1.8.0_111.jdk/Contents/Home/jre/lib/ext/sunpkcs11.jar:/Library/Java/JavaVirtualMachines/jdk1.8.0_111.jdk/Contents/Home/jre/lib/ext/zipfs.jar:/Library/Java/JavaVirtualMachines/jdk1.8.0_111.jdk/Contents/Home/jre/lib/javaws.jar:/Library/Java/JavaVirtualMachines/jdk1.8.0_111.jdk/Contents/Home/jre/lib/jce.jar:/Library/Java/JavaVirtualMachines/jdk1.8.0_111.jdk/Contents/Home/jre/lib/jfr.jar:/Library/Java/JavaVirtualMachines/jdk1.8.0_111.jdk/Contents/Home/jre/lib/jfxswt.jar:/Library/Java/JavaVirtualMachines/jdk1.8.0_111.jdk/Contents/Home/jre/lib/jsse.jar:/Library/Java/JavaVirtualMachines/jdk1.8.0_111.jdk/Contents/Home/jre/lib/management-agent.jar:/Library/Java/JavaVirtualMachines/jdk1.8.0_111.jdk/Contents/Home/jre/lib/plugin.jar:/Library/Java/JavaVirtualMachines/jdk1.8.0_111.jdk/Contents/Home/jre/lib/resources.jar:/Library/Java/JavaVirtualMachines/jdk1.8.0_111.jdk/Contents/Home/jre/lib/rt.jar:/Library/Java/JavaVirtualMachines/jdk1.8.0_111.jdk/Contents/Home/lib/ant-javafx.jar:/Library/Java/JavaVirtualMachines/jdk1.8.0_111.jdk/Contents/Home/lib/dt.jar:/Library/Java/JavaVirtualMachines/jdk1.8.0_111.jdk/Contents/Home/lib/javafx-mx.jar:/Library/Java/JavaVirtualMachines/jdk1.8.0_111.jdk/Contents/Home/lib/jconsole.jar:/Library/Java/JavaVirtualMachines/jdk1.8.0_111.jdk/Contents/Home/lib/packager.jar:/Library/Java/JavaVirtualMachines/jdk1.8.0_111.jdk/Contents/Home/lib/sa-jdi.jar:/Library/Java/JavaVirtualMachines/jdk1.8.0_111.jdk/Contents/Home/lib/tools.jar:/Users/c5239200/thesis/sequence-comparison/target/classes:/Users/c5239200/.m2/repository/com/carrotsearch/hppc/0.7.2/hppc-0.7.2.jar:/Users/c5239200/.m2/repository/org/openjdk/jmh/jmh-core/1.17.4/jmh-core-1.17.4.jar:/Users/c5239200/.m2/repository/net/sf/jopt-simple/jopt-simple/4.6/jopt-simple-4.6.jar:/Users/c5239200/.m2/repository/org/apache/commons/commons-math3/3.2/commons-math3-3.2.jar:/Users/c5239200/.m2/repository/org/openjdk/jmh/jmh-generator-annprocess/1.17.4/jmh-generator-annprocess-1.17.4.jar:/Applications/IntelliJ IDEA CE.app/Contents/lib/idea_rt.jar" com.intellij.rt.execution.application.AppMain by.bsu.start.Start -testsToRun 1-3 -algsToRun dirichlet -l 7
+Waiting for start
+l
+Start Dirihlet method for db1 k=10 l=7
+800
+Found db1
+comps = 64279
+reduce = 60420
+length = 60421
+distances = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1135, 581, 332, 267, 222, 234, 222, 204, 140, 96, 91, 127, 151, 54, 2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+missposition = 28925
+Dirichlet time 788
+
+Start Dirihlet method for db2 k=10 l=7
+2000
+Found db2
+comps = 384939
+reduce = 370233
+length = 370262
+distances = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 6319, 2724, 1198, 784, 553, 552, 515, 427, 295, 215, 246, 359, 348, 129, 12, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+missposition = 116424
+Dirichlet time 2441
+
+Start Dirihlet method for db3 k=10 l=7
+4000
+Found db3
+comps = 1862500
+reduce = 1800448
+length = 1800945
+distances = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 35721, 10052, 3763, 2219, 1755, 1453, 1307, 1225, 849, 479, 434, 682, 915, 576, 117, 7, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+missposition = 517958
+Dirichlet time 10100
+
+
+небольшое Л(нужна тонкая настройка) и пропуск совпадений лмеров, если они не в нужной позиции
+уменьшается количество сравнений на 20-40 процентов, но есть оверхед на препроцессинге и этапе фильтрации
+Start Dirihlet method for db1 k=10 l=7
+800
+Found db1
+comps = 63685
+reduce = 60420
+length = 60421
+distances = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1135, 579, 316, 252, 205, 213, 190, 151, 46, 27, 57, 77, 13, 3, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+missposition = 47799
+levenshtein = 3265
+Dirichlet time 963
+
+Start Dirihlet method for db2 k=10 l=7
+2000
+Found db2
+comps = 383434
+reduce = 370233
+length = 370262
+distances = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 6318, 2714, 1104, 717, 482, 501, 443, 310, 124, 78, 131, 198, 49, 3, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+missposition = 212758
+levenshtein = 13201
+Dirichlet time 3214
+
+Start Dirihlet method for db3 k=10 l=7
+4000
+Found db3
+comps = 1857864
+reduce = 1800448
+length = 1800945
+distances = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 35695, 9845, 3441, 1986, 1426, 1302, 1099, 836, 346, 161, 230, 378, 154, 18, 2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+missposition = 1039665
+levenshtein = 57416
+Dirichlet time 15495
+
+Start Dirihlet method for db4 k=10 l=7
+8000
+Found db4
+comps = 6168387
+reduce = 5845274
+length = 5848556
+distances = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 202546, 63826, 19268, 9466, 6166, 5409, 4539, 3312, 1599, 750, 838, 1325, 630, 134, 22, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+missposition = 4328255
+levenshtein = 323113
+Dirichlet time 67706
+

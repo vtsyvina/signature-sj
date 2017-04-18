@@ -29,6 +29,12 @@ public class KMerDict {
      * for each position 0, 1*l, 2*l,... store set of hashes that occur at any sequence from sample
      */
     public LongSet[] wholeSampleFixedPositionHashesList;
+
+    /**
+     * Store distance from each sequence to consensus string
+     */
+    public Map<Integer, Integer> consensusDistances;
+
     /**
      * Length of l-mers partition
      */

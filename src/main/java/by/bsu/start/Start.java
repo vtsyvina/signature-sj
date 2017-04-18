@@ -4,36 +4,43 @@ import by.bsu.algorithms.BruteForce;
 import by.bsu.algorithms.DirichletMethod;
 import by.bsu.algorithms.PointsMethod;
 import by.bsu.algorithms.TreeMethod;
-import by.bsu.model.*;
 import by.bsu.model.IntIntPair;
-import by.bsu.util.*;
-import org.openjdk.jmh.Main;
+import by.bsu.model.KMerDict;
+import by.bsu.model.Sample;
+import by.bsu.util.CallDir;
+import by.bsu.util.FasReader;
+import by.bsu.util.KMerDictBuilder;
+import by.bsu.util.PointsBuilder;
+import by.bsu.util.SequencesTreeBuilder;
 import org.openjdk.jmh.runner.RunnerException;
 
 import java.io.File;
 import java.io.IOException;
+import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
-import java.util.concurrent.*;
-
-import static java.util.stream.Collectors.toMap;
+import java.util.Map;
+import java.util.Set;
+import java.util.concurrent.Callable;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
 
 
 public class Start {
     private static Path folder = Paths.get("cleaned_independent_264");
     private static List<Sample> allFiles = new ArrayList<>();
+    public static Map<String, String> settings = new HashMap<>();
 
-    private static void loadAllFiles(Path folder) {
+    private static void loadAllFiles(Path folder) throws IOException {
         if (allFiles.isEmpty()) {
-            for (File file : folder.toFile().listFiles()) {
-                try {
-                    allFiles.add(new Sample(file.getName(), FasReader.readList(file.toPath())));
-                } catch (IOException e) {
-                    e.printStackTrace();
-                }
-            }
+            allFiles = FasReader.readSampleList(folder.toString(), true);
         }
     }
 
@@ -43,7 +50,6 @@ public class Start {
         if (c == 113){
             System.exit(1);
         }
-        Map<String, String> settings = new HashMap<>();
         String key = null;
         for (String arg : args){
             if (arg.startsWith("-") && arg.length() > 1){
@@ -83,12 +89,12 @@ public class Start {
         System.out.println("How to set arguments:");
         System.out.println("-k 10 -- threshold for sequence similarity(10 is default value)");
         System.out.println("-l 11 -- l-mer length for Dirichlet method(11 is default value)");
-        System.out.println("-dir /usr/name/tmp/ -- folder with input. (cleaned_independent_264 is default value)");
+        System.out.println("-dir /usr/name/tmp/ -- folder with input. (cleaned_independent_264 is default value, except of bigData)");
         System.out.println("-m bigData -- run one of predefined methods. Methods are: bigData, largeRelated, dirichletTest. bigData is default");
         System.exit(1);
     }
 
-    private static void testLargeRelatedSamples(Path folder) {
+    private static void testLargeRelatedSamples(Path folder) throws IOException {
         System.out.println("Start testLargeRelatedSamples");
         loadAllFiles(folder);
         Sample sample = allFiles.get(165);
@@ -178,125 +184,74 @@ public class Start {
     }
 
     private static void testBigDataSet(int k, int l) throws IOException, ExecutionException, InterruptedException {
-
-        Sample query = new Sample("query_close", FasReader.readList(Paths.get("test_data/query1/close.fas")));
-        //query = new Sample("query_close", FasReader.readList(Paths.get("some.fas")));
-//        runBruteWithTime(2, query);
-//        runDirWithTime(k, l, query);
-//        runTreeWithTime(2, query);
-
-        SequencesTreeBuilder.build(query);
-        //runPointsWithTime(k, query);
-
-        System.out.println();
-        query = new Sample("query_medium", FasReader.readList(Paths.get("test_data/query2/medium.fas")));
-//        runBruteWithTime(k, query);
-//        runDirWithTime(k, l, query);
-//        SequencesTreeBuilder.build(query);
-        //runPointsWithTime(k, query);
-
-        System.out.println();
-        query = new Sample("query_far", FasReader.readList(Paths.get("test_data/query3/far.fas")));
-//        runBruteWithTime(k, query);
-//        runDirWithTime(k, l, query);
-//        runTreeWithTime(k, query);
-//        SequencesTreeBuilder.build(query);
-        //runPointsWithTime(k, query);
-
-        System.out.println();
-        query = new Sample("db1", FasReader.readList(Paths.get("test_data/db1/1000.fas")));
-        //SequencesTreeBuilder.build(query);
-        //runDirWithTime(k, l, query);
-        //runTreeWithTime(k, query);
-
-        System.out.println();
-        query = new Sample("db2", FasReader.readList(Paths.get("test_data/db2/2000.fas")));
-        //SequencesTreeBuilder.build(query);
-        runDirWithTime(k, l, query);
-        //runTreeWithTime(k, query);
-
-        System.out.println();
-        query = new Sample("db3", FasReader.readList(Paths.get("test_data/db3/4000.fas")));
-        //SequencesTreeBuilder.build(query);
-        runDirWithTime(k, l, query);
-        //runTreeWithTime(k, query);
-
-
-        System.out.println();
-        query = new Sample("db4", FasReader.readList(Paths.get("test_data/db4/8000.fas")));
-        //SequencesTreeBuilder.build(query);
-        runDirWithTime(k, l, query);
-        //runTreeWithTime(k, query);
-
-        System.out.println();
-        query = new Sample("db5", FasReader.readList(Paths.get("test_data/db5/16000.fas")));
-        //SequencesTreeBuilder.build(query);
-        runDirWithTime(k, l, query);
-        //runTreeWithTime(k, query);
-
-        System.out.println();
-        query = new Sample("db6", FasReader.readList(Paths.get("test_data/db6/32000.fas")));
-        //SequencesTreeBuilder.build(query);
-        runDirWithTime(k, l, query);
-
-        System.out.println();
-        Map<Integer, String > seq = FasReader.readList(Paths.get("test_data/db7/32000 (1).fas"));
-        Map<Integer, String > tmp = FasReader.readList(Paths.get("test_data/db7/32000 (2).fas"));
-        int[] size = new int[1];
-        size[0] = seq.size();
-        tmp = tmp.entrySet().stream().collect(toMap(e -> e.getKey() + size[0], Map.Entry::getValue));
-        seq.putAll(tmp);
-        query = new Sample("db7", seq);
-        //SequencesTreeBuilder.build(query);
-        //runDirWithTime(k, l, query);
-
-        System.out.println();
-        // TODO create method for such samples
-        seq = FasReader.readList(Paths.get("test_data/db8/32000.fas"));
-        tmp = FasReader.readList(Paths.get("test_data/db8/32000 (2).fas"));
-        size[0] = seq.size();
-        tmp = tmp.entrySet().stream().collect(toMap(e -> e.getKey() + size[0], Map.Entry::getValue));
-        seq.putAll(tmp);
-        tmp = FasReader.readList(Paths.get("test_data/db8/32000 (3).fas"));
-        size[0] = seq.size();
-        tmp = tmp.entrySet().stream().collect(toMap(e -> e.getKey() + size[0], Map.Entry::getValue));
-        seq.putAll(tmp);
-        tmp = FasReader.readList(Paths.get("test_data/db8/32000 (4).fas"));
-        size[0] = seq.size();
-        tmp = tmp.entrySet().stream().collect(toMap(e -> e.getKey() + size[0], Map.Entry::getValue));
-        seq.putAll(tmp);
-        query = new Sample("db8", seq);
-        long start = System.currentTimeMillis();
-        //SequencesTreeBuilder.build(query);
-        System.out.println("BUILD "+(System.currentTimeMillis() - start));
-        //runDirWithTime(k, l, query);
+        File dir = new File(settings.getOrDefault("-dir", "test_data"));
+        String[] algsToRun = settings.getOrDefault("-algsToRun", "dirichlet").split(",");
+        for (File file : dir.listFiles()) {
+            if (isTestToRun(file)){
+                Sample sample = FasReader.readSampleFromFolder(file);
+                if (Arrays.stream(algsToRun).filter( s -> s.equals("dirichlet")).count() > 0){
+                    runDirWithTime(k,l, sample);
+                }
+                if (Arrays.stream(algsToRun).filter( s -> s.equals("tree")).count() > 0){
+                    runTreeWithTime(k, sample);
+                }
+                if (Arrays.stream(algsToRun).filter( s -> s.equals("points")).count() > 0){
+                    runPointsWithTime(k, sample);
+                }
+                if (Arrays.stream(algsToRun).filter( s -> s.equals("brute")).count() > 0){
+                    runBruteWithTime(k, sample);
+                }
+            }
+        }
     }
 
     private static void runDirWithTime(int k, int l, Sample query) throws ExecutionException, InterruptedException, IOException {
         long start;
         start = System.currentTimeMillis();
         KMerDict k1 = KMerDictBuilder.getDict(query, l);
-        DirichletMethod.runParallel(query, k1 ,k);
-        System.out.println("Diri "+(System.currentTimeMillis()-start));
-        //System.out.println(DirichletMethod.max);
+        DirichletMethod.run(query, k1 ,k);
+        System.out.println("Dirichlet time "+(System.currentTimeMillis()-start));
+        System.out.println();
     }
 
     private static void runPointsWithTime(int k, Sample query) {
         long start;
         start = System.currentTimeMillis();
         PointsMethod.run(query, PointsBuilder.buildPoints(query), k);
-        System.out.println("Points "+(System.currentTimeMillis()-start));
+        System.out.println("Points time "+(System.currentTimeMillis()-start));
+        System.out.println();
     }
 
     private static void runBruteWithTime(int k, Sample query) {
         long start = System.currentTimeMillis();
-        Set<IntIntPair> r = BruteForce.run(query, k);
-        System.out.println("Brute "+(System.currentTimeMillis()-start));
+        BruteForce.run(query, k);
+        System.out.println("Brute force time "+(System.currentTimeMillis()-start));
+        System.out.println();
     }
 
     private static void runTreeWithTime(int k, Sample query) {
         long start = System.currentTimeMillis();
         TreeMethod.runV2(query, SequencesTreeBuilder.build(query), k);
-        System.out.println("Tree "+(System.currentTimeMillis()-start));
+        System.out.println("Tree time "+(System.currentTimeMillis()-start));
+        System.out.println();
+    }
+
+    private static boolean isTestToRun(File file){
+        String testsToRun = settings.getOrDefault("-testsToRun","0-1000");
+        String testsPrefix = settings.getOrDefault("-testsPrefix","db");
+        List<IntIntPair> ranges = new ArrayList<>();
+        for (String s : testsToRun.split(",")) {
+           if (!s.contains("-")){
+               ranges.add(new IntIntPair(Integer.valueOf(s), Integer.valueOf(s)));
+           }else {
+               ranges.add(new IntIntPair(Integer.valueOf(s.split("-")[0]), Integer.valueOf(s.split("-")[1])));
+           }
+        }
+
+        if (!file.getName().startsWith(testsPrefix)){
+            return false;
+        }
+        Integer testNumber = Integer.valueOf(file.getName().substring(testsPrefix.length()));
+        return ranges.stream().filter( r -> r.l <= testNumber && r.r >= testNumber).count() > 0;
     }
 }

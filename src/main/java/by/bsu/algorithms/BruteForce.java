@@ -29,9 +29,15 @@ public class BruteForce {
     }
 
     public static Set<IntIntPair> run(Sample sample, int k){
+        System.out.println("Start Brute force method for "+sample.name+" k="+k);
         Set<IntIntPair> result = new HashSet<>();
         LevenshteinDistance distance = new LevenshteinDistance(k);
+        int i = 0;
         for (Map.Entry<Integer, String> entry1 : sample.sequences.entrySet()){
+            i++;
+            if (i % 400 == 0){
+                System.out.print("\r"+i);
+            }
             for (Map.Entry<Integer, String> entry2 : sample.sequences.entrySet()){
                 if (entry1.getKey() <= entry2.getKey()){
                     continue;
@@ -42,6 +48,7 @@ public class BruteForce {
                 }
             }
         }
+        System.out.println();
         System.out.println("length = " +result.size());
         return result;
     }

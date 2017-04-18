@@ -62,5 +62,10 @@ public class KMerDictBuilder {
         return result;
     }
 
-
+    public static KMerDict getDict(Sample sample, int l, int threshold){
+        KMerDict result = getDict(sample, l);
+        sample.consensus = Utils.consensus(sample.sequences);
+        result.consensusDistances = Utils.distancesMap(sample.consensus, sample.sequences, threshold);
+        return result;
+    }
 }

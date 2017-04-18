@@ -30,7 +30,11 @@ public class TreeMethod {
         return result;
     }
 
+    /**
+     * Only for samples with the same length
+     */
     public static Set<IntIntPair> runV2(Sample sample, SequencesTree tree, int k){
+        System.out.println("Start Tree method for " + sample.name + " k=" + k);
         comps = 0;
         comps2 = 0;
         Set<IntIntPair> result = ConcurrentHashMap.newKeySet();
@@ -42,6 +46,7 @@ public class TreeMethod {
                     k, result, levenshteinDistance, hammingDistance);
         }
         System.out.println("comps = " + (comps+comps2));
+        System.out.println("travel comps = " + (comps));
         System.out.println("length = " + result.size());
         return result;
     }
@@ -90,18 +95,23 @@ public class TreeMethod {
                 SequencesTree.Node currentNode = nodesToVisit.poll();
                 if (currentNode.children != null){
                     int min = currentNode.key.length() < node.key.length() ? currentNode.key.length() : node.key.length();
-                    comps2++;
+                    comps++;
                     if ( hamming.apply(currentNode.key.substring(0, min), node.key.substring(0, min)) <= k
                             ||  levenshtein.apply(currentNode.key.substring(0, min), node.key.substring(0, min)) != -1) {
                         nodesToVisit.addAll(currentNode.children);
                     }
                 } else if (currentNode != node){
-                    comps2++;
-                    if ( hamming.apply(currentNode.key, node.key) <= k
-                            ||  levenshtein.apply(currentNode.key, node.key) != -1){
+                    if ( hamming.apply(currentNode.key, node.key) <= k){
                         node.sequences.keySet().forEach( index ->
                                 currentNode.sequences.keySet().forEach(
                                         index2 -> result.add(new IntIntPair(index, index2))));
+                    } else {
+                        comps2++;
+                        if (levenshtein.apply(currentNode.key, node.key) != -1){
+                            node.sequences.keySet().forEach( index ->
+                                    currentNode.sequences.keySet().forEach(
+                                            index2 -> result.add(new IntIntPair(index, index2))));
+                        }
                     }
                 } else if(currentNode.sequences.size() > 1){
                     node.sequences.keySet().forEach( index ->

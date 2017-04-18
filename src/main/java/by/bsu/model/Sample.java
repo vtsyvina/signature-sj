@@ -1,8 +1,8 @@
 package by.bsu.model;
 
-import java.util.List;
+import by.bsu.util.Utils;
+
 import java.util.Map;
-import java.util.Set;
 
 /**
  * Data container to store sample data
@@ -14,11 +14,23 @@ public class Sample {
      */
     public Map<Integer, String> sequences;
 
+    public Map<Integer, String> forHamming;
+
+    public String consensus;
+
     public Sample() {
     }
 
     public Sample(String name, Map<Integer, String> sequences) {
         this.name = name;
         this.sequences = sequences;
+        this.forHamming = Utils.stringsForHamming(sequences);
+    }
+
+    public Sample(String name, Map<Integer, String> sequences, String consensus) {
+        this.name = name;
+        this.sequences = sequences;
+        this.consensus = consensus;
+        this.forHamming = Utils.stringsForHamming(sequences);
     }
 }
