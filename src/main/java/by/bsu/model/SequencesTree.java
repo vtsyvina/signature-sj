@@ -1,5 +1,8 @@
 package by.bsu.model;
 
+import com.carrotsearch.hppc.LongArrayList;
+import com.carrotsearch.hppc.ShortArrayList;
+
 import java.util.Map;
 import java.util.Queue;
 
@@ -20,8 +23,11 @@ import java.util.Queue;
  */
 public class SequencesTree {
     public Node root;
+    public long l;
     public static class Node{
         public String key;
+        public LongArrayList chunks;
+        public Map<Long, ShortArrayList> grams;
         public Queue<Node> children;
         public Node parent;
         public Map<Integer, String> sequences;

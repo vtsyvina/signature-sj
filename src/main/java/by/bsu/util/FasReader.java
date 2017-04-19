@@ -21,6 +21,10 @@ import java.util.stream.Collectors;
 public class FasReader {
 
     public static Map<Integer, String> readList(Path filePath) throws IOException {
+        return readList(filePath, false);
+    }
+
+    public static Map<Integer, String> readList(Path filePath, boolean reversed) throws IOException{
         List<String> raw = Files.readAllLines(filePath);
         Map<Integer, String> result = new HashMap<>();
         int i = 0;
@@ -28,14 +32,14 @@ public class FasReader {
         for (int j = 0; j < raw.size(); j++) {
             String str = raw.get(j);
             if (str.startsWith(">") && seq.length() > 0 || str.length() == 0) {
-                result.put(i, seq.toString());
+                result.put(i, (reversed ? seq.reverse() : seq).toString());
                 i++;
                 seq.setLength(0);
             } else if (!str.startsWith(">")) {
                 seq.append(str);
-                //workaround for for cases when file doesn't cantain last empty string
+                //workaround for for cases when file doesn't contain last empty string
                 if (j + 1 == raw.size()) {
-                    result.put(i, seq.toString());
+                    result.put(i, (reversed ? seq.reverse() : seq).toString());
                 }
             }
         }

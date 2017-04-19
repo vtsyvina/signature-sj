@@ -1,8 +1,10 @@
 package by.bsu.util;
 
 import by.bsu.model.Sample;
+import by.bsu.model.SequencesTree;
 import com.carrotsearch.hppc.LongHashSet;
 import com.carrotsearch.hppc.LongSet;
+import com.carrotsearch.hppc.ShortArrayList;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -59,6 +61,35 @@ public class Utils {
             result[i++] = hashValue;
         }
         return result;
+    }
+
+    public static void fillNodeGramsAndChunks(SequencesTree.Node node, int l){
+        long hashValue = 0;
+        String seq = node.key;
+        if (seq.length() < l){
+            return;
+        }
+        for (int j = 0; j < l; j++) {
+            hashValue *= 4;
+            hashValue += convertLetterToDigit(seq.charAt(j));
+        }
+        if (!node.grams.containsKey(hashValue)){
+            node.grams.put(hashValue, new ShortArrayList());
+        }
+        node.grams.get(hashValue).add((short) 0);
+        node.chunks.add(hashValue);
+        for (short j = 1; j < seq.length() - l +1; j++) {
+            hashValue -= convertLetterToDigit(seq.charAt(j-1)) << 2 * (l-1);
+            hashValue <<= 2;
+            hashValue += convertLetterToDigit(seq.charAt(j+l -1));
+            if (!node.grams.containsKey(hashValue)){
+                node.grams.put(hashValue, new ShortArrayList());
+            }
+            node.grams.get(hashValue).add(j);
+            if (j % l == 0){
+                node.chunks.add(hashValue);
+            }
+        }
     }
 
     public static int qHits(String s1, String s2, int q, int k){

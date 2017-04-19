@@ -84,7 +84,7 @@ public class PointsMethod {
             }
             toProcess.pointSeqMap.remove(point1.getKey());
         }
-        System.out.println("comps = "+comps);
+        System.out.println("allComps = "+comps);
         System.out.println("length = "+closePairs.size());
         return closePairs;
     }

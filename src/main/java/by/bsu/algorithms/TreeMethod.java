@@ -15,8 +15,8 @@ import java.util.concurrent.atomic.AtomicInteger;
  */
 public class TreeMethod {
 
-    public static int comps = 0;
-    public static int comps2 = 0;
+    public static int allComps = 0;
+    public static int levenshteinSeqComp = 0;
 
     public static Set<IntIntPair> run(Sample sample, SequencesTree tree, int k) {
 
@@ -26,7 +26,7 @@ public class TreeMethod {
             recursiveDescent(seq, tree.root, k, result, count);
         });
         System.out.println("length = " + result.size());
-        System.out.println("comps = " + count);
+        System.out.println("allComps = " + count);
         return result;
     }
 
@@ -35,8 +35,8 @@ public class TreeMethod {
      */
     public static Set<IntIntPair> runV2(Sample sample, SequencesTree tree, int k){
         System.out.println("Start Tree method for " + sample.name + " k=" + k);
-        comps = 0;
-        comps2 = 0;
+        allComps = 0;
+        levenshteinSeqComp = 0;
         Set<IntIntPair> result = ConcurrentHashMap.newKeySet();
         LevenshteinDistance levenshteinDistance = new LevenshteinDistance(k);
         HammingDistance hammingDistance = new HammingDistance();
@@ -45,8 +45,8 @@ public class TreeMethod {
                     tree.root.children,
                     k, result, levenshteinDistance, hammingDistance);
         }
-        System.out.println("comps = " + (comps+comps2));
-        System.out.println("travel comps = " + (comps));
+        System.out.println("levenshtein = " + (allComps + levenshteinSeqComp));
+        System.out.println("travel allComps = " + (allComps));
         System.out.println("length = " + result.size());
         return result;
     }
@@ -94,37 +94,60 @@ public class TreeMethod {
             while (!nodesToVisit.isEmpty()){
                 SequencesTree.Node currentNode = nodesToVisit.poll();
                 if (currentNode.children != null){
-                    int min = currentNode.key.length() < node.key.length() ? currentNode.key.length() : node.key.length();
-                    comps++;
-                    if ( hamming.apply(currentNode.key.substring(0, min), node.key.substring(0, min)) <= k
-                            ||  levenshtein.apply(currentNode.key.substring(0, min), node.key.substring(0, min)) != -1) {
-                        nodesToVisit.addAll(currentNode.children);
-                    }
+                    walkLevelDeeper(node, k, levenshtein, hamming, nodesToVisit, currentNode);
                 } else if (currentNode != node){
-                    if ( hamming.apply(currentNode.key, node.key) <= k){
-                        node.sequences.keySet().forEach( index ->
-                                currentNode.sequences.keySet().forEach(
-                                        index2 -> result.add(new IntIntPair(index, index2))));
-                    } else {
-                        comps2++;
-                        if (levenshtein.apply(currentNode.key, node.key) != -1){
-                            node.sequences.keySet().forEach( index ->
-                                    currentNode.sequences.keySet().forEach(
-                                            index2 -> result.add(new IntIntPair(index, index2))));
-                        }
-                    }
+                    compareSequencesFromDifferentNodes(node, k, result, levenshtein, hamming, currentNode);
                 } else if(currentNode.sequences.size() > 1){
-                    node.sequences.keySet().forEach( index ->
-                            currentNode.sequences.keySet().forEach(
-                                    index2 -> {
-                                        if (index < index2)
-                                            result.add(new IntIntPair(index, index2));
-                                    }));
+                    addSequencesFromSameNode(node, result, currentNode);
 
                 }
             }
         }
         node.parent.children.remove(node);
+    }
+
+    /**
+     * If node is in toCheckList but doesn't contain sequences we need to go further to get sequences from its children
+     */
+    private static void walkLevelDeeper(SequencesTree.Node node, int k, LevenshteinDistance levenshtein, HammingDistance hamming, Queue<SequencesTree.Node> nodesToVisit, SequencesTree.Node currentNode) {
+        int min = currentNode.key.length() < node.key.length() ? currentNode.key.length() : node.key.length();
+        allComps++;
+        if ( hamming.apply(currentNode.key.substring(0, min), node.key.substring(0, min)) <= k
+                ||  levenshtein.apply(currentNode.key.substring(0, min), node.key.substring(0, min)) != -1) {
+            nodesToVisit.addAll(currentNode.children);
+        }
+    }
+
+    /**
+     * Simply compares all sequences from first node with all sequences from second node
+     */
+    private static void compareSequencesFromDifferentNodes(SequencesTree.Node node, int k, Set<IntIntPair> result, LevenshteinDistance levenshtein, HammingDistance hamming, SequencesTree.Node currentNode) {
+        if ( hamming.apply(currentNode.key, node.key) <= k){
+            node.sequences.keySet().forEach( index ->
+                    currentNode.sequences.keySet().forEach(
+                            index2 -> result.add(new IntIntPair(index, index2))));
+        } else {
+            levenshteinSeqComp++;
+            if (levenshtein.apply(currentNode.key, node.key) != -1){
+                node.sequences.keySet().forEach( index ->
+                        currentNode.sequences.keySet().forEach(
+                                index2 -> result.add(new IntIntPair(index, index2))));
+            }
+        }
+    }
+
+    /**
+     * If sample has several equal sequences we need to add all their pair combinations
+     */
+    private static void addSequencesFromSameNode(SequencesTree.Node node, Set<IntIntPair> result, SequencesTree.Node currentNode) {
+        node.sequences.keySet().forEach( index ->
+                currentNode.sequences.keySet().forEach(
+                        index2 -> {
+                            if (index < index2)
+                                result.add(new IntIntPair(index, index2));
+                        }
+                )
+        );
     }
 
     /**
@@ -139,7 +162,7 @@ public class TreeMethod {
     private static Set<SequencesTree.Node> calculateToCheckForGivenNode(SequencesTree.Node currentNode, SequencesTree.Node toCheck, int k, LevenshteinDistance levenshtein, HammingDistance hamming){
         Set<SequencesTree.Node> result = new HashSet<>();
         int min = currentNode.key.length() < toCheck.key.length() ? currentNode.key.length() : toCheck.key.length();
-        comps++;
+        allComps++;
         if ( hamming.apply(currentNode.key.substring(0, min), toCheck.key.substring(0, min)) <= k
                 ||  levenshtein.apply(currentNode.key.substring(0, min), toCheck.key.substring(0, min)) != -1){
             if (currentNode.key.length() <= toCheck.key.length()){

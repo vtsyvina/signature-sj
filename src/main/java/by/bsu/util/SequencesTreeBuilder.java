@@ -3,8 +3,13 @@ package by.bsu.util;
 import by.bsu.model.IntStrPair;
 import by.bsu.model.Sample;
 import by.bsu.model.SequencesTree;
+import com.carrotsearch.hppc.LongArrayList;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Comparator;
+import java.util.HashMap;
+import java.util.LinkedList;
+import java.util.List;
 
 /**
  * Builds SequencesTree by given sample
@@ -12,16 +17,27 @@ import java.util.*;
 public class SequencesTreeBuilder {
 
     public static SequencesTree build(Sample sample) {
+        SequencesTree tree = initEmptyTree();
+        List<IntStrPair> sequences = new ArrayList<>();
+        sample.sequences.entrySet().forEach(s -> sequences.add(new IntStrPair(s.getKey(), s.getValue())));
+        sequences.sort(Comparator.comparing(c -> c.r));
+        recursiveFillTree(0, sequences.size()-1, 0, tree.root, sequences);
+        return tree;
+    }
+
+    public static SequencesTree build(Sample sample, int l) {
+        SequencesTree tree = build(sample);
+        recursiveFillNodeChunks(tree.root, l);
+        tree.l = l;
+        return tree;
+    }
+
+    private static SequencesTree initEmptyTree() {
         SequencesTree tree = new SequencesTree();
         tree.root = new SequencesTree.Node();
         tree.root.key = "";
         tree.root.parent = null;
         tree.root.children = new LinkedList<>();
-
-        List<IntStrPair> sequences = new ArrayList<>();
-        sample.sequences.entrySet().forEach(s -> sequences.add(new IntStrPair(s.getKey(), s.getValue())));
-        sequences.sort(Comparator.comparing(c -> c.r));
-        recursiveFillTree(0, sequences.size()-1, 0, tree.root, sequences);
         return tree;
     }
 
@@ -43,6 +59,15 @@ public class SequencesTreeBuilder {
                 str.append("   ");
             }
             System.out.println(str.toString()+node.key.length()+" "+node.children.size());
+        }
+    }
+
+    private static void recursiveFillNodeChunks(SequencesTree.Node node, int l){
+        node.chunks = new LongArrayList();
+        node.grams = new HashMap<>();
+        Utils.fillNodeGramsAndChunks(node, l);
+        if (node.children != null) {
+            node.children.parallelStream().forEach( c -> recursiveFillNodeChunks(c, l));
         }
     }
 
