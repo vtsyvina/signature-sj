@@ -188,12 +188,12 @@ public class Start {
         String[] algsToRun = settings.getOrDefault("-algsToRun", "dirichlet").split(",");
         for (File file : dir.listFiles()) {
             if (isTestToRun(file)){
-                Sample sample = FasReader.readSampleFromFolder(file);
+                Sample sample = FasReader.readSampleFromFolder(file, true);
                 if (Arrays.stream(algsToRun).filter( s -> s.equals("dirichlet")).count() > 0){
                     runDirWithTime(k,l, sample);
                 }
                 if (Arrays.stream(algsToRun).filter( s -> s.equals("tree")).count() > 0){
-                    runTreeWithTime(k, sample);
+                    runTreeWithTime(k, l, sample);
                 }
                 if (Arrays.stream(algsToRun).filter( s -> s.equals("points")).count() > 0){
                     runPointsWithTime(k, sample);
@@ -209,7 +209,7 @@ public class Start {
         long start;
         start = System.currentTimeMillis();
         KMerDict k1 = KMerDictBuilder.getDict(query, l);
-        DirichletMethod.run(query, k1 ,k);
+        DirichletMethod.runParallel(query, k1 ,k);
         System.out.println("Dirichlet time "+(System.currentTimeMillis()-start));
         System.out.println();
     }
@@ -229,9 +229,9 @@ public class Start {
         System.out.println();
     }
 
-    private static void runTreeWithTime(int k, Sample query) {
+    private static void runTreeWithTime(int k, int l, Sample query) throws IOException {
         long start = System.currentTimeMillis();
-        TreeMethod.runV2(query, SequencesTreeBuilder.build(query), k);
+        TreeMethod.runV2(query, SequencesTreeBuilder.build(query, l), k);
         System.out.println("Tree time "+(System.currentTimeMillis()-start));
         System.out.println();
     }
@@ -253,5 +253,14 @@ public class Start {
         }
         Integer testNumber = Integer.valueOf(file.getName().substring(testsPrefix.length()));
         return ranges.stream().filter( r -> r.l <= testNumber && r.r >= testNumber).count() > 0;
+    }
+
+    public static Path getOutputFilename(Sample sample, String algName) throws IOException {
+        String dir = settings.getOrDefault("-outDir","");
+        Path path = Paths.get((dir.equals("")?"":dir+"/")+sample.name + "-"+algName+"-output.txt");
+        Files.deleteIfExists(path);
+        path.toFile().getParentFile().mkdirs();
+        Files.createFile(path);
+        return path;
     }
 }

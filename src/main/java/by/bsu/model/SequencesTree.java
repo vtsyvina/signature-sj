@@ -23,7 +23,8 @@ import java.util.Queue;
  */
 public class SequencesTree {
     public Node root;
-    public long l;
+    public int l;
+    public int maxChunks;
     public static class Node{
         public String key;
         public LongArrayList chunks;

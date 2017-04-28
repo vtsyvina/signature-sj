@@ -18,7 +18,6 @@ import com.carrotsearch.hppc.cursors.LongCursor;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.nio.file.StandardOpenOption;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -34,20 +33,16 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 
+import static by.bsu.util.Utils.expandNumbers;
+import static by.bsu.util.Utils.numbers;
+
 /**
  * Algorithm use Dirichlet method to filter pairs on sequences from sample/samples
  */
 public class DirichletMethod {
 
     public static boolean DEBUG = true;
-    private static List<String> numbers = new ArrayList<>();
     private static volatile long tasksIteration = 0;
-
-    static {
-        for (int i = 0; i < 100_000; i++) {
-            numbers.add(String.valueOf(i));
-        }
-    }
 
     public static Set<IntIntPair> run(Sample sample1, Sample sample2, KMerDict dict1, KMerDict dict2, int k) {
         Set<IntIntPair> result = new HashSet<>();
@@ -140,16 +135,14 @@ public class DirichletMethod {
         LevenshteinDistance unlim = new LevenshteinDistance(60);
         HammingDistance hammingDistance = new HammingDistance();
         StringBuilder str = new StringBuilder();
-        String outputFilename = getOutputFilename(sample);
-        Files.deleteIfExists(Paths.get(outputFilename));
-        Files.createFile(Paths.get(outputFilename));
+        Path path = Start.getOutputFilename(sample,"dirichlet");
         long length = 0;
         iter[0] = 0;
         for (Map.Entry<Integer, String> seqEntity : sample.sequences.entrySet()) {
             iter[0]++;
             //write to file each 400 iterations
             if (iter[0] % 400 == 0) {
-                Files.write(Paths.get(outputFilename), str.toString().getBytes(), StandardOpenOption.APPEND);
+                Files.write(path, str.toString().getBytes(), StandardOpenOption.APPEND);
                 str = new StringBuilder();
                 System.out.print("\r" + iter[0]);
             }
@@ -187,7 +180,7 @@ public class DirichletMethod {
             processed.add(seq);
         }
         //write the rest of computed pairs
-        Files.write(Paths.get(outputFilename), str.toString().getBytes(), StandardOpenOption.APPEND);
+        Files.write(path, str.toString().getBytes(), StandardOpenOption.APPEND);
         System.out.println();
         if (length != 0) {
             System.out.printf("Found %s%n", sample.name);
@@ -203,10 +196,7 @@ public class DirichletMethod {
     public static Long runParallel(Sample sample, KMerDict dict, int k) throws IOException {
         System.out.println("Start Dirihlet method parallel for " + sample.name + " k= " + k + " l= " + dict.l);
         expandNumbers(sample.sequences.size());
-        String outputFilename = getOutputFilename(sample);
-        Path path = Paths.get(outputFilename);
-        Files.deleteIfExists(path);
-        Files.createFile(path);
+        Path path = Start.getOutputFilename(sample, "dirichlet");
         //divide sequences into parts for executor service
         int cores = Runtime.getRuntime().availableProcessors();
         ExecutorService service = Executors.newFixedThreadPool(cores);
@@ -259,10 +249,6 @@ public class DirichletMethod {
             System.out.println("length = " + results[3]);
         }
         return results[0];
-    }
-
-    private static String getOutputFilename(Sample sample) {
-        return Start.settings.getOrDefault("outDir","")+sample.name + "-output.txt";
     }
 
     /**
@@ -392,13 +378,7 @@ public class DirichletMethod {
         return kMerCoincidences;
     }
 
-    private static void expandNumbers(int size) {
-        if (size > numbers.size()) {
-            for (int i = numbers.size(); i < size; i++) {
-                numbers.add(String.valueOf(i));
-            }
-        }
-    }
+
 
     /**
      * Class runs almost the same code as sequential run, but on different sequences set
@@ -430,7 +410,6 @@ public class DirichletMethod {
               3 -> total length
              */
             long[] iters = {0, 0, 0, 0};
-            String outputFilename = sample.name + "-output.txt";
 
             int fileWriteThreshold = Math.min(sequences.size() / 10, 400);
             for (Map.Entry<Integer, String> seqEntity : sequences.entrySet()) {
@@ -439,7 +418,7 @@ public class DirichletMethod {
                 //write to file each fileWriteThreshold iterations
                 if (iters[0] % fileWriteThreshold == 0) {
                     synchronized (path) {
-                        Files.write(Paths.get(outputFilename), str.toString().getBytes(), StandardOpenOption.APPEND);
+                        Files.write(path, str.toString().getBytes(), StandardOpenOption.APPEND);
                     }
                     str = new StringBuilder();
                     System.out.print("\r" + tasksIteration);
@@ -474,7 +453,7 @@ public class DirichletMethod {
             }
             //write the rest of computed pairs
             synchronized (path) {
-                Files.write(Paths.get(outputFilename), str.toString().getBytes(), StandardOpenOption.APPEND);
+                Files.write(path, str.toString().getBytes(), StandardOpenOption.APPEND);
             }
             return iters;
         }

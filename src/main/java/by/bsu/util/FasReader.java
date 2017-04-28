@@ -50,26 +50,34 @@ public class FasReader {
         return readList(Paths.get(filePath));
     }
 
-    public static List<Sample> readSampleList(String filePath, boolean onePerFile) throws IOException {
+    public static List<Sample> readSampleList(String filePath, boolean onePerFile) throws IOException{
+        return readSampleList(filePath, onePerFile, false);
+    }
+
+    public static List<Sample> readSampleList(String filePath, boolean onePerFile, boolean reversed) throws IOException {
         File dir = new File(filePath);
         List<Sample> result = new ArrayList<>();
         for (File file : dir.listFiles()) {
             if (onePerFile == file.isDirectory()) {
                 continue;
             }
-            result.add(onePerFile ? readSampleFromFile(file) : readSampleFromFolder(file));
+            result.add(onePerFile ? readSampleFromFile(file) : readSampleFromFolder(file, reversed));
         }
         return result;
     }
 
     public static Sample readSampleFromFolder(File file) {
+        return readSampleFromFolder(file, false);
+    }
+
+    public static Sample readSampleFromFolder(File file, boolean reversed) {
         List<File> sortedFiles = Arrays.stream(file.listFiles())
                 .sorted(Comparator.comparing(File::getName))
                 .collect(Collectors.toList());
         Map<Integer, String> seq = new HashMap<>();
         sortedFiles.stream().filter( f -> !f.isHidden()).forEach(f -> {
             try {
-                seq.putAll(readList(f.toPath())
+                seq.putAll(readList(f.toPath(), reversed)
                         .entrySet()
                         .stream()
                         .collect(Collectors.toMap(e -> e.getKey() + seq.size(), Map.Entry::getValue)));

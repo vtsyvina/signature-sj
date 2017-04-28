@@ -16,6 +16,8 @@ import java.util.List;
  */
 public class SequencesTreeBuilder {
 
+    private static int maxChunks = 0;
+
     public static SequencesTree build(Sample sample) {
         SequencesTree tree = initEmptyTree();
         List<IntStrPair> sequences = new ArrayList<>();
@@ -27,8 +29,10 @@ public class SequencesTreeBuilder {
 
     public static SequencesTree build(Sample sample, int l) {
         SequencesTree tree = build(sample);
+        maxChunks = 0;
         recursiveFillNodeChunks(tree.root, l);
         tree.l = l;
+        tree.maxChunks = maxChunks;
         return tree;
     }
 
@@ -66,6 +70,9 @@ public class SequencesTreeBuilder {
         node.chunks = new LongArrayList();
         node.grams = new HashMap<>();
         Utils.fillNodeGramsAndChunks(node, l);
+        if ( node.chunks.size() > maxChunks){
+            maxChunks = node.chunks.size();
+        }
         if (node.children != null) {
             node.children.parallelStream().forEach( c -> recursiveFillNodeChunks(c, l));
         }

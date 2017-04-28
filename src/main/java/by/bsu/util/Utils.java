@@ -19,6 +19,13 @@ import java.util.stream.Collectors;
 public class Utils {
     private static final List<String> impossibleCharacters = new ArrayList<>();
 
+    public static List<String> numbers = new ArrayList<>();
+
+    static {
+        for (int i = 0; i < 100_000; i++) {
+            numbers.add(String.valueOf(i));
+        }
+    }
     static {
         impossibleCharacters.add("");
         for (int i = 1; i < 200; i++) {
@@ -203,5 +210,13 @@ public class Utils {
                 .collect(Collectors
                         .toMap( Map.Entry::getKey,
                                 e-> e.getValue().length() < max? e.getValue()+impossibleCharacters.get(max-e.getValue().length()) : e.getValue()));
+    }
+
+    public static void expandNumbers(int size) {
+        if (size > numbers.size()) {
+            for (int i = numbers.size(); i < size; i++) {
+                numbers.add(String.valueOf(i));
+            }
+        }
     }
 }
