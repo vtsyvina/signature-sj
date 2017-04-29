@@ -5,9 +5,11 @@ import by.bsu.model.SequencesTree;
 import com.carrotsearch.hppc.LongHashSet;
 import com.carrotsearch.hppc.LongSet;
 import com.carrotsearch.hppc.ShortArrayList;
+import info.debatty.java.stringsimilarity.QGram;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
@@ -204,12 +206,25 @@ public class Utils {
     }
 
 
+    /**
+     * Append missing characters to string so they have the same size
+     */
     public static Map<Integer, String> stringsForHamming(Map<Integer, String > sequences){
         int max = sequences.values().stream().mapToInt(String::length).max().getAsInt();
         return sequences.entrySet().stream()
                 .collect(Collectors
                         .toMap( Map.Entry::getKey,
                                 e-> e.getValue().length() < max? e.getValue()+impossibleCharacters.get(max-e.getValue().length()) : e.getValue()));
+    }
+
+    /**
+     * Builds profiles for all given strings
+     */
+    public static Map<Integer, Map<String, Integer>> getProfiles(Map<Integer, String > sequences, int l){
+        Map<Integer, Map<String, Integer>> result = new HashMap<>();
+        QGram qGram = new QGram(l);
+        sequences.entrySet().stream().forEach( e -> result.put(e.getKey(), qGram.getProfile(e.getValue())));
+        return result;
     }
 
     public static void expandNumbers(int size) {

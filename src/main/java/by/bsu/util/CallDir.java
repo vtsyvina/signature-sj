@@ -11,7 +11,7 @@ import java.util.concurrent.Callable;
 /**
  * Created by c5239200 on 2/6/17.
  */
-public class CallDir implements Callable<Set<IntIntPair>> {
+public class CallDir implements Callable<Long> {
 
     private Sample sample1;
     private Sample sample2;
@@ -26,7 +26,7 @@ public class CallDir implements Callable<Set<IntIntPair>> {
         this.k = k;
     }
     @Override
-    public Set<IntIntPair> call() throws Exception {
+    public Long call() throws Exception {
         return DirichletMethod.run(sample1, sample2, dict1, dict2, k);
     }
 }

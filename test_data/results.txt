@@ -212,3 +212,42 @@ missposition = 4328255
 levenshtein = 323113
 Dirichlet time 67706
 
+
+Start Tree method for db6 k=10
+38835023
+comps = 25785961
+travel allComps = 22179187
+levenshtein = 3606774
+signatureReduce = 0
+length = 38835302
+Tree time 119404
+
+q = 3
+Benchmark                    Mode  Cnt   Score   Error  Units
+Test.testHammingLimited      avgt   10   0.118 ± 0.013  us/op
+Test.testLevenshteinLimited  avgt   10  10.493 ± 0.787  us/op
+Test.testQram11              avgt   10  18.393 ± 3.528  us/op
+Test.test3QramSimilarity      avgt   10   2.056 ± 0.121  us/op -- смотреть сколько отсеяло ниже
+Test.test8QramSimilarity      avgt   10   9.675 ± 0.429  us/op 
+
+qgram = 3
+Start Dirihlet method parallel for db4 k= 10 l= 11
+8000
+Found db4
+comparisons = 6256934
+passed hamming distance = 5845274
+levenshtein = 382828
+qgram reduce = 28832
+length = 5848556
+Dirichlet time 4626
+
+qgram = 8
+Start Dirihlet method parallel for db4 k= 10 l= 11
+8000
+Found db4
+comparisons = 6256934
+passed hamming distance = 5845274
+levenshtein = 325586
+qgram reduce = 86074
+length = 5848556
+Dirichlet time 6546

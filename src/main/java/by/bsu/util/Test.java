@@ -1,6 +1,8 @@
 package by.bsu.util;
 
+import by.bsu.algorithms.QGramSimilarity;
 import by.bsu.model.Sample;
+import info.debatty.java.stringsimilarity.QGram;
 import org.openjdk.jmh.annotations.Benchmark;
 import org.openjdk.jmh.annotations.BenchmarkMode;
 import org.openjdk.jmh.annotations.Fork;
@@ -23,21 +25,28 @@ import static java.util.stream.Collectors.toMap;
  * Created by c5239200 on 2/3/17.
  */
 @BenchmarkMode(Mode.AverageTime)
-@OutputTimeUnit(TimeUnit.MILLISECONDS)
+@OutputTimeUnit(TimeUnit.MICROSECONDS)
 @State(Scope.Thread)
-@Warmup(iterations = 10, time = 500, timeUnit = TimeUnit.MILLISECONDS)
-@Measurement(iterations = 20, time = 500, timeUnit = TimeUnit.MILLISECONDS)
+@Warmup(iterations = 5, time = 400, timeUnit = TimeUnit.MILLISECONDS)
+@Measurement(iterations = 10, time = 400, timeUnit = TimeUnit.MILLISECONDS)
 public class Test {
     LevenshteinDistance defaultLev = LevenshteinDistance.getDefaultInstance();
-    LevenshteinDistance limitedLev = new LevenshteinDistance(30);
+    LevenshteinDistance limitedLev = new LevenshteinDistance(11);
     HammingDistance hammingDistance = new HammingDistance();
+
+    QGram qGram7 = new QGram(7);
+    QGramSimilarity qGramSimilarity = new QGramSimilarity();
     String str1 = "CACCGACTGCGGCGCTGGTTATGGCACAAGTGCTCCGGATCCCGGAAGCTATCGTGGATATGGTAGCTGGAGCCCACTGGGGAGTCCTAGCGGGGCTAGCTTACTATTCCATGGTTGGCAACTGGGCGAAGGTGCTAGTCGTGCTGCTCCTGTTCGCGGGGGTTGATGCTGATACCAAGACCATCGGCGGTAAGGCTACGCAGCAAACCGCGCGCCTCACCAGCTTCTTTAGCCCGGGTCCCCAGCAGAACATCGCGCTTATCA";
     String str2 = "CACCGACTGCGGCACTGGTTATGGCACAAGTGCTCCGGATCCCGGAAGCTATCGTGGATATGGTAGCTGGAGCCCACTGGGGAGTCCTAGCGGGGCTAGCTTACTATTCCATGGTTGGCAACTGGGCGAAGGTGCTAGTCGTGCTGCTCCTGTTCGCGGGGGTTGATGCTGATACCAAGACCATCGGCGGTAAGGCTACGCAGCAAACCGCGCGCCTCACCAGCTTCTTTAGCCCGGGTCCCCAGCAGGACATCGCGCTTATCA";
+    Map<String, Integer> p1;
+    Map<String, Integer> p2;
     AtomicInteger i = new AtomicInteger(0);
     Sample query = null;
     long[] h1;
     long[] h2;
     {
+        p1 = qGram7.getProfile(str1);
+        p2 = qGram7.getProfile(str2);
         Map<Integer, String > seq;
         Map<Integer, String > tmp;
         try {
@@ -68,14 +77,27 @@ public class Test {
     public void testLevenshtein() {
         defaultLev.apply(str1, str2);
     }
+    
 
-    //@Benchmark
+    @Benchmark
+    @Fork(1)
+    public void testQram11() {
+        qGram7.distance(p1, p2);
+    }
+
+    @Benchmark
+    @Fork(1)
+    public void testQramSimilarity() {
+        qGramSimilarity.similarity(p1, p2);
+    }
+
+    @Benchmark
     @Fork(1)
     public void testLevenshteinLimited() {
         limitedLev.apply(str1, str2);
     }
 
-    //@Benchmark
+    @Benchmark
     @Fork(1)
     public void testHammingLimited() {
         hammingDistance.apply(str1, str2);
@@ -88,13 +110,13 @@ public class Test {
         i.incrementAndGet();
     }
 
-    @Benchmark
+    //@Benchmark
     @Fork(1)
     public void testConsensus() {
         Utils.distancesMap(query.consensus, query.sequences, 20);
     }
 
-    @Benchmark
+    //@Benchmark
     @Fork(1)
     public void testConsensus2() {
         Utils.distancesMap(query.consensus, query.sequences, 20);

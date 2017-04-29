@@ -22,10 +22,8 @@ import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
@@ -45,6 +43,7 @@ public class Start {
     }
 
     public static void main(String[] args) throws IOException, RunnerException, InterruptedException, ExecutionException {
+        //Main.main(args);
         System.out.println("Waiting for start");
         int c = System.in.read();
         if (c == 113){
@@ -91,6 +90,7 @@ public class Start {
         System.out.println("-l 11 -- l-mer length for Dirichlet method(11 is default value)");
         System.out.println("-dir /usr/name/tmp/ -- folder with input. (cleaned_independent_264 is default value, except of bigData)");
         System.out.println("-m bigData -- run one of predefined methods. Methods are: bigData, largeRelated, dirichletTest. bigData is default");
+        System.out.println("-algsToRun dirichlet,tree -- which methods run for bigData method. Methods are: dirichlet, tree, brute, points. dirichlet is default");
         System.exit(1);
     }
 
@@ -136,6 +136,9 @@ public class Start {
         System.out.println("Start testDitichletAlgorithm with k="+k+" l="+l);
         long start = System.currentTimeMillis();
         loadAllFiles(folder);
+        //allFiles.add(FasReader.readSampleFromFolder(new File("test_data/db1")));
+        //allFiles.add(FasReader.readSampleFromFolder(new File("test_data/db2")));
+        //allFiles.add(FasReader.readSampleFromFolder(new File("test_data/db3")));
         KMerDict[] kdicts = new KMerDict[allFiles.size()];
         int threads = Runtime.getRuntime().availableProcessors();
         ExecutorService executor = Executors.newFixedThreadPool(threads);
@@ -167,15 +170,15 @@ public class Start {
         System.out.println("Time to build dictionaties = " + (System.currentTimeMillis() - start));
         executor.shutdown();
         executor = Executors.newFixedThreadPool(threads);
-        List<Callable<Set<IntIntPair>>> taskList = new ArrayList<>();
+        List<Callable<Long>> taskList = new ArrayList<>();
         for (int j = 0; j < allFiles.size(); j++) {
             for (int fIndex = j + 1; fIndex < allFiles.size(); fIndex++) {
                 taskList.add(new CallDir(allFiles.get(j), allFiles.get(fIndex), kdicts[j], kdicts[fIndex], k));
             }
         }
-        List<Future<Set<IntIntPair>>> futures = executor.invokeAll(taskList);
+        List<Future<Long>> futures = executor.invokeAll(taskList);
 
-        for (Future<Set<IntIntPair>> fut : futures) {
+        for (Future<Long> fut : futures) {
             fut.get();
         }
         executor.shutdown();
@@ -209,7 +212,19 @@ public class Start {
         long start;
         start = System.currentTimeMillis();
         KMerDict k1 = KMerDictBuilder.getDict(query, l);
+        //query = new Sample(query.name, query.sequences, 8);
         DirichletMethod.runParallel(query, k1 ,k);
+        System.out.println("Dirichlet time "+(System.currentTimeMillis()-start));
+        System.out.println();
+    }
+
+    private static void runDirWithTime(int k, int l, Sample s1, Sample s2) throws ExecutionException, InterruptedException, IOException {
+        long start;
+        start = System.currentTimeMillis();
+        KMerDict k1 = KMerDictBuilder.getDict(s1, l);
+        KMerDict k2 = KMerDictBuilder.getDict(s2, l);
+        long length = DirichletMethod.run(s1, s2, k1, k2, k);
+        System.out.println("count "+length);
         System.out.println("Dirichlet time "+(System.currentTimeMillis()-start));
         System.out.println();
     }
@@ -257,9 +272,20 @@ public class Start {
 
     public static Path getOutputFilename(Sample sample, String algName) throws IOException {
         String dir = settings.getOrDefault("-outDir","");
-        Path path = Paths.get((dir.equals("")?"":dir+"/")+sample.name + "-"+algName+"-output.txt");
+        return preparePath((dir.equals("")?"":dir+"/")+sample.name + "-"+algName+"-output.txt");
+    }
+
+    public static Path getOutputFilename(Sample sample1, Sample sample2, String algName) throws IOException {
+        String dir = settings.getOrDefault("-outDir","");
+        return preparePath((dir.equals("")?"":dir+"/")+sample1.name +"_"+sample2.name+ "-"+algName+"-output.txt");
+    }
+    
+    private static Path preparePath(String filePath) throws IOException {
+        Path path = Paths.get(filePath);
         Files.deleteIfExists(path);
-        path.toFile().getParentFile().mkdirs();
+        if (path.toFile().getParentFile() != null){
+            path.toFile().getParentFile().mkdirs();
+        }
         Files.createFile(path);
         return path;
     }

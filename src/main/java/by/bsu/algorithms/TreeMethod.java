@@ -154,7 +154,7 @@ public class TreeMethod {
         int min = currentNode.key.length() < node.key.length() ? currentNode.key.length() : node.key.length();
         allComps++;
         if (hamming.apply(currentNode.key.substring(0, min), node.key.substring(0, min)) <= k
-                || signatureCheck(currentNode, node)
+                //|| signatureCheck(currentNode, node)
                 || levenshtein.apply(currentNode.key.substring(0, min), node.key.substring(0, min)) != -1) {
             nodesToVisit.addAll(currentNode.children);
         }
@@ -174,9 +174,9 @@ public class TreeMethod {
                     )
             );
         } else {
-            if (!signatureCheck(currentNode, node)) {
-                return;
-            }
+//            if (!signatureCheck(currentNode, node)) {
+//                return;
+//            }
             levenshteinSeqComp++;
             if (levenshtein.apply(currentNode.key, node.key) != -1) {
                 node.sequences.keySet().forEach(index ->
@@ -224,7 +224,7 @@ public class TreeMethod {
         int min = currentNode.key.length() < toCheck.key.length() ? currentNode.key.length() : toCheck.key.length();
         allComps++;
         if (hamming.apply(currentNode.key.substring(0, min), toCheck.key.substring(0, min)) <= k
-                || signatureCheck(currentNode, toCheck)
+                //|| signatureCheck(currentNode, toCheck)
                 || levenshtein.apply(currentNode.key.substring(0, min), toCheck.key.substring(0, min)) != -1) {
             if (currentNode.key.length() <= toCheck.key.length()) {
                 result.add(toCheck);
@@ -239,6 +239,7 @@ public class TreeMethod {
 
     /**
      * Checks if one of node contains enough grams for chunks of second node
+     * (working not good)
      */
     private static boolean signatureCheck(SequencesTree.Node n1, SequencesTree.Node n2) {
         SequencesTree.Node min = n1.key.length() < n2.key.length() ? n1 : n2;

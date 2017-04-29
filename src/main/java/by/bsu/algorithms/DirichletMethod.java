@@ -44,12 +44,11 @@ public class DirichletMethod {
     public static boolean DEBUG = true;
     private static volatile long tasksIteration = 0;
 
-    public static Set<IntIntPair> run(Sample sample1, Sample sample2, KMerDict dict1, KMerDict dict2, int k) {
-        Set<IntIntPair> result = new HashSet<>();
+    public static long run(Sample sample1, Sample sample2, KMerDict dict1, KMerDict dict2, int k) throws IOException {
         int comps = 0;
         int kMerCoincidences = calculateCoincidences(dict1, dict2);
         if (kMerCoincidences < dict1.fixedkMersCount - k) {
-            return result;
+            return 0;
         }
         int oldLength = sample1.sequences.size() * sample2.sequences.size();
         sample1 = filterUnlikelySequences(k, dict1, dict2, sample1);
@@ -57,20 +56,29 @@ public class DirichletMethod {
 
         //if we filter one of samples fully
         if (sample1.sequences.size() * sample2.sequences.size() == 0) {
-            return result;
+            return 0;
         }
+        
+        boolean swap = false;
         if (sample1.sequences.size() < sample2.sequences.size()) {
             Sample tmp = sample1;
             sample1 = sample2;
             sample2 = tmp;
+            swap = true;
         }
-        if (sample1.sequences.size() * sample2.sequences.size() < oldLength) {
+        if (sample1.sequences.size() * sample2.sequences.size() < oldLength || swap) {
             dict1 = KMerDictBuilder.getDict(sample1, dict1.l);
             dict2 = KMerDictBuilder.getDict(sample2, dict2.l);
         }
         LevenshteinDistance distance = new LevenshteinDistance(k);
         HammingDistance hammingDistance = new HammingDistance();
+        Path path = Start.getOutputFilename(sample1, sample2, "dirichlet");
+        StringBuilder str = new StringBuilder();
+        expandNumbers(sample1.sequences.size());
+        expandNumbers(sample2.sequences.size());
         int reduce = 0;
+        int iteration = 0;
+        int length = 0;
         for (Map.Entry<Integer, String> seqEntity : sample1.sequences.entrySet()) {
             IntIntMap possibleSequences = new IntIntHashMap(dict2.sequencesNumber);
             int seq = seqEntity.getKey();
@@ -98,31 +106,40 @@ public class DirichletMethod {
                 }
             }
             for (IntIntCursor s : possibleSequences) {
-                if (seq !=s.key
+                if (seq != s.key
                         && s.value >= dict1.fixedkMersCount - k) {
                     comps++;
-                    if ( hammingDistance.apply(sample1.forHamming.get(seq), sample2.forHamming.get(s.key)) <= k) {
-                        result.add(new IntIntPair(seq, s.key));
+                    if (hammingDistance.apply(sample1.forHamming.get(seq), sample2.forHamming.get(s.key)) <= k) {
+                        str.append(numbers.get(seq)).append(" ").append(numbers.get(s.key)).append("\n");
                         reduce++;
+                        length++;
                         continue;
                     }
                     int d = distance.apply(sample1.sequences.get(seq), sample2.sequences.get(s.key));
                     if (d != -1) {
-                        result.add(new IntIntPair(seq, s.key));
+                        length++;
+                        str.append(numbers.get(seq)).append(" ").append(numbers.get(s.key)).append("\n");
                     }
                 }
             }
+            iteration++;
+            if (iteration % 400 == 0){
+                Files.write(path, str.toString().getBytes(), StandardOpenOption.APPEND);
+                str = new StringBuilder();
+            }
         }
+        Files.write(path, str.toString().getBytes(), StandardOpenOption.APPEND);
         if (DEBUG && comps > 0) {
             System.out.printf("%s %s%n", sample1.name, sample2.name);
             System.out.println("comps = " + comps);
             System.out.println("reduce = " + reduce);
-            System.out.println("length = " + result.size());
+            System.out.println("levenshtein = " + (comps - reduce));
+            System.out.println("length = " + length);
         }
-        if (!result.isEmpty()) {
+        if (length > 0) {
             System.out.printf("Found %s %s%n", sample1.name, sample2.name);
         }
-        return result;
+        return length;
     }
 
     public static long run(Sample sample, KMerDict dict, int k) throws IOException {
@@ -133,9 +150,13 @@ public class DirichletMethod {
         int[] distances = new int[264];
         LevenshteinDistance distance = new LevenshteinDistance(k);
         LevenshteinDistance unlim = new LevenshteinDistance(60);
+        int q = 5;
+        //QGram qGram = new QGram(q);
+        QGramSimilarity qGram = new QGramSimilarity();
+        int c = 0;
         HammingDistance hammingDistance = new HammingDistance();
         StringBuilder str = new StringBuilder();
-        Path path = Start.getOutputFilename(sample,"dirichlet");
+        Path path = Start.getOutputFilename(sample, "dirichlet");
         long length = 0;
         iter[0] = 0;
         for (Map.Entry<Integer, String> seqEntity : sample.sequences.entrySet()) {
@@ -166,12 +187,17 @@ public class DirichletMethod {
                         iter[2]++;
                         str.append(numbers.get(seq)).append(" ").append(numbers.get(s.key)).append("\n");
                     } else {
+//                        if (k*q < s1.length()-q+1-qGram.similarity(sample.profiles.get(seq), sample.profiles.get(s.key))){
+//                            iter[3]++;
+//                            continue;
+//                        }
                         if (distance.apply(s1, sample.sequences.get(s.key)) != -1) {
                             length++;
                             str.append(numbers.get(seq)).append(" ").append(numbers.get(s.key)).append("\n");
-                        } else if(DEBUG) {
-                            int z = unlim.apply(sample.sequences.get(seq), sample.sequences.get(s.key));
-                            distances[z]++;
+                        } else if (DEBUG) {
+
+                            //int z = unlim.apply(sample.sequences.get(seq), sample.sequences.get(s.key));
+                            //distances[z]++;
                         }
                     }
 
@@ -188,7 +214,8 @@ public class DirichletMethod {
             System.out.println("reduce = " + iter[2]);
             System.out.println("length = " + length);
             System.out.println("distances = " + Arrays.toString(distances));
-            System.out.println("levenshtein = " + (iter[1]-iter[2]));
+            System.out.println("levenshtein = " + (iter[1] - iter[2] - iter[3]));
+            System.out.println("c = " + iter[3]);
         }
         return length;
     }
@@ -214,7 +241,7 @@ public class DirichletMethod {
         List<Callable<long[]>> tasks = new ArrayList<>();
         //create tasks with parts of sequences
         parts.forEach(part -> tasks.add(new ParallelTask(sample, part, dict, k, path)));
-        long[] results = {0, 0, 0, 0};
+        long[] results = {0, 0, 0, 0, 0};
         try {
             List<Future<long[]>> futures = service.invokeAll(tasks);
             service.shutdown();
@@ -231,6 +258,7 @@ public class DirichletMethod {
                     results[1] += f[1];
                     results[2] += f[2];
                     results[3] += f[3];
+                    results[4] += f[4];
                 } catch (InterruptedException | ExecutionException e) {
                     System.err.println("Error! Parallel tasks were not successful on get");
                     e.printStackTrace();
@@ -245,7 +273,8 @@ public class DirichletMethod {
             System.out.printf("Found %s%n", sample.name);
             System.out.println("comparisons = " + results[1]);
             System.out.println("passed hamming distance = " + results[2]);
-            System.out.println("levenshtein = " + (results[1]-results[2]));
+            System.out.println("levenshtein = " + (results[1] - results[2]- results[4]));
+            System.out.println("qgram reduce = " +  results[4]);
             System.out.println("length = " + results[3]);
         }
         return results[0];
@@ -379,7 +408,6 @@ public class DirichletMethod {
     }
 
 
-
     /**
      * Class runs almost the same code as sequential run, but on different sequences set
      */
@@ -409,8 +437,9 @@ public class DirichletMethod {
               2 -> hamming
               3 -> total length
              */
-            long[] iters = {0, 0, 0, 0};
-
+            long[] iters = {0, 0, 0, 0, 0};
+            //only for additional QGram filter experiment(doesn't work good)
+            //int q = 8;
             int fileWriteThreshold = Math.min(sequences.size() / 10, 400);
             for (Map.Entry<Integer, String> seqEntity : sequences.entrySet()) {
                 iters[0]++;
@@ -435,6 +464,7 @@ public class DirichletMethod {
                 }
                 String s1 = sample.sequences.get(seq);
                 String h1 = sample.forHamming.get(seq);
+//                QGramSimilarity qGram = new QGramSimilarity();
                 for (IntIntCursor s : possibleSequences) {
                     if (s.value >= dict.fixedkMersCount - k) {
                         iters[1]++;
@@ -443,6 +473,10 @@ public class DirichletMethod {
                             iters[2]++;
                             str.append(numbers.get(seq)).append(" ").append(numbers.get(s.key)).append("\n");
                         } else {
+//                            if (k * q < s1.length() - q + 1 - qGram.similarity(sample.profiles.get(seq), sample.profiles.get(s.key))) {
+//                                iters[4]++;
+//                                continue;
+//                            }
                             if (distance.apply(s1, sample.sequences.get(s.key)) != -1) {
                                 iters[3]++;
                                 str.append(numbers.get(seq)).append(" ").append(numbers.get(s.key)).append("\n");

@@ -15,6 +15,8 @@ public class Sample {
     public Map<Integer, String> sequences;
 
     public Map<Integer, String> forHamming;
+    
+    public Map<Integer, Map<String, Integer>> profiles;
 
     public String consensus;
 
@@ -26,11 +28,14 @@ public class Sample {
         this.sequences = sequences;
         this.forHamming = Utils.stringsForHamming(sequences);
     }
+    
+    public Sample(String name, Map<Integer, String> sequences, int l){
+        this(name, sequences);
+        this.profiles = Utils.getProfiles(sequences, l);
+    }
 
     public Sample(String name, Map<Integer, String> sequences, String consensus) {
-        this.name = name;
-        this.sequences = sequences;
-        this.consensus = consensus;
+        this(name, sequences);
         this.forHamming = Utils.stringsForHamming(sequences);
     }
 }
