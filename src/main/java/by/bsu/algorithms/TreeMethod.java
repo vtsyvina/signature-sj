@@ -81,8 +81,7 @@ public class TreeMethod {
         hamming = new HammingDistance();
         while (!tree.root.children.isEmpty()) {
             recursiveDescentV2(tree.root.children.peek(),
-                    tree.root.children,
-                    k);
+                    tree.root.children);
         }
         System.out.println();
         System.out.println("comps = " + (allComps + levenshteinSeqComp));
@@ -120,13 +119,13 @@ public class TreeMethod {
         }
     }
 
-    private static void recursiveDescentV2(SequencesTree.Node node, Queue<SequencesTree.Node> toCheck, int k) throws IOException {
+    private static void recursiveDescentV2(SequencesTree.Node node, Queue<SequencesTree.Node> toCheck) throws IOException {
         if (node.sequences == null) {
             Queue<SequencesTree.Node> newToCheck = new LinkedList<>();
-            toCheck.forEach(check -> newToCheck.addAll(calculateToCheckForGivenNode(node, check, levenshtein, hamming)));
+            toCheck.forEach(check -> newToCheck.addAll(calculateToCheckForGivenNode(node, check)));
             if (node.children != null) {
                 while (!node.children.isEmpty()) {
-                    recursiveDescentV2(node.children.peek(), newToCheck, k);
+                    recursiveDescentV2(node.children.peek(), newToCheck);
                 }
 
             }
@@ -135,9 +134,9 @@ public class TreeMethod {
             while (!nodesToVisit.isEmpty()) {
                 SequencesTree.Node currentNode = nodesToVisit.poll();
                 if (currentNode.children != null) {
-                    walkLevelDeeper(node, k, nodesToVisit, currentNode);
+                    walkLevelDeeper(node, nodesToVisit, currentNode);
                 } else if (currentNode != node) {
-                    compareSequencesFromDifferentNodes(node, k, currentNode);
+                    compareSequencesFromDifferentNodes(node, currentNode);
                 } else if (currentNode.sequences.size() > 1) {
                     addSequencesFromSameNode(node, currentNode);
 
@@ -150,7 +149,7 @@ public class TreeMethod {
     /**
      * If node is in toCheckList but doesn't contain sequences we need to go further to get sequences from its children
      */
-    private static void walkLevelDeeper(SequencesTree.Node node, int k, Queue<SequencesTree.Node> nodesToVisit, SequencesTree.Node currentNode) {
+    private static void walkLevelDeeper(SequencesTree.Node node, Queue<SequencesTree.Node> nodesToVisit, SequencesTree.Node currentNode) {
         int min = currentNode.key.length() < node.key.length() ? currentNode.key.length() : node.key.length();
         allComps++;
         if (hamming.apply(currentNode.key.substring(0, min), node.key.substring(0, min)) <= k
@@ -163,7 +162,7 @@ public class TreeMethod {
     /**
      * Simply compares all sequences from first node with all sequences from second node
      */
-    private static void compareSequencesFromDifferentNodes(SequencesTree.Node node, int k, SequencesTree.Node currentNode) throws IOException {
+    private static void compareSequencesFromDifferentNodes(SequencesTree.Node node, SequencesTree.Node currentNode) throws IOException {
         if (hamming.apply(currentNode.key, node.key) <= k) {
             node.sequences.keySet().forEach(index ->
                     currentNode.sequences.keySet().forEach(
@@ -219,7 +218,7 @@ public class TreeMethod {
      * @param toCheck     current node to check
      * @return set of nodes with key length bigger than currentNode.key and with distance less than k
      */
-    private static Set<SequencesTree.Node> calculateToCheckForGivenNode(SequencesTree.Node currentNode, SequencesTree.Node toCheck, LevenshteinDistance levenshtein, HammingDistance hamming) {
+    private static Set<SequencesTree.Node> calculateToCheckForGivenNode(SequencesTree.Node currentNode, SequencesTree.Node toCheck) {
         Set<SequencesTree.Node> result = new HashSet<>();
         int min = currentNode.key.length() < toCheck.key.length() ? currentNode.key.length() : toCheck.key.length();
         allComps++;
@@ -230,7 +229,7 @@ public class TreeMethod {
                 result.add(toCheck);
             } else {
                 if (toCheck.children != null) {
-                    toCheck.children.forEach(child -> result.addAll(calculateToCheckForGivenNode(currentNode, child, levenshtein, hamming)));
+                    toCheck.children.forEach(child -> result.addAll(calculateToCheckForGivenNode(currentNode, child)));
                 }
             }
         }

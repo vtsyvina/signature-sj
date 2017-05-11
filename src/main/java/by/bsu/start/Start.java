@@ -91,6 +91,7 @@ public class Start {
         System.out.println("-dir /usr/name/tmp/ -- folder with input. (cleaned_independent_264 is default value, except of bigData)");
         System.out.println("-m bigData -- run one of predefined methods. Methods are: bigData, largeRelated, dirichletTest. bigData is default");
         System.out.println("-algsToRun dirichlet,tree -- which methods run for bigData method. Methods are: dirichlet, tree, brute, points. dirichlet is default");
+        System.out.println("-testsToRun 1,2-4,6 -- which tests to run for bigData test. Run all tests by default. Can be any combination with commas and dashes");
         System.exit(1);
     }
 

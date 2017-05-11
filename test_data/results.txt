@@ -251,3 +251,39 @@ levenshtein = 325586
 qgram reduce = 86074
 length = 5848556
 Dirichlet time 6546
+
+Start Tree method for db1 k=10
+60015
+comps = 83618
+travel allComps = 56152
+levenshtein = 27466
+signatureReduce = 0
+length = 60421
+Tree time 1132
+
+Start Tree method for db2 k=10
+370170
+comps = 242454
+travel allComps = 178772
+levenshtein = 63682
+signatureReduce = 0
+length = 370262
+Tree time 2112
+
+Start Tree method for db3 k=10
+1800741
+comps = 881030
+travel allComps = 693884
+levenshtein = 187146
+signatureReduce = 0
+length = 1800945
+Tree time 5874
+
+Start Tree method for db5 k=10
+18565691
+comps = 11650723
+travel allComps = 9603030
+levenshtein = 2047693
+signatureReduce = 0
+length = 18570536
+Tree time 60756
