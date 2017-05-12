@@ -59,14 +59,7 @@ public class DirichletMethod {
             return 0;
         }
         
-        boolean swap = false;
-        if (sample1.sequences.size() < sample2.sequences.size()) {
-            Sample tmp = sample1;
-            sample1 = sample2;
-            sample2 = tmp;
-            swap = true;
-        }
-        if (sample1.sequences.size() * sample2.sequences.size() < oldLength || swap) {
+        if (sample1.sequences.size() * sample2.sequences.size() < oldLength) {
             dict1 = KMerDictBuilder.getDict(sample1, dict1.l);
             dict2 = KMerDictBuilder.getDict(sample2, dict2.l);
         }
