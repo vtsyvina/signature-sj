@@ -12,6 +12,7 @@ import by.bsu.util.FasReader;
 import by.bsu.util.KMerDictBuilder;
 import by.bsu.util.PointsBuilder;
 import by.bsu.util.SequencesTreeBuilder;
+import org.openjdk.jmh.Main;
 import org.openjdk.jmh.runner.RunnerException;
 
 import java.io.File;

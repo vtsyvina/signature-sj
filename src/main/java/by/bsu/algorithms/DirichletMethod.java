@@ -41,7 +41,7 @@ import static by.bsu.util.Utils.numbers;
  */
 public class DirichletMethod {
 
-    public static boolean DEBUG = true;
+    public static boolean DEBUG = false;
     private static volatile long tasksIteration = 0;
 
     public static long run(Sample sample1, Sample sample2, KMerDict dict1, KMerDict dict2, int k) throws IOException {
@@ -50,19 +50,25 @@ public class DirichletMethod {
         if (kMerCoincidences < dict1.fixedkMersCount - k) {
             return 0;
         }
-        int oldLength = sample1.sequences.size() * sample2.sequences.size();
+/*
+        ineffective filter, that slows down algorithm due to high amount of dictionary rebuild
+        int oldLength1 = sample1.sequences.size();
+        int oldLength2 = sample2.sequences.size();
         sample1 = filterUnlikelySequences(k, dict1, dict2, sample1);
         sample2 = filterUnlikelySequences(k, dict2, dict1, sample2);
 
         //if we filter one of samples fully
+
         if (sample1.sequences.size() * sample2.sequences.size() == 0) {
             return 0;
         }
-        
-        if (sample1.sequences.size() * sample2.sequences.size() < oldLength) {
+        if (sample1.sequences.size() < oldLength1){
             dict1 = KMerDictBuilder.getDict(sample1, dict1.l);
+        }
+        if (sample2.sequences.size() < oldLength2){
             dict2 = KMerDictBuilder.getDict(sample2, dict2.l);
         }
+*/
         LevenshteinDistance distance = new LevenshteinDistance(k);
         HammingDistance hammingDistance = new HammingDistance();
         Path path = Start.getOutputFilename(sample1, sample2, "dirichlet");
@@ -73,24 +79,22 @@ public class DirichletMethod {
         int iteration = 0;
         int length = 0;
         for (Map.Entry<Integer, String> seqEntity : sample1.sequences.entrySet()) {
-            IntIntMap possibleSequences = new IntIntHashMap(dict2.sequencesNumber);
+            IntIntMap possibleSequences = new IntIntHashMap();
             int seq = seqEntity.getKey();
-            List<IntIntPair> tuples = getSortedTuplesTwoSamples(dict1, dict2, seqEntity);
-            for (int i = 0; i < tuples.size(); i++) {
-                if (i <= tuples.size() - (dict1.fixedkMersCount - k)) {
-                    for (IntCursor possibleSeq :
-                            dict2.hashToSequencesMap
-                                    .get(dict1.sequenceFixedPositionHashesList.get(seq)[tuples.get(i).l])
-                            ) {
+            List<IntIntPair> chunks = getSortedChunksTwoSamples(dict1, dict2, seqEntity);
+            for (int i = 0; i < chunks.size(); i++) {
+                long chunkHash = dict1.sequenceFixedPositionHashesList.get(seq)[chunks.get(i).l];
+                if (i <= chunks.size() - (dict1.fixedkMersCount - k)) {
+                    for (IntCursor possibleSeq : dict2.hashToSequencesMap.get(chunkHash)) {
                         possibleSequences.putOrAdd(possibleSeq.value, 1, 1);
                     }
                 } else {
                     IntIntMap tmp = new IntIntHashMap(possibleSequences.size());
-                    long hash = dict1.sequenceFixedPositionHashesList.get(seq)[tuples.get(i).l];
+                    IntSet sequencesWithChunks = dict2.hashToSequencesMap.get(chunkHash);
                     for (IntIntCursor entry : possibleSequences) {
-                        boolean isInSecondDict = dict2.hashToSequencesMap.get(hash).contains(entry.key);
+                        boolean isInSecondDict = sequencesWithChunks.contains(entry.key);
                         if (isInSecondDict ||
-                                dict1.fixedkMersCount - k <= entry.value + tuples.size() - i) {
+                                dict1.fixedkMersCount - k <= entry.value + chunks.size() - i) {
                             int add = isInSecondDict ? 1 : 0;
                             tmp.put(entry.key, entry.value + add);
                         }
@@ -131,6 +135,8 @@ public class DirichletMethod {
         }
         if (length > 0) {
             System.out.printf("Found %s %s%n", sample1.name, sample2.name);
+        } else{
+           Files.delete(path);
         }
         return length;
     }
@@ -160,14 +166,14 @@ public class DirichletMethod {
                 str = new StringBuilder();
                 System.out.print("\r" + iter[0]);
             }
-            IntIntMap possibleSequences = new IntIntHashMap(dict.sequencesNumber);
+            IntIntMap possibleSequences = new IntIntHashMap();
             int seq = seqEntity.getKey();
-            List<IntIntPair> sortedTuples = getSortedTuplesOneSample(dict, seqEntity);
-            for (int i = 0; i < sortedTuples.size(); i++) {
-                if (i <= sortedTuples.size() - (dict.fixedkMersCount - k)) {
-                    fillPossiblePairs(dict, possibleSequences, seq, sortedTuples, processed, i);
+            List<IntIntPair> sortedChunks = getSortedChunksOneSample(dict, seqEntity);
+            for (int i = 0; i < sortedChunks.size(); i++) {
+                if (i <= sortedChunks.size() - (dict.fixedkMersCount - k)) {
+                    fillPossiblePairs(dict, possibleSequences, seq, sortedChunks, processed, i);
                 } else {
-                    possibleSequences = filterPossibleSequences(dict, possibleSequences, seq, k, sortedTuples, i);
+                    possibleSequences = filterPossibleSequences(dict, possibleSequences, seq, k, sortedChunks, i);
                 }
             }
             String s1 = sample.sequences.get(seq);
@@ -274,13 +280,13 @@ public class DirichletMethod {
     }
 
     /**
-     * Fills possibleSequences with appearing sequences for given position(tuples.get(iter))
+     * Fills possibleSequences with appearing sequences for given position(chunks.get(iter))
      * only for non parallel run
      */
-    private static void fillPossiblePairs(KMerDict dict, IntIntMap possibleSequences, int seq, List<IntIntPair> tuples, Set<Integer> processed, int iter) {
+    private static void fillPossiblePairs(KMerDict dict, IntIntMap possibleSequences, int seq, List<IntIntPair> chunks, Set<Integer> processed, int iter) {
         for (IntCursor possibleSeq :
                 dict.hashToSequencesMap
-                        .get(dict.sequenceFixedPositionHashesList.get(seq)[tuples.get(iter).l])
+                        .get(dict.sequenceFixedPositionHashesList.get(seq)[chunks.get(iter).l])
                 ) {
             //avoid equal pairs, do not add already processed sequences
             if (possibleSeq.value <= seq || processed.contains(possibleSeq.value)) {
@@ -293,10 +299,10 @@ public class DirichletMethod {
     /**
      * For parallel(processed is buggy in this case)
      */
-    private static void fillPossiblePairs(KMerDict dict, IntIntMap possibleSequences, int seq, List<IntIntPair> tuples, int iter) {
+    private static void fillPossiblePairs(KMerDict dict, IntIntMap possibleSequences, int seq, List<IntIntPair> chunks, int iter) {
         for (IntCursor possibleSeq :
                 dict.hashToSequencesMap
-                        .get(dict.sequenceFixedPositionHashesList.get(seq)[tuples.get(iter).l])
+                        .get(dict.sequenceFixedPositionHashesList.get(seq)[chunks.get(iter).l])
                 ) {
             //avoid equal pairs
             if (possibleSeq.value <= seq) {
@@ -310,15 +316,15 @@ public class DirichletMethod {
      * Filters possibleSequences by removing all sequences that doesn't contain necessary amount of equal l-mers
      * with current sequence (seq)
      */
-    private static IntIntMap filterPossibleSequences(KMerDict dict, IntIntMap possibleSequences, int seq, int k, List<IntIntPair> tuples, int iter) {
+    private static IntIntMap filterPossibleSequences(KMerDict dict, IntIntMap possibleSequences, int seq, int k, List<IntIntPair> chunks, int iter) {
         IntIntMap tmp = new IntIntHashMap(possibleSequences.size());
-        long hash = dict.sequenceFixedPositionHashesList.get(seq)[tuples.get(iter).l];
+        long hash = dict.sequenceFixedPositionHashesList.get(seq)[chunks.get(iter).l];
         IntSet sequencesWithHashSet = dict.hashToSequencesMap.get(hash);
         for (IntIntCursor entry : possibleSequences) {
             boolean isInDict = sequencesWithHashSet.contains(entry.key);
             // put if sequence hash l-mer for current fixed position or if it already has enough equal l-mers
             if (isInDict ||
-                    dict.fixedkMersCount - k <= entry.value + tuples.size() - iter) {
+                    dict.fixedkMersCount - k <= entry.value + chunks.size() - iter) {
                 int add = isInDict ? 1 : 0;
                 tmp.put(entry.key, entry.value + add);
             }
@@ -327,10 +333,10 @@ public class DirichletMethod {
     }
 
     /**
-     * Returns list of sorted tuples for current sequence entity by number of sequences that contain
+     * Returns list of sorted chunks for current sequence entity by number of sequences that contain
      * l-mers from sequence entity fixed positions
      */
-    private static List<IntIntPair> getSortedTuplesOneSample(KMerDict dict, Map.Entry<Integer, String> seqEntity) {
+    private static List<IntIntPair> getSortedChunksOneSample(KMerDict dict, Map.Entry<Integer, String> seqEntity) {
         List<IntIntPair> result = new ArrayList<>();
         //for each fixed position
         for (int i = 0; i < dict.fixedkMersCount; i++) {
@@ -370,9 +376,9 @@ public class DirichletMethod {
     }
 
     /**
-     * see getSortedTuplesOneSample
+     * see getSortedChunksOneSample
      */
-    private static List<IntIntPair> getSortedTuplesTwoSamples(KMerDict dict1, KMerDict dict2, Map.Entry<Integer, String> seqEntity) {
+    private static List<IntIntPair> getSortedChunksTwoSamples(KMerDict dict1, KMerDict dict2, Map.Entry<Integer, String> seqEntity) {
         List<IntIntPair> result = new ArrayList<>();
         for (int i = 0; i < dict1.fixedkMersCount; i++) {
             long hash = dict1.sequenceFixedPositionHashesList.get(seqEntity.getKey())[i];
@@ -447,12 +453,12 @@ public class DirichletMethod {
                 }
                 IntIntMap possibleSequences = new IntIntHashMap();
                 int seq = seqEntity.getKey();
-                List<IntIntPair> sortedTuples = getSortedTuplesOneSample(dict, seqEntity);
-                for (int i = 0; i < sortedTuples.size(); i++) {
-                    if (i <= sortedTuples.size() - (dict.fixedkMersCount - k)) {
-                        fillPossiblePairs(dict, possibleSequences, seq, sortedTuples, i);
+                List<IntIntPair> sortedChunks = getSortedChunksOneSample(dict, seqEntity);
+                for (int i = 0; i < sortedChunks.size(); i++) {
+                    if (i <= sortedChunks.size() - (dict.fixedkMersCount - k)) {
+                        fillPossiblePairs(dict, possibleSequences, seq, sortedChunks, i);
                     } else {
-                        possibleSequences = filterPossibleSequences(dict, possibleSequences, seq, k, sortedTuples, i);
+                        possibleSequences = filterPossibleSequences(dict, possibleSequences, seq, k, sortedChunks, i);
                     }
                 }
                 String s1 = sample.sequences.get(seq);
