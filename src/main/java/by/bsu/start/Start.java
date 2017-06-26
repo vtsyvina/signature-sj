@@ -19,14 +19,18 @@ import java.util.concurrent.Future;
 import org.openjdk.jmh.runner.RunnerException;
 
 import by.bsu.algorithms.BruteForce;
+import by.bsu.algorithms.BruteForceHamming;
+import by.bsu.algorithms.SignatureHammingMethod;
 import by.bsu.algorithms.SignatureMethod;
 import by.bsu.algorithms.TreeMethod;
 import by.bsu.model.IntIntPair;
 import by.bsu.model.KMerDict;
+import by.bsu.model.KMerDictChunks;
 import by.bsu.model.Sample;
 import by.bsu.util.CallSignature;
 import by.bsu.util.FasReader;
 import by.bsu.util.KMerDictBuilder;
+import by.bsu.util.KMerDictChunksBuilder;
 import by.bsu.util.SequencesTreeBuilder;
 
 
@@ -192,7 +196,10 @@ public class Start {
             if (isTestToRun(file)){
                 Sample sample = FasReader.readSampleFromFolder(file, true);
                 if (Arrays.stream(algsToRun).filter( s -> s.equals("signature")).count() > 0){
-                    runDirWithTime(k,l, sample);
+                    runSigWithTime(k,l, sample);
+                }
+                if (Arrays.stream(algsToRun).filter( s -> s.equals("signature-hamming")).count() > 0){
+                    runSigHamWithTime(k,l, sample);
                 }
                 if (Arrays.stream(algsToRun).filter( s -> s.equals("tree")).count() > 0){
                     runTreeWithTime(k, l, sample);
@@ -200,11 +207,14 @@ public class Start {
                 if (Arrays.stream(algsToRun).filter( s -> s.equals("brute")).count() > 0){
                     runBruteWithTime(k, sample);
                 }
+                if (Arrays.stream(algsToRun).filter( s -> s.equals("brute-hamming")).count() > 0){
+                    runBruteHammingWithTime(k, sample);
+                }
             }
         }
     }
 
-    private static void runDirWithTime(int k, int l, Sample query) throws ExecutionException, InterruptedException, IOException {
+    private static void runSigWithTime(int k, int l, Sample query) throws ExecutionException, InterruptedException, IOException {
         long start;
         start = System.currentTimeMillis();
         KMerDict k1 = KMerDictBuilder.getDict(query, l);
@@ -214,7 +224,16 @@ public class Start {
         System.out.println();
     }
 
-    private static void runDirWithTime(int k, int l, Sample s1, Sample s2) throws ExecutionException, InterruptedException, IOException {
+    private static void runSigHamWithTime(int k, int l, Sample query) throws ExecutionException, InterruptedException, IOException {
+        long start;
+        start = System.currentTimeMillis();
+        KMerDictChunks dict = KMerDictChunksBuilder.getDict(query, l);
+        SignatureHammingMethod.runParallel(query, dict ,k);
+        System.out.println("Signature hamming time "+(System.currentTimeMillis()-start));
+        System.out.println();
+    }
+
+    private static void runSigWithTime(int k, int l, Sample s1, Sample s2) throws ExecutionException, InterruptedException, IOException {
         long start;
         start = System.currentTimeMillis();
         KMerDict k1 = KMerDictBuilder.getDict(s1, l);
@@ -225,10 +244,17 @@ public class Start {
         System.out.println();
     }
 
-    private static void runBruteWithTime(int k, Sample query) {
+    private static void runBruteWithTime(int k, Sample query) throws IOException {
         long start = System.currentTimeMillis();
         BruteForce.run(query, k);
         System.out.println("Brute force time "+(System.currentTimeMillis()-start));
+        System.out.println();
+    }
+
+    private static void runBruteHammingWithTime(int k, Sample query) throws IOException {
+        long start = System.currentTimeMillis();
+        BruteForceHamming.run(query, k);
+        System.out.println("Brute Hamming force time "+(System.currentTimeMillis()-start));
         System.out.println();
     }
 

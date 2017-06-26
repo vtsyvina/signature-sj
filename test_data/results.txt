@@ -301,3 +301,50 @@ Files.readAllLines(Paths.get("some.fas")).stream().filter(s -> s.startsWith("lev
 22037502011
 
 887122/22037502011f * 100% = 0.0040255105%
+
+Start Signature Hamming method parallel for db1 k= 10 l= 11
+996
+Found db1
+comparisons = 65937
+length = 60420
+Signature hamming time 231
+
+Start Signature Hamming method parallel for db2 k= 10 l= 11
+1995
+Found db2
+comparisons = 388987
+length = 370233
+Signature hamming time 173
+
+Start Signature Hamming method parallel for db3 k= 10 l= 11
+3999
+Found db3
+comparisons = 1873268
+length = 1800448
+Signature hamming time 600
+
+Start Signature Hamming method parallel for db4 k= 10 l= 11
+8000
+Found db4
+comparisons = 6256934
+length = 5845274
+Signature hamming time 1692
+
+Start Signature Hamming method parallel for db5 k= 10 l= 11
+15999
+Found db5
+comparisons = 21028890
+length = 18551359
+Signature hamming time 6465
+
+Start Signature Hamming method parallel for db6 k= 10 l= 11
+31995
+Found db6
+comparisons = 46744905
+length = 38792420
+Signature hamming time 15308
+
+Start Brute Hamming force method for db6 k=10
+32000
+length = 38792420
+Brute Hamming force time 150262

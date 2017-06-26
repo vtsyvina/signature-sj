@@ -36,9 +36,9 @@ public class KMerDictChunksBuilder {
             result.chunksHashToSequencesMap[i] = new HashMap<>();
         }
         for (Map.Entry<Integer, String> entry : sample.sequences.entrySet()) {
+            result.sequenceFixedPositionHashesList.put(entry.getKey(), new long[result.fixedkMersCount]);
             for (int i = 0; i < result.fixedkMersCount; i++) {
                 long hashValue = getHashValue(i*l, l, entry);
-                result.sequenceFixedPositionHashesList.put(entry.getKey(), new long[result.fixedkMersCount]);
                 result.sequenceFixedPositionHashesList.get(entry.getKey())[i] = hashValue;
                 result.wholeSampleFixedPositionHashesList[i].add(hashValue);
                 if (!result.chunksHashToSequencesMap[i].containsKey(hashValue)){

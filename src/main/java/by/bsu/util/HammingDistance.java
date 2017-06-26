@@ -28,7 +28,7 @@ public class HammingDistance {
      * @throws IllegalArgumentException if either input is {@code null} or
      *             if they do not have the same length
      */
-    public Integer apply(final CharSequence left, final CharSequence right) {
+    public int apply(final CharSequence left, final CharSequence right) {
         if (left == null || right == null) {
             throw new IllegalArgumentException("Strings must not be null");
         }
