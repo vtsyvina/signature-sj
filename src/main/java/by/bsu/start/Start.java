@@ -1,20 +1,5 @@
 package by.bsu.start;
 
-import by.bsu.algorithms.BruteForce;
-import by.bsu.algorithms.DirichletMethod;
-import by.bsu.algorithms.PointsMethod;
-import by.bsu.algorithms.TreeMethod;
-import by.bsu.model.IntIntPair;
-import by.bsu.model.KMerDict;
-import by.bsu.model.Sample;
-import by.bsu.util.CallDir;
-import by.bsu.util.FasReader;
-import by.bsu.util.KMerDictBuilder;
-import by.bsu.util.PointsBuilder;
-import by.bsu.util.SequencesTreeBuilder;
-import org.openjdk.jmh.Main;
-import org.openjdk.jmh.runner.RunnerException;
-
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
@@ -30,6 +15,19 @@ import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
+
+import org.openjdk.jmh.runner.RunnerException;
+
+import by.bsu.algorithms.BruteForce;
+import by.bsu.algorithms.SignatureMethod;
+import by.bsu.algorithms.TreeMethod;
+import by.bsu.model.IntIntPair;
+import by.bsu.model.KMerDict;
+import by.bsu.model.Sample;
+import by.bsu.util.CallSignature;
+import by.bsu.util.FasReader;
+import by.bsu.util.KMerDictBuilder;
+import by.bsu.util.SequencesTreeBuilder;
 
 
 public class Start {
@@ -73,7 +71,7 @@ public class Start {
                 case "largeRelated":
                     testLargeRelatedSamples(folder);
                     break;
-                case "dirichletTest":
+                case "signatureTest":
                     testDitichletAlgorithm(folder, k, l);
                     break;
                 default:
@@ -88,10 +86,11 @@ public class Start {
         System.out.println("Error! Wrong argument value: "+arg+" . No argument name in for of -key");
         System.out.println("How to set arguments:");
         System.out.println("-k 10 -- threshold for sequence similarity(10 is default value)");
-        System.out.println("-l 11 -- l-mer length for Dirichlet method(11 is default value)");
+        System.out.println("-l 11 -- l-mer length for Signature method(11 is default value)");
         System.out.println("-dir /usr/name/tmp/ -- folder with input. (cleaned_independent_264 is default value, except of bigData)");
-        System.out.println("-m bigData -- run one of predefined methods. Methods are: bigData, largeRelated, dirichletTest. bigData is default");
-        System.out.println("-algsToRun dirichlet,tree -- which methods run for bigData method. Methods are: dirichlet, tree, brute, points. dirichlet is default");
+        System.out.println("-outDir /usr/name/tmp/ -- folder with output.");
+        System.out.println("-m bigData -- run one of predefined methods. Methods are: bigData, largeRelated, signatureTest. bigData is default");
+        System.out.println("-algsToRun signature,tree -- which methods run for bigData method. Methods are: signature, tree, brute. signature is default");
         System.out.println("-testsToRun 1,2-4,6 -- which tests to run for bigData test. Run all tests by default. Can be any combination with commas and dashes");
         System.exit(1);
     }
@@ -120,12 +119,8 @@ public class Start {
         KMerDict k2 = KMerDictBuilder.getDict(s2, 11);
         long start = System.currentTimeMillis();
         System.out.println(s1.sequences.size()*s2.sequences.size());
-        DirichletMethod.run(s1, s2, k1 , k2, 3);
-        System.out.println("DirichletMethod time:");
-        System.out.println(System.currentTimeMillis()-start);
-        start = System.currentTimeMillis();
-        PointsMethod.run(s1,s2, PointsBuilder.buildPoints(s1), PointsBuilder.buildPoints(s2), 3);
-        System.out.println("PointsMethod time:");
+        SignatureMethod.run(s1, s2, k1 , k2, 3);
+        System.out.println("SignatureMethod time:");
         System.out.println(System.currentTimeMillis()-start);
         start = System.currentTimeMillis();
         BruteForce.run(s1,s2, 3);
@@ -175,7 +170,7 @@ public class Start {
         List<Callable<Long>> taskList = new ArrayList<>();
         for (int j = 0; j < allFiles.size(); j++) {
             for (int fIndex = j + 1; fIndex < allFiles.size(); fIndex++) {
-                taskList.add(new CallDir(allFiles.get(j), allFiles.get(fIndex), kdicts[j], kdicts[fIndex], k));
+                taskList.add(new CallSignature(allFiles.get(j), allFiles.get(fIndex), kdicts[j], kdicts[fIndex], k));
             }
         }
         List<Future<Long>> futures = executor.invokeAll(taskList);
@@ -185,23 +180,22 @@ public class Start {
         }
         executor.shutdown();
         System.out.println("testDitichletAlgorithm has ended with time = " + (System.currentTimeMillis() - start));
+        System.out.println("coincidenceFilter="+ SignatureMethod.coincidenceFilter);
+        System.out.println("executionCount="+ SignatureMethod.executionCount);
         System.out.println();
     }
 
     private static void testBigDataSet(int k, int l) throws IOException, ExecutionException, InterruptedException {
         File dir = new File(settings.getOrDefault("-dir", "test_data"));
-        String[] algsToRun = settings.getOrDefault("-algsToRun", "dirichlet").split(",");
+        String[] algsToRun = settings.getOrDefault("-algsToRun", "signature").split(",");
         for (File file : dir.listFiles()) {
             if (isTestToRun(file)){
                 Sample sample = FasReader.readSampleFromFolder(file, true);
-                if (Arrays.stream(algsToRun).filter( s -> s.equals("dirichlet")).count() > 0){
+                if (Arrays.stream(algsToRun).filter( s -> s.equals("signature")).count() > 0){
                     runDirWithTime(k,l, sample);
                 }
                 if (Arrays.stream(algsToRun).filter( s -> s.equals("tree")).count() > 0){
                     runTreeWithTime(k, l, sample);
-                }
-                if (Arrays.stream(algsToRun).filter( s -> s.equals("points")).count() > 0){
-                    runPointsWithTime(k, sample);
                 }
                 if (Arrays.stream(algsToRun).filter( s -> s.equals("brute")).count() > 0){
                     runBruteWithTime(k, sample);
@@ -215,8 +209,8 @@ public class Start {
         start = System.currentTimeMillis();
         KMerDict k1 = KMerDictBuilder.getDict(query, l);
         //query = new Sample(query.name, query.sequences, 8);
-        DirichletMethod.runParallel(query, k1 ,k);
-        System.out.println("Dirichlet time "+(System.currentTimeMillis()-start));
+        SignatureMethod.runParallel(query, k1 ,k);
+        System.out.println("Signature time "+(System.currentTimeMillis()-start));
         System.out.println();
     }
 
@@ -225,17 +219,9 @@ public class Start {
         start = System.currentTimeMillis();
         KMerDict k1 = KMerDictBuilder.getDict(s1, l);
         KMerDict k2 = KMerDictBuilder.getDict(s2, l);
-        long length = DirichletMethod.run(s1, s2, k1, k2, k);
+        long length = SignatureMethod.run(s1, s2, k1, k2, k);
         System.out.println("count "+length);
-        System.out.println("Dirichlet time "+(System.currentTimeMillis()-start));
-        System.out.println();
-    }
-
-    private static void runPointsWithTime(int k, Sample query) {
-        long start;
-        start = System.currentTimeMillis();
-        PointsMethod.run(query, PointsBuilder.buildPoints(query), k);
-        System.out.println("Points time "+(System.currentTimeMillis()-start));
+        System.out.println("Signature time "+(System.currentTimeMillis()-start));
         System.out.println();
     }
 

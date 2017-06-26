@@ -18,3 +18,15 @@ hs_err_pid*
 *-output*.txt
 /config
 /var
+/unrelated
+.DS_Store
+out-test/
+out-test1/
+python/.DS_Store
+src/.DS_Store
+src/main/.DS_Store
+src/main/java/.DS_Store
+src/main/java/by/.DS_Store
+test_data/.DS_Store
+test_data/db2/.DS_Store
+test_data/db6/.DS_Store

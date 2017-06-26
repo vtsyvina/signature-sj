@@ -5,7 +5,6 @@ import by.bsu.model.KMerDict;
 import by.bsu.model.Sample;
 import by.bsu.start.Start;
 import by.bsu.util.HammingDistance;
-import by.bsu.util.KMerDictBuilder;
 import by.bsu.util.LevenshteinDistance;
 import com.carrotsearch.hppc.IntIntHashMap;
 import com.carrotsearch.hppc.IntIntMap;
@@ -32,22 +31,27 @@ import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
+import java.util.concurrent.atomic.AtomicInteger;
 
 import static by.bsu.util.Utils.expandNumbers;
 import static by.bsu.util.Utils.numbers;
 
 /**
- * Algorithm use Dirichlet method to filter pairs on sequences from sample/samples
+ * Algorithm use Signature method to filter pairs on sequences from sample/samples
  */
-public class DirichletMethod {
+public class SignatureMethod {
 
     public static boolean DEBUG = false;
     private static volatile long tasksIteration = 0;
+    public static AtomicInteger coincidenceFilter = new AtomicInteger();
+    public static AtomicInteger executionCount = new AtomicInteger();
 
     public static long run(Sample sample1, Sample sample2, KMerDict dict1, KMerDict dict2, int k) throws IOException {
         int comps = 0;
         int kMerCoincidences = calculateCoincidences(dict1, dict2);
+        executionCount.incrementAndGet();
         if (kMerCoincidences < dict1.fixedkMersCount - k) {
+            coincidenceFilter.incrementAndGet();
             return 0;
         }
 /*
@@ -71,7 +75,7 @@ public class DirichletMethod {
 */
         LevenshteinDistance distance = new LevenshteinDistance(k);
         HammingDistance hammingDistance = new HammingDistance();
-        Path path = Start.getOutputFilename(sample1, sample2, "dirichlet");
+        Path path = Start.getOutputFilename(sample1, sample2, "signature");
         StringBuilder str = new StringBuilder();
         expandNumbers(sample1.sequences.size());
         expandNumbers(sample2.sequences.size());
@@ -134,7 +138,7 @@ public class DirichletMethod {
             System.out.println("length = " + length);
         }
         if (length > 0) {
-            System.out.printf("Found %s %s%n", sample1.name, sample2.name);
+            System.out.printf("Found %s %s. Length = %d\n", sample1.name, sample2.name, length);
         } else{
            Files.delete(path);
         }
@@ -142,20 +146,19 @@ public class DirichletMethod {
     }
 
     public static long run(Sample sample, KMerDict dict, int k) throws IOException {
-        System.out.println("Start Dirihlet method for " + sample.name + " k=" + k + " l=" + dict.l);
+        System.out.println("Start Signature method for " + sample.name + " k=" + k + " l=" + dict.l);
         expandNumbers(sample.sequences.size());
         Set<Integer> processed = new HashSet<>();
         long[] iter = {0, 0, 0, 0};
         int[] distances = new int[264];
         LevenshteinDistance distance = new LevenshteinDistance(k);
-        LevenshteinDistance unlim = new LevenshteinDistance(60);
-        int q = 5;
+        //LevenshteinDistance unlim = new LevenshteinDistance(60);
+        //int q = 5;
         //QGram qGram = new QGram(q);
         QGramSimilarity qGram = new QGramSimilarity();
-        int c = 0;
         HammingDistance hammingDistance = new HammingDistance();
         StringBuilder str = new StringBuilder();
-        Path path = Start.getOutputFilename(sample, "dirichlet");
+        Path path = Start.getOutputFilename(sample, "signature");
         long length = 0;
         iter[0] = 0;
         for (Map.Entry<Integer, String> seqEntity : sample.sequences.entrySet()) {
@@ -220,9 +223,9 @@ public class DirichletMethod {
     }
 
     public static Long runParallel(Sample sample, KMerDict dict, int k) throws IOException {
-        System.out.println("Start Dirihlet method parallel for " + sample.name + " k= " + k + " l= " + dict.l);
+        System.out.println("Start Signature method parallel for " + sample.name + " k= " + k + " l= " + dict.l);
         expandNumbers(sample.sequences.size());
-        Path path = Start.getOutputFilename(sample, "dirichlet");
+        Path path = Start.getOutputFilename(sample, "signature");
         //divide sequences into parts for executor service
         int cores = Runtime.getRuntime().availableProcessors();
         ExecutorService service = Executors.newFixedThreadPool(cores);
@@ -354,7 +357,9 @@ public class DirichletMethod {
     /**
      * removes all sequences from given sample that don't have any related sequences in second sample based on
      * amount of presented l-mers for fixed positions
+     * @deprecated filter that didn't succeed to achieve any acceptable results
      */
+    @Deprecated
     private static Sample filterUnlikelySequences(int k, KMerDict dict1, KMerDict dict2, Sample sample) {
         Sample result = new Sample();
         result.name = sample.name;

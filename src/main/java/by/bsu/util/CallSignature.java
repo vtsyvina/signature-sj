@@ -1,24 +1,22 @@
 package by.bsu.util;
 
-import by.bsu.algorithms.DirichletMethod;
+import by.bsu.algorithms.SignatureMethod;
 import by.bsu.model.KMerDict;
-import by.bsu.model.IntIntPair;
 import by.bsu.model.Sample;
 
-import java.util.Set;
 import java.util.concurrent.Callable;
 
 /**
  * Created by c5239200 on 2/6/17.
  */
-public class CallDir implements Callable<Long> {
+public class CallSignature implements Callable<Long> {
 
     private Sample sample1;
     private Sample sample2;
     KMerDict dict1;
     KMerDict dict2;
     int k;
-    public CallDir(Sample sample1, Sample sample2, KMerDict dict1, KMerDict dict2, int k){
+    public CallSignature(Sample sample1, Sample sample2, KMerDict dict1, KMerDict dict2, int k){
         this.sample1 = sample1;
         this.sample2 = sample2;
         this.dict1 = dict1;
@@ -27,6 +25,6 @@ public class CallDir implements Callable<Long> {
     }
     @Override
     public Long call() throws Exception {
-        return DirichletMethod.run(sample1, sample2, dict1, dict2, k);
+        return SignatureMethod.run(sample1, sample2, dict1, dict2, k);
     }
 }
