@@ -10,7 +10,7 @@ import java.util.Map;
 
 import by.bsu.model.Sample;
 import by.bsu.start.Start;
-import by.bsu.util.HammingDistance;
+import by.bsu.distance.HammingDistance;
 
 /**
  * Brute force algorithm that compares all possible sequence pairs with Hamming distance

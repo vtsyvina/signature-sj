@@ -1,4 +1,4 @@
-package by.bsu.util;
+package by.bsu.distance;
 
 import java.util.Arrays;
 

@@ -4,8 +4,8 @@ import by.bsu.model.IntIntPair;
 import by.bsu.model.Sample;
 import by.bsu.model.SequencesTree;
 import by.bsu.start.Start;
-import by.bsu.util.HammingDistance;
-import by.bsu.util.LevenshteinDistance;
+import by.bsu.distance.HammingDistance;
+import by.bsu.distance.LevenshteinDistance;
 import com.carrotsearch.hppc.ShortArrayList;
 import com.carrotsearch.hppc.cursors.ShortCursor;
 

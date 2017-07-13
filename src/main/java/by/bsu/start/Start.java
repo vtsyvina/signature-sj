@@ -218,7 +218,6 @@ public class Start {
         long start;
         start = System.currentTimeMillis();
         KMerDict k1 = KMerDictBuilder.getDict(query, l);
-        //query = new Sample(query.name, query.sequences, 8);
         SignatureMethod.runParallel(query, k1 ,k);
         System.out.println("Signature time "+(System.currentTimeMillis()-start));
         System.out.println();

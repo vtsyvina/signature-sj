@@ -4,10 +4,12 @@ import by.bsu.model.IntIntPair;
 import by.bsu.model.KMerDict;
 import by.bsu.model.Sample;
 import by.bsu.start.Start;
-import by.bsu.util.HammingDistance;
-import by.bsu.util.LevenshteinDistance;
+import by.bsu.distance.HammingDistance;
+import by.bsu.distance.LevenshteinDistance;
+
 import com.carrotsearch.hppc.IntIntHashMap;
 import com.carrotsearch.hppc.IntIntMap;
+import com.carrotsearch.hppc.IntScatterSet;
 import com.carrotsearch.hppc.IntSet;
 import com.carrotsearch.hppc.LongSet;
 import com.carrotsearch.hppc.cursors.IntCursor;
@@ -54,25 +56,6 @@ public class SignatureMethod {
             coincidenceFilter.incrementAndGet();
             return 0;
         }
-/*
-        ineffective filter, that slows down algorithm due to high amount of dictionary rebuild
-        int oldLength1 = sample1.sequences.size();
-        int oldLength2 = sample2.sequences.size();
-        sample1 = filterUnlikelySequences(k, dict1, dict2, sample1);
-        sample2 = filterUnlikelySequences(k, dict2, dict1, sample2);
-
-        //if we filter one of samples fully
-
-        if (sample1.sequences.size() * sample2.sequences.size() == 0) {
-            return 0;
-        }
-        if (sample1.sequences.size() < oldLength1){
-            dict1 = KMerDictBuilder.getDict(sample1, dict1.l);
-        }
-        if (sample2.sequences.size() < oldLength2){
-            dict2 = KMerDictBuilder.getDict(sample2, dict2.l);
-        }
-*/
         LevenshteinDistance distance = new LevenshteinDistance(k);
         HammingDistance hammingDistance = new HammingDistance();
         Path path = Start.getOutputFilename(sample1, sample2, "signature");
@@ -86,6 +69,7 @@ public class SignatureMethod {
             IntIntMap possibleSequences = new IntIntHashMap();
             int seq = seqEntity.getKey();
             List<IntIntPair> chunks = getSortedChunksTwoSamples(dict1, dict2, seqEntity);
+            IntSet toCompare = new IntScatterSet();
             for (int i = 0; i < chunks.size(); i++) {
                 long chunkHash = dict1.sequenceFixedPositionHashesList.get(seq)[chunks.get(i).l];
                 if (i <= chunks.size() - (dict1.fixedkMersCount - k)) {
@@ -100,7 +84,11 @@ public class SignatureMethod {
                         if (isInSecondDict ||
                                 dict1.fixedkMersCount - k <= entry.value + chunks.size() - i) {
                             int add = isInSecondDict ? 1 : 0;
-                            tmp.put(entry.key, entry.value + add);
+                            if (entry.value + add >= dict1.fixedkMersCount - k) {
+                                toCompare.add(entry.key);
+                            } else {
+                                tmp.put(entry.key, entry.value + add);
+                            }
                         }
                     }
                     possibleSequences = tmp;
@@ -124,7 +112,7 @@ public class SignatureMethod {
                 }
             }
             iteration++;
-            if (iteration % 400 == 0){
+            if (iteration % 400 == 0) {
                 Files.write(path, str.toString().getBytes(), StandardOpenOption.APPEND);
                 str = new StringBuilder();
             }
@@ -139,8 +127,8 @@ public class SignatureMethod {
         }
         if (length > 0) {
             System.out.printf("Found %s %s. Length = %d\n", sample1.name, sample2.name, length);
-        } else{
-           Files.delete(path);
+        } else {
+            Files.delete(path);
         }
         return length;
     }
@@ -152,10 +140,6 @@ public class SignatureMethod {
         long[] iter = {0, 0, 0, 0};
         int[] distances = new int[264];
         LevenshteinDistance distance = new LevenshteinDistance(k);
-        //LevenshteinDistance unlim = new LevenshteinDistance(60);
-        //int q = 5;
-        //QGram qGram = new QGram(q);
-        QGramSimilarity qGram = new QGramSimilarity();
         HammingDistance hammingDistance = new HammingDistance();
         StringBuilder str = new StringBuilder();
         Path path = Start.getOutputFilename(sample, "signature");
@@ -172,37 +156,30 @@ public class SignatureMethod {
             IntIntMap possibleSequences = new IntIntHashMap();
             int seq = seqEntity.getKey();
             List<IntIntPair> sortedChunks = getSortedChunksOneSample(dict, seqEntity);
+            IntSet toCompare = new IntScatterSet();
             for (int i = 0; i < sortedChunks.size(); i++) {
                 if (i <= sortedChunks.size() - (dict.fixedkMersCount - k)) {
                     fillPossiblePairs(dict, possibleSequences, seq, sortedChunks, processed, i);
                 } else {
-                    possibleSequences = filterPossibleSequences(dict, possibleSequences, seq, k, sortedChunks, i);
+                    possibleSequences = filterPossibleSequences(dict, possibleSequences, seq, k, sortedChunks, i, toCompare);
                 }
             }
             String s1 = sample.sequences.get(seq);
             String h1 = sample.forHamming.get(seq);
-            for (IntIntCursor s : possibleSequences) {
-                if (s.value >= dict.fixedkMersCount - k) {
-                    iter[1]++;
-                    if (hammingDistance.apply(h1, sample.forHamming.get(s.key)) <= k) {
+            for (IntCursor s : toCompare) {
+                iter[1]++;
+                if (hammingDistance.apply(h1, sample.forHamming.get(s.value)) <= k) {
+                    length++;
+                    iter[2]++;
+                    str.append(numbers.get(seq)).append(" ").append(numbers.get(s.value)).append("\n");
+                } else {
+                    if (distance.apply(s1, sample.sequences.get(s.value)) != -1) {
                         length++;
-                        iter[2]++;
-                        str.append(numbers.get(seq)).append(" ").append(numbers.get(s.key)).append("\n");
-                    } else {
-//                        if (k*q < s1.length()-q+1-qGram.similarity(sample.profiles.get(seq), sample.profiles.get(s.key))){
-//                            iter[3]++;
-//                            continue;
-//                        }
-                        if (distance.apply(s1, sample.sequences.get(s.key)) != -1) {
-                            length++;
-                            str.append(numbers.get(seq)).append(" ").append(numbers.get(s.key)).append("\n");
-                        } else if (DEBUG) {
-
-                            //int z = unlim.apply(sample.sequences.get(seq), sample.sequences.get(s.key));
-                            //distances[z]++;
-                        }
+                        str.append(numbers.get(seq)).append(" ").append(numbers.get(s.value)).append("\n");
+                    } else if (DEBUG) {
+                        //int z = unlim.apply(sample.sequences.get(seq), sample.sequences.get(s.key));
+                        //distances[z]++;
                     }
-
                 }
             }
             processed.add(seq);
@@ -243,7 +220,7 @@ public class SignatureMethod {
         List<Callable<long[]>> tasks = new ArrayList<>();
         //create tasks with parts of sequences
         parts.forEach(part -> tasks.add(new ParallelTask(sample, part, dict, k, path)));
-        long[] results = {0, 0, 0, 0, 0};
+        long[] results = {0, 0, 0, 0};
         try {
             List<Future<long[]>> futures = service.invokeAll(tasks);
             service.shutdown();
@@ -260,7 +237,6 @@ public class SignatureMethod {
                     results[1] += f[1];
                     results[2] += f[2];
                     results[3] += f[3];
-                    results[4] += f[4];
                 } catch (InterruptedException | ExecutionException e) {
                     System.err.println("Error! Parallel tasks were not successful on get");
                     e.printStackTrace();
@@ -275,8 +251,7 @@ public class SignatureMethod {
             System.out.printf("Found %s%n", sample.name);
             System.out.println("comparisons = " + results[1]);
             System.out.println("passed hamming distance = " + results[2]);
-            System.out.println("levenshtein = " + (results[1] - results[2]- results[4]));
-            System.out.println("qgram reduce = " +  results[4]);
+            System.out.println("levenshtein = " + (results[1] - results[2]));
             System.out.println("length = " + results[3]);
         }
         return results[0];
@@ -318,8 +293,10 @@ public class SignatureMethod {
     /**
      * Filters possibleSequences by removing all sequences that doesn't contain necessary amount of equal l-mers
      * with current sequence (seq)
+     * <p>
+     * add sequence to toCompare set if it already reached necessary amount of hits so we don't need it in possibleSequences anymore
      */
-    private static IntIntMap filterPossibleSequences(KMerDict dict, IntIntMap possibleSequences, int seq, int k, List<IntIntPair> chunks, int iter) {
+    private static IntIntMap filterPossibleSequences(KMerDict dict, IntIntMap possibleSequences, int seq, int k, List<IntIntPair> chunks, int iter, IntSet toCompare) {
         IntIntMap tmp = new IntIntHashMap(possibleSequences.size());
         long hash = dict.sequenceFixedPositionHashesList.get(seq)[chunks.get(iter).l];
         IntSet sequencesWithHashSet = dict.hashToSequencesMap.get(hash);
@@ -329,7 +306,11 @@ public class SignatureMethod {
             if (isInDict ||
                     dict.fixedkMersCount - k <= entry.value + chunks.size() - iter) {
                 int add = isInDict ? 1 : 0;
-                tmp.put(entry.key, entry.value + add);
+                if (entry.value + add >= dict.fixedkMersCount - k) {
+                    toCompare.add(entry.key);
+                } else {
+                    tmp.put(entry.key, entry.value + add);
+                }
             }
         }
         return tmp;
@@ -357,6 +338,7 @@ public class SignatureMethod {
     /**
      * removes all sequences from given sample that don't have any related sequences in second sample based on
      * amount of presented l-mers for fixed positions
+     *
      * @deprecated filter that didn't succeed to achieve any acceptable results
      */
     @Deprecated
@@ -441,9 +423,7 @@ public class SignatureMethod {
               2 -> hamming
               3 -> total length
              */
-            long[] iters = {0, 0, 0, 0, 0};
-            //only for additional QGram filter experiment(doesn't work good)
-            //int q = 8;
+            long[] iters = {0, 0, 0, 0};
             int fileWriteThreshold = Math.min(sequences.size() / 10, 400);
             for (Map.Entry<Integer, String> seqEntity : sequences.entrySet()) {
                 iters[0]++;
@@ -459,32 +439,26 @@ public class SignatureMethod {
                 IntIntMap possibleSequences = new IntIntHashMap();
                 int seq = seqEntity.getKey();
                 List<IntIntPair> sortedChunks = getSortedChunksOneSample(dict, seqEntity);
+                IntSet toCompare = new IntScatterSet();
                 for (int i = 0; i < sortedChunks.size(); i++) {
                     if (i <= sortedChunks.size() - (dict.fixedkMersCount - k)) {
                         fillPossiblePairs(dict, possibleSequences, seq, sortedChunks, i);
                     } else {
-                        possibleSequences = filterPossibleSequences(dict, possibleSequences, seq, k, sortedChunks, i);
+                        possibleSequences = filterPossibleSequences(dict, possibleSequences, seq, k, sortedChunks, i, toCompare);
                     }
                 }
                 String s1 = sample.sequences.get(seq);
                 String h1 = sample.forHamming.get(seq);
-//                QGramSimilarity qGram = new QGramSimilarity();
-                for (IntIntCursor s : possibleSequences) {
-                    if (s.value >= dict.fixedkMersCount - k) {
-                        iters[1]++;
-                        if (hammingDistance.apply(h1, sample.forHamming.get(s.key)) <= k) {
+                for (IntCursor s : toCompare) {
+                    iters[1]++;
+                    if (hammingDistance.apply(h1, sample.forHamming.get(s.value)) <= k) {
+                        iters[3]++;
+                        iters[2]++;
+                        str.append(numbers.get(seq)).append(" ").append(numbers.get(s.value)).append("\n");
+                    } else {
+                        if (distance.apply(s1, sample.sequences.get(s.value)) != -1) {
                             iters[3]++;
-                            iters[2]++;
-                            str.append(numbers.get(seq)).append(" ").append(numbers.get(s.key)).append("\n");
-                        } else {
-//                            if (k * q < s1.length() - q + 1 - qGram.similarity(sample.profiles.get(seq), sample.profiles.get(s.key))) {
-//                                iters[4]++;
-//                                continue;
-//                            }
-                            if (distance.apply(s1, sample.sequences.get(s.key)) != -1) {
-                                iters[3]++;
-                                str.append(numbers.get(seq)).append(" ").append(numbers.get(s.key)).append("\n");
-                            }
+                            str.append(numbers.get(seq)).append(" ").append(numbers.get(s.value)).append("\n");
                         }
                     }
                 }

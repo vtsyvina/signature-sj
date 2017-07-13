@@ -1,5 +1,6 @@
 package by.bsu.util;
 
+import by.bsu.distance.LevenshteinDistance;
 import by.bsu.model.Sample;
 import by.bsu.model.SequencesTree;
 import com.carrotsearch.hppc.LongHashSet;
@@ -35,24 +36,33 @@ public class Utils {
         }
     }
 
+    /**
+     * Return hashes of l-mers in string
+     */
     public static LongSet getSequenceHashesSet(String seq, int l){
         LongSet result = new LongHashSet(seq.length() - l + 1);
-        long hashValue = 0;
-
-        for (int j = 0; j < l; j++) {
-            hashValue *= 4;
-            hashValue += convertLetterToDigit(seq.charAt(j));
-        }
-        result.add(hashValue);
-        for (int j = 1; j < seq.length() - l +1; j++) {
-            hashValue -= convertLetterToDigit(seq.charAt(j-1)) << 2 * (l-1);
-            hashValue <<= 2;
-            hashValue += convertLetterToDigit(seq.charAt(j+l -1));
-            result.add(hashValue);
+        long[] sequenceHashesArray = getSequenceHashesArray(seq, l);
+        for (long l1 : sequenceHashesArray) {
+            result.add(l1);
         }
         return result;
     }
 
+    /**
+     * Return hashes of l-mers in string
+     */
+    public static List<Long> getSequenceHashesList(String seq, int l){
+        List<Long> result = new ArrayList<>(seq.length() - l + 1);
+        long[] sequenceHashesArray = getSequenceHashesArray(seq, l);
+        for (long l1 : sequenceHashesArray) {
+            result.add(l1);
+        }
+        return result;
+    }
+
+    /**
+     * Return hashes of l-mers in string
+     */
     public static long[] getSequenceHashesArray(String seq, int l){
         long[] result = new long[seq.length() - l+1];
         int i = 0;
@@ -101,15 +111,18 @@ public class Utils {
         }
     }
 
-    public static int qHits(String s1, String s2, int q, int k){
+    /**
+     * The number of hits between sequences' q-grams
+     */
+    public static int qHits(String s1, String s2, int q){
         long[] h1 = getSequenceHashesArray(s1, q);
         long[] h2 = getSequenceHashesArray(s2, q);
         Arrays.sort(h1);
         Arrays.sort(h2);
-        return qHits(h1, h2, k);
+        return qHits(h1, h2);
     }
 
-    public static int qHits(long[] h1, long[] h2, int k){
+    public static int qHits(long[] h1, long[] h2){
        int hits = 0;
        int i = 0, j = 0;
        while (i < h1.length && j < h2.length){

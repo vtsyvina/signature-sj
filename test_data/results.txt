@@ -1,75 +1,74 @@
-Executor service k=10 l =11
-Start Dirihlet method parallel for db1 k= 10 l= 11
-997
+Start Signature method parallel for db1 k= 10 l= 11
+996
 Found db1
 comparisons = 65937
 passed hamming distance = 60420
 levenshtein = 5517
 length = 60421
-Dirichlet time 459
+Signature time 361
 
-Start Dirihlet method parallel for db2 k= 10 l= 11
-1996
+Start Signature method parallel for db2 k= 10 l= 11
+1993
 Found db2
 comparisons = 388987
 passed hamming distance = 370233
 levenshtein = 18754
 length = 370262
-Dirichlet time 414
+Signature time 336
 
-Start Dirihlet method parallel for db3 k= 10 l= 11
+Start Signature method parallel for db3 k= 10 l= 11
 4000
 Found db3
 comparisons = 1873268
 passed hamming distance = 1800448
 levenshtein = 72820
 length = 1800945
-Dirichlet time 1124
+Signature time 967
 
-Start Dirihlet method parallel for db4 k= 10 l= 11
-8000
+Start Signature method parallel for db4 k= 10 l= 11
+7994
 Found db4
 comparisons = 6256934
 passed hamming distance = 5845274
 levenshtein = 411660
 length = 5848556
-Dirichlet time 3561
+Signature time 3154
 
-Start Dirihlet method parallel for db5 k= 10 l= 11
-15999
+Start Signature method parallel for db5 k= 10 l= 11
+15998
 Found db5
 comparisons = 21028890
 passed hamming distance = 18551359
 levenshtein = 2477531
 length = 18570536
-Dirichlet time 14207
+Signature time 12791
 
-Start Dirihlet method parallel for db6 k= 10 l= 11
-32000
+Start Signature method parallel for db6 k= 10 l= 11
+31985
 Found db6
 comparisons = 46744915
 passed hamming distance = 38792420
 levenshtein = 7952495
 length = 38835302
-Dirichlet time 42710
+Signature time 37990
 
-Start Dirihlet method parallel for db7 k= 10 l= 11
-63999
+Start Signature method parallel for db7 k= 10 l= 11
+63973
 Found db7
 comparisons = 187011650
 passed hamming distance = 155201680
 levenshtein = 31809970
 length = 155373208
-Dirichlet time 180985
+Signature time 147448
 
-Start Dirihlet method parallel for db8 k= 10 l= 11
-127995
+Start Signature method parallel for db8 k= 10 l= 11
+127943
 Found db8
 comparisons = 748110580
 passed hamming distance = 620870720
 levenshtein = 127239860
 length = 621556832
-Dirichlet time 723501
+Signature time 612740
 
 qHits - фильтруют лишь крохи
 R hamming filter -  вообще ничего не фильтрует
@@ -348,3 +347,74 @@ Start Brute Hamming force method for db6 k=10
 32000
 length = 38792420
 Brute Hamming force time 150262
+
+//с новым вычислением расстояния хэмминга
+Start Signature Hamming method parallel for db7 k= 4 l= 11
+63998
+Found db7
+comparisons = 58408524
+length = 41900140
+Signature hamming time 29061
+
+Start Brute Hamming force method for db7 k=4
+64000
+length = 41900140
+Brute Hamming force time 546405
+
+Test.testHamming                   avgt   10  0.108 ± 0.004  us/op
+Test.testHammingWithDictCharArray  avgt   10  0.032 ± 0.004  us/op
+
+/***************************************************************************************************************
+SWGraph construct
+db1
+Duration 104
+Simularity computations: 68893, average 68.893 per read
+Edges found: 60420
+
+db2
+Duration 439
+Simularity computations: 398563, average 199.281 per read
+Edges found: 370233
+
+db3
+Duration 1906
+Simularity computations: 1909771, average 477.443 per read
+Edges found: 1800448
+
+db4
+Duration 6606
+Simularity computations: 6425469, average 803.184 per read
+Edges found: 5845274
+
+db5
+Duration 24716
+Simularity computations: 21787336, average 1361.71 per read
+Edges found: 18551359
+
+db6
+Duration 69822
+Simularity computations: 49977971, average 1561.81 per read
+Edges found: 38792420
+
+/***************************************************************************************************************
+
+Start Signature Hamming method parallel for db1 k= 1 l= 11
+1568140
+Found db1
+comparisons = 9654460
+length = 9064599
+Signature hamming time 31347
+
+1575200
+Found db1
+comps = 9654388
+length = 9064528
+distances = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+Signature hamming time 77920
+
+Start Signature Hamming method parallel for db1 k= 1 l= 11
+1568732
+Found db1
+comparisons = 9859050
+length = 9242148
+Signature hamming time 32659
