@@ -20,33 +20,33 @@ import java.util.stream.Collectors;
  */
 public class FasReader {
 
-    public static Map<Integer, String> readList(Path filePath) throws IOException {
+    public static String[] readList(Path filePath) throws IOException {
         return readList(filePath, false);
     }
 
-    public static Map<Integer, String> readList(Path filePath, boolean reversed) throws IOException{
+    public static String[] readList(Path filePath, boolean reversed) throws IOException{
         List<String> raw = Files.readAllLines(filePath);
-        Map<Integer, String> result = new HashMap<>();
+        List<String> result = new ArrayList<>();
         int i = 0;
         StringBuilder seq = new StringBuilder();
         for (int j = 0; j < raw.size(); j++) {
             String str = raw.get(j);
             if (str.startsWith(">") && seq.length() > 0 || str.length() == 0) {
-                result.put(i, (reversed ? seq.reverse() : seq).toString());
+                result.add((reversed ? seq.reverse() : seq).toString());
                 i++;
                 seq.setLength(0);
             } else if (!str.startsWith(">")) {
                 seq.append(str);
                 //workaround for for cases when file doesn't contain last empty string
                 if (j + 1 == raw.size()) {
-                    result.put(i, (reversed ? seq.reverse() : seq).toString());
+                    result.add((reversed ? seq.reverse() : seq).toString());
                 }
             }
         }
-        return result;
+        return result.stream().toArray(String[]::new);
     }
 
-    public static Map<Integer, String> readList(String filePath) throws IOException {
+    public static String[] readList(String filePath) throws IOException {
         return readList(Paths.get(filePath));
     }
 
@@ -74,19 +74,17 @@ public class FasReader {
         List<File> sortedFiles = Arrays.stream(file.listFiles())
                 .sorted(Comparator.comparing(File::getName))
                 .collect(Collectors.toList());
-        Map<Integer, String> seq = new HashMap<>();
+        List<String> seq = new ArrayList<>();
         sortedFiles.stream().filter( f -> !f.isHidden()).forEach(f -> {
             try {
-                seq.putAll(readList(f.toPath(), reversed)
-                        .entrySet()
-                        .stream()
-                        .collect(Collectors.toMap(e -> e.getKey() + seq.size(), Map.Entry::getValue)));
+                seq.addAll(Arrays.asList(readList(f.toPath(), reversed)));
             } catch (IOException e) {
                 System.err.println("Error reading file for multyfile sample");
                 e.printStackTrace();
             }
         });
-        return new Sample(file.getName(), seq);
+        
+        return new Sample(file.getName(), seq.stream().toArray(String[]::new));
     }
 
     public static Sample readSampleFromFile(File file) throws IOException {

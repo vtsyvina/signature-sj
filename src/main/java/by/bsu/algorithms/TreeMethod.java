@@ -1,13 +1,6 @@
 package by.bsu.algorithms;
 
-import by.bsu.model.IntIntPair;
-import by.bsu.model.Sample;
-import by.bsu.model.SequencesTree;
-import by.bsu.start.Start;
-import by.bsu.distance.HammingDistance;
-import by.bsu.distance.LevenshteinDistance;
-import com.carrotsearch.hppc.ShortArrayList;
-import com.carrotsearch.hppc.cursors.ShortCursor;
+import static by.bsu.util.Utils.numbers;
 
 import java.io.IOException;
 import java.nio.file.Files;
@@ -15,13 +8,20 @@ import java.nio.file.Path;
 import java.nio.file.StandardOpenOption;
 import java.util.HashSet;
 import java.util.LinkedList;
-import java.util.Map;
 import java.util.Queue;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicInteger;
 
-import static by.bsu.util.Utils.numbers;
+import com.carrotsearch.hppc.ShortArrayList;
+import com.carrotsearch.hppc.cursors.ShortCursor;
+
+import by.bsu.distance.HammingDistance;
+import by.bsu.distance.LevenshteinDistance;
+import by.bsu.model.IntIntPair;
+import by.bsu.model.Sample;
+import by.bsu.model.SequencesTree;
+import by.bsu.start.Start;
 
 /**
  * Created by c5239200 on 3/5/17.
@@ -53,9 +53,9 @@ public class TreeMethod {
 
         Set<IntIntPair> result = ConcurrentHashMap.newKeySet();
         AtomicInteger count = new AtomicInteger(0);
-        sample.sequences.entrySet().parallelStream().forEach(seq -> {
-            recursiveDescent(seq, tree.root, k, result, count);
-        });
+        for (int i = 0; i < sample.sequences.length; i++) {
+            recursiveDescent(i, sample.sequences[i], tree.root, k, result, count);
+        }
         System.out.println("length = " + result.size());
         System.out.println("allComps = " + count);
         return result;
@@ -92,25 +92,25 @@ public class TreeMethod {
         return resultLength;
     }
 
-    private static void recursiveDescent(Map.Entry<Integer, String> entry, SequencesTree.Node node, int k, Set<IntIntPair> result, AtomicInteger count) {
+    private static void recursiveDescent(int i, String sequence, SequencesTree.Node node, int k, Set<IntIntPair> result, AtomicInteger count) {
         LevenshteinDistance levenshteinDistance = new LevenshteinDistance(k);
         HammingDistance hammingDistance = new HammingDistance();
         count.incrementAndGet();
-        if (hammingDistance.apply(entry.getValue().substring(0, node.key.length()), node.key) <= k
-                || levenshteinDistance.apply(entry.getValue().substring(0, node.key.length()), node.key) != -1) {
+        if (hammingDistance.apply(sequence.substring(0, node.key.length()), node.key) <= k
+                || levenshteinDistance.apply(sequence.substring(0, node.key.length()), node.key) != -1) {
             if (node.children != null && !node.children.isEmpty()) {
-                node.children.forEach(n -> recursiveDescent(entry, n, k, result, count));
+                node.children.forEach(n -> recursiveDescent(i, sequence, n, k, result, count));
             }
             if (node.sequences != null) {
                 node.sequences.entrySet().forEach(s ->
                 {
-                    if (!(entry.getKey() <= s.getKey())) {
-                        if (hammingDistance.apply(entry.getValue(), s.getValue()) <= k) {
-                            result.add(new IntIntPair(entry.getKey(), s.getKey()));
+                    if (!(i <= s.getKey())) {
+                        if (hammingDistance.apply(sequence, s.getValue()) <= k) {
+                            result.add(new IntIntPair(i, s.getKey()));
                         } else {
                             //count.incrementAndGet();
-                            if (levenshteinDistance.apply(entry.getValue(), s.getValue()) != -1) {
-                                result.add(new IntIntPair(entry.getKey(), s.getKey()));
+                            if (levenshteinDistance.apply(sequence, s.getValue()) != -1) {
+                                result.add(new IntIntPair(i, s.getKey()));
                             }
                         }
                     }

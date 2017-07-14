@@ -1,9 +1,8 @@
 package by.bsu.util;
 
-import static by.bsu.util.Utils.convertLetterToDigit;
+import static by.bsu.util.Utils.getHashValue;
 
 import java.util.HashMap;
-import java.util.Map;
 
 import com.carrotsearch.hppc.IntScatterSet;
 import com.carrotsearch.hppc.LongScatterSet;
@@ -20,12 +19,12 @@ public class KMerDictChunksBuilder {
         KMerDictChunks result = new KMerDictChunks();
         result.sampleName = sample.name;
         result.l = l;
-        result.sequencesLength = sample.sequences.values().iterator().next().length();
+        result.sequencesLength = sample.sequences[0].length();
         result.fixedkMersCount = result.sequencesLength / l;
 
-        result.sequencesNumber = sample.sequences.size();
+        result.sequencesNumber = sample.sequences.length;
         result.wholeSampleFixedPositionHashesList = new LongScatterSet[result.fixedkMersCount];
-        result.sequenceFixedPositionHashesList = new HashMap<>();
+        result.sequenceFixedPositionHashesList = new long[sample.sequences.length][];
         result.allHashesSet = new LongScatterSet();
         for (int i = 0; i < result.fixedkMersCount; i++) {
             result.wholeSampleFixedPositionHashesList[i] = new LongScatterSet();
@@ -35,28 +34,19 @@ public class KMerDictChunksBuilder {
         for (int i = 0; i < result.fixedkMersCount; i++) {
             result.chunksHashToSequencesMap[i] = new HashMap<>();
         }
-        for (Map.Entry<Integer, String> entry : sample.sequences.entrySet()) {
-            result.sequenceFixedPositionHashesList.put(entry.getKey(), new long[result.fixedkMersCount]);
+        for (int seq = 0; seq < sample.sequences.length; seq++) {
+            result.sequenceFixedPositionHashesList[seq] = new long[result.fixedkMersCount];
             for (int i = 0; i < result.fixedkMersCount; i++) {
-                long hashValue = getHashValue(i*l, l, entry);
-                result.sequenceFixedPositionHashesList.get(entry.getKey())[i] = hashValue;
+                long hashValue = getHashValue(i*l, l, sample.sequences[seq]);
+                result.sequenceFixedPositionHashesList[seq][i] = hashValue;
                 result.wholeSampleFixedPositionHashesList[i].add(hashValue);
                 if (!result.chunksHashToSequencesMap[i].containsKey(hashValue)){
                     result.chunksHashToSequencesMap[i].put(hashValue, new IntScatterSet());
                 }
-                result.chunksHashToSequencesMap[i].get(hashValue).add(entry.getKey());
+                result.chunksHashToSequencesMap[i].get(hashValue).add(seq);
                 result.allHashesSet.add(hashValue);
             }
         }
         return result;
-    }
-
-    private static long getHashValue(int position, int l, Map.Entry<Integer, String> entry) {
-        long hashValue = 0;
-        for (int j = 0; j < l; j++) {
-            hashValue *= 4;
-            hashValue += convertLetterToDigit(entry.getValue().charAt(position+j));
-        }
-        return hashValue;
     }
 }

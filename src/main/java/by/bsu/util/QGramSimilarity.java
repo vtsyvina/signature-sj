@@ -1,4 +1,4 @@
-package by.bsu.algorithms;
+package by.bsu.util;
 
 import java.util.Collections;
 import java.util.HashMap;

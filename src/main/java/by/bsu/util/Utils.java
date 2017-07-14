@@ -36,6 +36,15 @@ public class Utils {
         }
     }
 
+    public static long getHashValue(int position, int l, String str) {
+        long hashValue = 0;
+        for (int j = 0; j < l; j++) {
+            hashValue *= 4;
+            hashValue += convertLetterToDigit(str.charAt(position+j));
+        }
+        return hashValue;
+    }
+
     /**
      * Return hashes of l-mers in string
      */
@@ -170,17 +179,17 @@ public class Utils {
     }
 
 
-    public static String consensus(Map<Integer, String> sequences){
-        if (sequences.isEmpty()){
+    public static String consensus(String[] sequences){
+        if (sequences.length == 0){
             return "";
         }
-        int l = sequences.values().iterator().next().length();
+        int l = sequences[0].length();
         int[][] count = new int[4][l];
-        sequences.values().forEach( s-> {
+        for (String s : sequences) {
             for (int i = 0; i < s.length(); i++) {
                 count[convertLetterToDigit(s.charAt(i))][i]++;
             }
-        });
+        }
         StringBuilder str = new StringBuilder();
         for (int i = 0; i < l; i++) {
             int max = 0;
@@ -199,44 +208,16 @@ public class Utils {
     }
 
     /**
-     * Calculates map of all edit distances from given sequence to all sequences
-     * @param source given sequence
-     * @param sequences all sequences to compare
-     * @return map of all distances
-     */
-    public static Map<Integer, Integer> distancesMap(String source, Map<Integer, String> sequences, int threshold) {
-        Map<Integer, Integer> result = new ConcurrentHashMap<>();
-        LevenshteinDistance d = new LevenshteinDistance(threshold);
-        sequences.entrySet().parallelStream().forEach( e -> {
-            int distance = d.apply(source, e.getValue());
-            if (distance != -1){
-                result.put(e.getKey(), distance);
-            } else {
-                result.put(e.getKey(), threshold+1);
-            }
-        });
-        return result;
-    }
-
-
-    /**
      * Append missing characters to string so they have the same size
      */
-    public static Map<Integer, String> stringsForHamming(Map<Integer, String > sequences){
-        int max = sequences.values().stream().mapToInt(String::length).max().getAsInt();
-        return sequences.entrySet().stream()
-                .collect(Collectors
-                        .toMap( Map.Entry::getKey,
-                                e-> e.getValue().length() < max? e.getValue()+impossibleCharacters.get(max-e.getValue().length()) : e.getValue()));
-    }
-
-    /**
-     * Builds profiles for all given strings
-     */
-    public static Map<Integer, Map<String, Integer>> getProfiles(Map<Integer, String > sequences, int l){
-        Map<Integer, Map<String, Integer>> result = new HashMap<>();
-        QGram qGram = new QGram(l);
-        sequences.entrySet().stream().forEach( e -> result.put(e.getKey(), qGram.getProfile(e.getValue())));
+    public static String[] stringsForHamming(String[] sequences){
+        int max = Arrays.stream(sequences).mapToInt(String::length).max().getAsInt();
+        String[] result = new String[sequences.length];
+        for (int i = 0; i < sequences.length; i++) {
+            result[i] = sequences[i].length() < max? 
+                    sequences[i] + impossibleCharacters.get(max - sequences[i].length()) : 
+                    sequences[i];
+        }
         return result;
     }
 

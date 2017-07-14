@@ -72,9 +72,6 @@ public class Start {
                 case "bigData":
                     testBigDataSet(k, l);
                     break;
-                case "largeRelated":
-                    testLargeRelatedSamples(folder);
-                    break;
                 case "signatureTest":
                     testDitichletAlgorithm(folder, k, l);
                     break;
@@ -93,43 +90,10 @@ public class Start {
         System.out.println("-l 11 -- l-mer length for Signature method(11 is default value)");
         System.out.println("-dir /usr/name/tmp/ -- folder with input. (cleaned_independent_264 is default value, except of bigData)");
         System.out.println("-outDir /usr/name/tmp/ -- folder with output.");
-        System.out.println("-m bigData -- run one of predefined methods. Methods are: bigData, largeRelated, signatureTest. bigData is default");
-        System.out.println("-algsToRun signature,tree -- which methods run for bigData method. Methods are: signature, tree, brute. signature is default");
+        System.out.println("-m bigData -- run one of predefined methods. Methods are: bigData, signatureTest. bigData is default");
+        System.out.println("-algsToRun signature,tree -- which methods run for bigData method. Methods are: signature, signature-hamming, tree, brute. signature is default");
         System.out.println("-testsToRun 1,2-4,6 -- which tests to run for bigData test. Run all tests by default. Can be any combination with commas and dashes");
         System.exit(1);
-    }
-
-    private static void testLargeRelatedSamples(Path folder) throws IOException {
-        System.out.println("Start testLargeRelatedSamples");
-        loadAllFiles(folder);
-        Sample sample = allFiles.get(165);
-        Sample s1 = new Sample();
-        Sample s2 = new Sample();
-        s1.name = "left";
-        s2.name = "right";
-        s1.sequences = new HashMap<>();
-        s2.sequences = new HashMap<>();
-        int i =0;
-        int half = sample.sequences.size()/2;
-        for (Map.Entry<Integer, String> entry : sample.sequences.entrySet()){
-            if (i < half){
-                s1.sequences.put(entry.getKey(), entry.getValue());
-            }else {
-                s2.sequences.put(entry.getKey(), entry.getValue());
-            }
-            i++;
-        }
-        KMerDict k1 = KMerDictBuilder.getDict(s1, 11);
-        KMerDict k2 = KMerDictBuilder.getDict(s2, 11);
-        long start = System.currentTimeMillis();
-        System.out.println(s1.sequences.size()*s2.sequences.size());
-        SignatureMethod.run(s1, s2, k1 , k2, 3);
-        System.out.println("SignatureMethod time:");
-        System.out.println(System.currentTimeMillis()-start);
-        start = System.currentTimeMillis();
-        BruteForce.run(s1,s2, 3);
-        System.out.println("BruteForce time:");
-        System.out.println(System.currentTimeMillis()-start);
     }
 
 

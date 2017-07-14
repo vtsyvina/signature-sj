@@ -1,13 +1,14 @@
 package by.bsu.util;
 
-import by.bsu.model.KMerDict;
-import by.bsu.model.Sample;
-import com.carrotsearch.hppc.*;
+import static by.bsu.util.Utils.convertLetterToDigit;
 
 import java.util.HashMap;
-import java.util.Map;
 
-import static by.bsu.util.Utils.convertLetterToDigit;
+import com.carrotsearch.hppc.IntScatterSet;
+import com.carrotsearch.hppc.LongScatterSet;
+
+import by.bsu.model.KMerDict;
+import by.bsu.model.Sample;
 
 /**
  * Class to build KMerDict for given Sequence
@@ -18,43 +19,44 @@ public class KMerDictBuilder {
         KMerDict result = new KMerDict();
         result.sampleName = sample.name;
         result.l = l;
-        result.sequencesLength = sample.sequences.values().iterator().next().length();
+        result.sequencesLength = sample.sequences[0].length();
         result.fixedkMersCount = result.sequencesLength / l;
 
-        result.sequencesNumber = sample.sequences.size();
+        result.sequencesNumber = sample.sequences.length;
         result.wholeSampleFixedPositionHashesList = new LongScatterSet[result.fixedkMersCount];
-        result.sequenceFixedPositionHashesList = new HashMap<>();
+        result.sequenceFixedPositionHashesList = new long[sample.sequences.length][];
         result.allHashesSet = new LongScatterSet();
         for (int i = 0; i < result.fixedkMersCount; i++) {
             result.wholeSampleFixedPositionHashesList[i] = new LongScatterSet();
         }
 
         result.hashToSequencesMap = new HashMap<>(result.sequencesNumber);
-        for (Map.Entry<Integer, String> entry : sample.sequences.entrySet()) {
+        for (int seq = 0; seq < sample.sequences.length; seq++) {
+            String sequence = sample.sequences[seq];
             long hashValue = 0;
             for (int j = 0; j < l; j++) {
                 hashValue *= 4;
-                hashValue += convertLetterToDigit(entry.getValue().charAt(j));
+                hashValue += convertLetterToDigit(sequence.charAt(j));
             }
-            result.sequenceFixedPositionHashesList.put(entry.getKey(), new long[result.fixedkMersCount]);
-            result.sequenceFixedPositionHashesList.get(entry.getKey())[0] = hashValue;
+            result.sequenceFixedPositionHashesList[seq] = new long[result.fixedkMersCount];
+            result.sequenceFixedPositionHashesList[seq][0] = hashValue;
             result.wholeSampleFixedPositionHashesList[0].add(hashValue);
             if (!result.hashToSequencesMap.containsKey(hashValue)){
                 result.hashToSequencesMap.put(hashValue, new IntScatterSet());
             }
-            result.hashToSequencesMap.get(hashValue).add(entry.getKey());
+            result.hashToSequencesMap.get(hashValue).add(seq);
             result.allHashesSet.add(hashValue);
-            for (int j = 1; j < entry.getValue().length() - l +1; j++) {
-                hashValue -= ((long)convertLetterToDigit(entry.getValue().charAt(j-1))) << 2 * (l-1);
+            for (int j = 1; j < sequence.length() - l +1; j++) {
+                hashValue -= ((long)convertLetterToDigit(sequence.charAt(j-1))) << 2 * (l-1);
                 hashValue <<= 2;
-                hashValue += convertLetterToDigit(entry.getValue().charAt(j+l -1));
+                hashValue += convertLetterToDigit(sequence.charAt(j+l -1));
                 if (!result.hashToSequencesMap.containsKey(hashValue)){
                     result.hashToSequencesMap.put(hashValue, new IntScatterSet());
                 }
-                result.hashToSequencesMap.get(hashValue).add(entry.getKey());
+                result.hashToSequencesMap.get(hashValue).add(seq);
                 result.allHashesSet.add(hashValue);
                 if (j % l == 0){
-                    result.sequenceFixedPositionHashesList.get(entry.getKey())[j/l] = hashValue;
+                    result.sequenceFixedPositionHashesList[seq][j/l] = hashValue;
                     result.wholeSampleFixedPositionHashesList[j/l].add(hashValue);
                 }
             }
@@ -65,7 +67,6 @@ public class KMerDictBuilder {
     public static KMerDict getDict(Sample sample, int l, int threshold){
         KMerDict result = getDict(sample, l);
         sample.consensus = Utils.consensus(sample.sequences);
-        result.consensusDistances = Utils.distancesMap(sample.consensus, sample.sequences, threshold);
         return result;
     }
 }

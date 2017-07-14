@@ -21,7 +21,9 @@ public class SequencesTreeBuilder {
     public static SequencesTree build(Sample sample) {
         SequencesTree tree = initEmptyTree();
         List<IntStrPair> sequences = new ArrayList<>();
-        sample.sequences.entrySet().forEach(s -> sequences.add(new IntStrPair(s.getKey(), s.getValue())));
+        for (int i = 0; i < sample.sequences.length; i++) {
+            sequences.add(new IntStrPair(i, sample.sequences[i]));
+        }
         sequences.sort(Comparator.comparing(c -> c.r));
         recursiveFillTree(0, sequences.size()-1, 0, tree.root, sequences);
         return tree;

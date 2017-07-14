@@ -24,18 +24,17 @@ public class BruteForceHamming {
         StringBuilder str = new StringBuilder();
         int iter = 0;
         Path path = Start.getOutputFilename(sample1, sample2, "brute-hamming");
-        for (Map.Entry<Integer, String> entry1 : sample1.sequences.entrySet()){
-            iter++;
-            if (iter % 400 == 0){
+        for (int i = 0; i < sample1.sequences.length; i++) {
+            if (i % 400 == 0){
                 Files.write(path, str.toString().getBytes(), StandardOpenOption.APPEND);
                 str = new StringBuilder();
                 System.out.print("\r" + iter);
             }
-            for (Map.Entry<Integer, String> entry2 : sample2.sequences.entrySet()){
-                int d = distance.apply(entry1.getValue(), entry2.getValue());
+            for (int j = 0; j < sample2.sequences.length; j++) {
+                int d = distance.apply(sample1.sequences[i], sample2.sequences[j]);
                 if (d <= k){
                     result++;
-                    str.append(numbers.get(entry1.getKey())).append(" ").append(numbers.get(entry2.getKey())).append("\n");
+                    str.append(numbers.get(i)).append(" ").append(numbers.get(j)).append("\n");
                 }
             }
         }
@@ -48,24 +47,19 @@ public class BruteForceHamming {
         System.out.println("Start Brute Hamming force method for "+sample.name+" k="+k);
         long result = 0;
         HammingDistance distance = new HammingDistance();
-        int i = 0;
         Path path = Start.getOutputFilename(sample, "brute-hamming");
         StringBuilder str = new StringBuilder();
-        for (Map.Entry<Integer, String> entry1 : sample.sequences.entrySet()){
-            i++;
+        for (int i = 0; i < sample.sequences.length; i++) {
             if (i % 400 == 0){
                 Files.write(path, str.toString().getBytes(), StandardOpenOption.APPEND);
                 str = new StringBuilder();
                 System.out.print("\r"+i);
             }
-            for (Map.Entry<Integer, String> entry2 : sample.sequences.entrySet()){
-                if (entry1.getKey() <= entry2.getKey()){
-                    continue;
-                }
-                int d = distance.apply(entry1.getValue(), entry2.getValue());
+            for (int j = i+1; j < sample.sequences.length; j++) {
+                int d = distance.apply(sample.sequences[i], sample.sequences[j]);
                 if (d <= k){
                     result++;
-                    str.append(numbers.get(entry1.getKey())).append(" ").append(numbers.get(entry2.getKey())).append("\n");
+                    str.append(numbers.get(i)).append(" ").append(numbers.get(j)).append("\n");
                 }
             }
         }
