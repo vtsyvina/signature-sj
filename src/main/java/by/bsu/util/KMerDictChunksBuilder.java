@@ -3,9 +3,12 @@ package by.bsu.util;
 import static by.bsu.util.Utils.getHashValue;
 
 import java.util.HashMap;
+import java.util.Map;
 
 import com.carrotsearch.hppc.IntScatterSet;
+import com.carrotsearch.hppc.IntSet;
 import com.carrotsearch.hppc.LongScatterSet;
+import com.carrotsearch.hppc.cursors.IntCursor;
 
 import by.bsu.model.KMerDictChunks;
 import by.bsu.model.Sample;
@@ -31,8 +34,10 @@ public class KMerDictChunksBuilder {
         }
 
         result.chunksHashToSequencesMap = new HashMap[result.fixedkMersCount];
+        result.chunksHashToSequencesMapArray = new HashMap[result.fixedkMersCount];
         for (int i = 0; i < result.fixedkMersCount; i++) {
             result.chunksHashToSequencesMap[i] = new HashMap<>();
+            result.chunksHashToSequencesMapArray[i] = new HashMap<>();
         }
         for (int seq = 0; seq < sample.sequences.length; seq++) {
             result.sequenceFixedPositionHashesList[seq] = new long[result.fixedkMersCount];
@@ -41,10 +46,22 @@ public class KMerDictChunksBuilder {
                 result.sequenceFixedPositionHashesList[seq][i] = hashValue;
                 result.wholeSampleFixedPositionHashesList[i].add(hashValue);
                 if (!result.chunksHashToSequencesMap[i].containsKey(hashValue)){
-                    result.chunksHashToSequencesMap[i].put(hashValue, new IntScatterSet());
+                    result.chunksHashToSequencesMap[i].put(hashValue, new int[sample.sequences.length]);
                 }
-                result.chunksHashToSequencesMap[i].get(hashValue).add(seq);
+                result.chunksHashToSequencesMap[i].get(hashValue)[seq] = 1;
                 result.allHashesSet.add(hashValue);
+            }
+        }
+        for (int i = 0; i < result.chunksHashToSequencesMap.length; i++) {
+            for (Map.Entry<Long, int[]> entry : result.chunksHashToSequencesMap[i].entrySet()) {
+                int[] tmp = new int[entry.getValue().length];
+                int j = 0;
+                for (int k = 0; k < entry.getValue().length; k++) {
+                    if (entry.getValue()[k] == 1){
+                        tmp[j++] = k; 
+                    }
+                }
+                result.chunksHashToSequencesMapArray[i].put(entry.getKey(), tmp);
             }
         }
         return result;
