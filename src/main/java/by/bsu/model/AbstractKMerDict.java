@@ -23,7 +23,7 @@ public abstract class AbstractKMerDict {
     public LongSet allHashesSet;
 
     /**
-     * for each sequence from sample stores hashes for l-mers on 0, 1*l, 2*l,... positions(in the amount of fixedkMersCount)
+     * for each sequence from sample stores hashes for l-mers on 0, 1*l, 2*l,... positions(in the amount of chunksCount)
      */
     public long[][] sequenceFixedPositionHashesList;
     /**
@@ -38,7 +38,7 @@ public abstract class AbstractKMerDict {
     /**
      * Count of l-mers in partition
      */
-    public int fixedkMersCount;
+    public int chunksCount;
     /**
      * Length of taken separately sequence
      */

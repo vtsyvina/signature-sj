@@ -98,7 +98,7 @@ reduced = 47337860
 leven = 7303118
 length = 51453578
 Diri 41018
-distances = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1754821, 809086, 338297, 139737, 60586, 34251, 22267, 13806, 8001, 4068, 1705, 556, 156, 51, 10, 2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+distances = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1754821, 809086, 338297, 139737, 60586, 34251, 22267, 13806, 8001, 4068, 1705, 556, 156, 51, 10, 2, 0, 0,
 
 
 Tree
@@ -131,7 +131,7 @@ length = 18570536
 Tree time 173059
 
 misspositions + l=7
-/Library/Java/JavaVirtualMachines/jdk1.8.0_111.jdk/Contents/Home/bin/java -Xmx14000m -Didea.launcher.port=7537 "-Didea.launcher.bin.path=/Applications/IntelliJ IDEA CE.app/Contents/bin" -Dfile.encoding=UTF-8 -classpath "/Library/Java/JavaVirtualMachines/jdk1.8.0_111.jdk/Contents/Home/jre/lib/charsets.jar:/Library/Java/JavaVirtualMachines/jdk1.8.0_111.jdk/Contents/Home/jre/lib/deploy.jar:/Library/Java/JavaVirtualMachines/jdk1.8.0_111.jdk/Contents/Home/jre/lib/ext/cldrdata.jar:/Library/Java/JavaVirtualMachines/jdk1.8.0_111.jdk/Contents/Home/jre/lib/ext/dnsns.jar:/Library/Java/JavaVirtualMachines/jdk1.8.0_111.jdk/Contents/Home/jre/lib/ext/jaccess.jar:/Library/Java/JavaVirtualMachines/jdk1.8.0_111.jdk/Contents/Home/jre/lib/ext/jfxrt.jar:/Library/Java/JavaVirtualMachines/jdk1.8.0_111.jdk/Contents/Home/jre/lib/ext/localedata.jar:/Library/Java/JavaVirtualMachines/jdk1.8.0_111.jdk/Contents/Home/jre/lib/ext/nashorn.jar:/Library/Java/JavaVirtualMachines/jdk1.8.0_111.jdk/Contents/Home/jre/lib/ext/sunec.jar:/Library/Java/JavaVirtualMachines/jdk1.8.0_111.jdk/Contents/Home/jre/lib/ext/sunjce_provider.jar:/Library/Java/JavaVirtualMachines/jdk1.8.0_111.jdk/Contents/Home/jre/lib/ext/sunpkcs11.jar:/Library/Java/JavaVirtualMachines/jdk1.8.0_111.jdk/Contents/Home/jre/lib/ext/zipfs.jar:/Library/Java/JavaVirtualMachines/jdk1.8.0_111.jdk/Contents/Home/jre/lib/javaws.jar:/Library/Java/JavaVirtualMachines/jdk1.8.0_111.jdk/Contents/Home/jre/lib/jce.jar:/Library/Java/JavaVirtualMachines/jdk1.8.0_111.jdk/Contents/Home/jre/lib/jfr.jar:/Library/Java/JavaVirtualMachines/jdk1.8.0_111.jdk/Contents/Home/jre/lib/jfxswt.jar:/Library/Java/JavaVirtualMachines/jdk1.8.0_111.jdk/Contents/Home/jre/lib/jsse.jar:/Library/Java/JavaVirtualMachines/jdk1.8.0_111.jdk/Contents/Home/jre/lib/management-agent.jar:/Library/Java/JavaVirtualMachines/jdk1.8.0_111.jdk/Contents/Home/jre/lib/plugin.jar:/Library/Java/JavaVirtualMachines/jdk1.8.0_111.jdk/Contents/Home/jre/lib/resources.jar:/Library/Java/JavaVirtualMachines/jdk1.8.0_111.jdk/Contents/Home/jre/lib/rt.jar:/Library/Java/JavaVirtualMachines/jdk1.8.0_111.jdk/Contents/Home/lib/ant-javafx.jar:/Library/Java/JavaVirtualMachines/jdk1.8.0_111.jdk/Contents/Home/lib/dt.jar:/Library/Java/JavaVirtualMachines/jdk1.8.0_111.jdk/Contents/Home/lib/javafx-mx.jar:/Library/Java/JavaVirtualMachines/jdk1.8.0_111.jdk/Contents/Home/lib/jconsole.jar:/Library/Java/JavaVirtualMachines/jdk1.8.0_111.jdk/Contents/Home/lib/packager.jar:/Library/Java/JavaVirtualMachines/jdk1.8.0_111.jdk/Contents/Home/lib/sa-jdi.jar:/Library/Java/JavaVirtualMachines/jdk1.8.0_111.jdk/Contents/Home/lib/tools.jar:/Users/c5239200/thesis/sequence-comparison/target/classes:/Users/c5239200/.m2/repository/com/carrotsearch/hppc/0.7.2/hppc-0.7.2.jar:/Users/c5239200/.m2/repository/org/openjdk/jmh/jmh-core/1.17.4/jmh-core-1.17.4.jar:/Users/c5239200/.m2/repository/net/sf/jopt-simple/jopt-simple/4.6/jopt-simple-4.6.jar:/Users/c5239200/.m2/repository/org/apache/commons/commons-math3/3.2/commons-math3-3.2.jar:/Users/c5239200/.m2/repository/org/openjdk/jmh/jmh-generator-annprocess/1.17.4/jmh-generator-annprocess-1.17.4.jar:/Applications/IntelliJ IDEA CE.app/Contents/lib/idea_rt.jar" com.intellij.rt.execution.application.AppMain by.bsu.start.Start -testsToRun 1-3 -algsToRun dirichlet -l 7
+
 Waiting for start
 l
 Start Dirihlet method for db1 k=10 l=7
@@ -140,7 +140,7 @@ Found db1
 comps = 64279
 reduce = 60420
 length = 60421
-distances = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1135, 581, 332, 267, 222, 234, 222, 204, 140, 96, 91, 127, 151, 54, 2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+distances = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1135, 581, 332, 267, 222, 234, 222, 204, 140, 96, 91, 127, 151, 54, 2, 0, 0, 0, 0,
 missposition = 28925
 Dirichlet time 788
 
@@ -150,7 +150,7 @@ Found db2
 comps = 384939
 reduce = 370233
 length = 370262
-distances = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 6319, 2724, 1198, 784, 553, 552, 515, 427, 295, 215, 246, 359, 348, 129, 12, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+distances = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 6319, 2724, 1198, 784, 553, 552, 515, 427, 295, 215, 246, 359, 348, 129, 12, 1, 0, 0, 0,
 missposition = 116424
 Dirichlet time 2441
 
@@ -160,7 +160,7 @@ Found db3
 comps = 1862500
 reduce = 1800448
 length = 1800945
-distances = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 35721, 10052, 3763, 2219, 1755, 1453, 1307, 1225, 849, 479, 434, 682, 915, 576, 117, 7, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+distances = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 35721, 10052, 3763, 2219, 1755, 1453, 1307, 1225, 849, 479, 434, 682, 915, 576, 117, 7, 1, 0,
 missposition = 517958
 Dirichlet time 10100
 
@@ -173,7 +173,7 @@ Found db1
 comps = 63685
 reduce = 60420
 length = 60421
-distances = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1135, 579, 316, 252, 205, 213, 190, 151, 46, 27, 57, 77, 13, 3, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+distances = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1135, 579, 316, 252, 205, 213, 190, 151, 46, 27, 57, 77, 13, 3, 0, 0, 0, 0,
 missposition = 47799
 levenshtein = 3265
 Dirichlet time 963
@@ -184,7 +184,7 @@ Found db2
 comps = 383434
 reduce = 370233
 length = 370262
-distances = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 6318, 2714, 1104, 717, 482, 501, 443, 310, 124, 78, 131, 198, 49, 3, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+distances = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 6318, 2714, 1104, 717, 482, 501, 443, 310, 124, 78, 131, 198, 49, 3, 0, 0,
 missposition = 212758
 levenshtein = 13201
 Dirichlet time 3214
@@ -195,7 +195,7 @@ Found db3
 comps = 1857864
 reduce = 1800448
 length = 1800945
-distances = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 35695, 9845, 3441, 1986, 1426, 1302, 1099, 836, 346, 161, 230, 378, 154, 18, 2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+distances = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 35695, 9845, 3441, 1986, 1426, 1302, 1099, 836, 346, 161, 230, 378, 154, 18, 2, 0, 0,
 missposition = 1039665
 levenshtein = 57416
 Dirichlet time 15495
@@ -206,7 +206,7 @@ Found db4
 comps = 6168387
 reduce = 5845274
 length = 5848556
-distances = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 202546, 63826, 19268, 9466, 6166, 5409, 4539, 3312, 1599, 750, 838, 1325, 630, 134, 22, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+distances = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 202546, 63826, 19268, 9466, 6166, 5409, 4539, 3312, 1599, 750, 838, 1325, 630, 134, 22, 1, 0,
 missposition = 4328255
 levenshtein = 323113
 Dirichlet time 67706
@@ -409,7 +409,6 @@ Signature hamming time 31347
 Found db1
 comps = 9654388
 length = 9064528
-distances = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
 Signature hamming time 77920
 
 Start Signature Hamming method parallel for db1 k= 1 l= 11
@@ -455,3 +454,179 @@ db5     21877   9168
 db6     65051   24845
 db7     272574  101085
 
+
+Start Signature Hamming method for db3 k=10 l=11
+4000
+Found db3
+comps = 1873268
+length = 1800448
+hamming time = 451
+fill time = 118
+filter time = 517
+write time = 88
+Signature hamming time 1249
+
+Start Signature Hamming method for db4 k=10 l=11
+8000
+Found db4
+comps = 6256934
+length = 5845274
+hamming time = 1693
+fill time = 472
+filter time = 1733
+write time = 271
+Signature hamming time 4385
+
+Start Signature Hamming method for db5 k=10 l=11
+16000
+Found db5
+comps = 21028890
+length = 18551359
+hamming time = 6946
+fill time = 1933
+filter time = 7096
+write time = 875
+Signature hamming time 17601
+
+Start Signature Hamming method for db6 k=10 l=11
+32000
+Found db6
+comps =                 46744905    44939957
+length = 38792420
+hamming time =          14698       12427
+fill time =             6937        5520
+filter time =           24562       6691
+write time =            1648        1842
+Signature hamming time  48585       27944
+
+Start Signature Hamming method for db7 k=10 l=11
+64000
+Found db7
+comps =                 187011620   179791828
+length =  155201680
+hamming time =          59915       53277
+fill time =             29008       22787
+filter time =           101766      25847
+write time =            5932        6057
+Signature hamming time  200224      110866
+==================================================================
+entropy
+k+2
+Start Signature Hamming method parallel for db5 k= 10 l= 0
+15934
+Found db5
+comparisons = 32512431
+length = 18551359
+Signature hamming time 7559
+k+3
+Start Signature Hamming method parallel for db5 k= 10 l= 0
+15989
+Found db5
+comparisons = 22337170
+length = 18551359
+Signature hamming time 6382
+k+4
+Start Signature Hamming method parallel for db5 k= 10 l= 0
+15992
+Found db5
+comparisons = 21457715
+length = 18551359
+Signature hamming time 6085
+k+5
+Start Signature Hamming method parallel for db5 k= 10 l= 0
+15990
+Found db5
+comparisons = 21200085
+length = 18551359
+Signature hamming time 6025
+k+6
+Start Signature Hamming method parallel for db5 k= 10 l= 0
+15991
+Found db5
+comparisons = 20824462
+length = 18551359
+Signature hamming time 6002
+k+7
+Start Signature Hamming method parallel for db5 k= 10 l= 0
+15997
+Found db5
+comparisons = 20706813
+length = 18551359
+Signature hamming time 5923
+k+8
+Start Signature Hamming method parallel for db5 k= 10 l= 0
+15995
+Found db5
+comparisons = 20602310
+length = 18551359
+Signature hamming time 5951
+k+9
+Start Signature Hamming method parallel for db5 k= 10 l= 0
+15994
+Found db5
+comparisons = 20502195
+length = 18551359
+Signature hamming time 6257
+k+15
+Start Signature Hamming method parallel for db5 k= 10 l= 0
+15997
+Found db5
+comparisons = 20009997
+length = 18551359
+Signature hamming time 6673
+
+with entropy dict
+Start Signature Hamming method for db3 k=10 l=0
+4000
+Found db3
+comps = 1862914
+length = 1800448
+hamming time = 582
+fill time = 108
+filter time = 295
+write time = 113
+Signature hamming time 1315
+
+Start Signature Hamming method for db4 k=10 l=0
+8000
+Found db4
+comps = 6204049
+length = 5845274
+hamming time = 1592
+fill time = 358
+filter time = 520
+write time = 235
+Signature hamming time 2962
+
+Start Signature Hamming method for db5 k=10 l=0
+16000
+Found db5
+comps = 20706813
+length = 18551359
+hamming time = 5441
+fill time = 1428
+filter time = 1877
+write time = 881
+Signature hamming time 9930
+
+Start Signature Hamming method for db6 k=10 l=0
+32000
+Found db6
+comps = 44939957
+length = 38792420
+hamming time = 12427
+fill time = 5520
+filter time = 6691
+write time = 1842
+Signature hamming time 27944
+
+Start Signature Hamming method for db7 k=10 l=0
+64000
+Found db7
+comps = 179791828
+length = 155201680
+hamming time = 53277
+fill time = 22787
+filter time = 25847
+write time = 6057
+Signature hamming time 110866

@@ -207,6 +207,27 @@ public class Utils {
         return consensus(sample.sequences);
     }
 
+    public static double[][] profile(Sample sample){
+        String[] sequences = sample.sequences;
+        if (sequences.length == 0){
+            return new double[0][4];
+        }
+        int l = sequences[0].length();
+        int[][] count = new int[4][l];
+        for (String s : sequences) {
+            for (int i = 0; i < s.length(); i++) {
+                count[convertLetterToDigit(s.charAt(i))][i]++;
+            }
+        }
+        double[][] result = new double[4][l];
+        for (int i = 0; i < 4; i++) {
+            for (int j = 0; j < l; j++) {
+                result[i][j] = count[i][j] / (double)sequences.length;
+            }
+        }
+        return result;
+    }
+
     /**
      * Append missing characters to string so they have the same size
      */

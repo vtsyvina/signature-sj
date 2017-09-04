@@ -19,7 +19,7 @@ public class KMerDictChunks extends AbstractKMerDict{
      *      0 -> {14323123 -> [0, 0, 1, 0, ..., 0, 1, 0,...], 36321322 -> [1, 0, 1, 1, 0, ... ,0, 1, ...]}
      *      1 -> {17481743 -> [0, 1, 1, 0, ..., 0, 1, 0,...], 96321422 -> [0, 0, 1, 1, 0, ... ,1, 0, ...]}
      *      ...
-     *      fixedkMersCount -> {...}
+     *      chunksCount -> {...}
      *  }
      *  
      */
@@ -33,7 +33,7 @@ public class KMerDictChunks extends AbstractKMerDict{
      *      0 -> {14323123 -> [1, 4, 6, 7,...], 36321322 -> [1, 3, 6, 9,...]}
      *      1 -> {17481743 -> [2, 5, 6, 7,...], 96321422 -> [2, 5, 8, 9,...]}
      *      ...
-     *      fixedkMersCount -> {...}
+     *      chunksCount -> {...}
      *  }
      *
      */

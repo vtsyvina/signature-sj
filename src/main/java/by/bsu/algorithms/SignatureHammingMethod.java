@@ -1,8 +1,13 @@
 package by.bsu.algorithms;
 
-import static by.bsu.util.AlgorithmUtils.calculateCoincidences;
-import static by.bsu.util.Utils.expandNumbers;
-import static by.bsu.util.Utils.numbers;
+import by.bsu.distance.HammingDistance;
+import by.bsu.model.IntIntPair;
+import by.bsu.model.KMerDictChunks;
+import by.bsu.model.Sample;
+import by.bsu.start.Start;
+import com.carrotsearch.hppc.IntIntHashMap;
+import com.carrotsearch.hppc.IntIntMap;
+import com.carrotsearch.hppc.cursors.IntIntCursor;
 
 import java.io.IOException;
 import java.nio.file.Files;
@@ -20,16 +25,9 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 import java.util.concurrent.atomic.AtomicInteger;
 
-import com.carrotsearch.hppc.IntIntHashMap;
-import com.carrotsearch.hppc.IntIntMap;
-import com.carrotsearch.hppc.IntSet;
-import com.carrotsearch.hppc.cursors.IntIntCursor;
-
-import by.bsu.distance.HammingDistance;
-import by.bsu.model.IntIntPair;
-import by.bsu.model.KMerDictChunks;
-import by.bsu.model.Sample;
-import by.bsu.start.Start;
+import static by.bsu.util.AlgorithmUtils.calculateCoincidences;
+import static by.bsu.util.Utils.expandNumbers;
+import static by.bsu.util.Utils.numbers;
 
 /**
  * Created by c5239200 on 6/26/17.
@@ -42,13 +40,12 @@ public class SignatureHammingMethod {
     private static volatile long tasksIteration = 0;
     public static AtomicInteger coincidenceFilter = new AtomicInteger();
     public static AtomicInteger executionCount = new AtomicInteger();
-    
-    //TODO check this method. Just copy-past for now, and docs for whole class
+
     public static long run(Sample sample1, Sample sample2, KMerDictChunks dict1, KMerDictChunks dict2, int k) throws IOException {
         int comps = 0;
         int kMerCoincidences = calculateCoincidences(dict1, dict2);
         executionCount.incrementAndGet();
-        if (kMerCoincidences < dict1.fixedkMersCount - k) {
+        if (kMerCoincidences < dict1.chunksCount - k) {
             coincidenceFilter.incrementAndGet();
             return 0;
         }
@@ -65,7 +62,7 @@ public class SignatureHammingMethod {
             List<IntIntPair> chunks = getSortedChunksTwoSamples(dict1, dict2, seq);
             for (int i = 0; i < chunks.size(); i++) {
                 long chunkHash = dict1.sequenceFixedPositionHashesList[seq][chunks.get(i).l];
-                if (i <= chunks.size() - (dict1.fixedkMersCount - k)) {
+                if (i <= chunks.size() - (dict1.chunksCount - k)) {
                     for (int possibleSeq : dict2.chunksHashToSequencesMapArray[chunks.get(i).l].get(chunkHash)) {
                         hits[possibleSeq]++;
                     }
@@ -75,7 +72,7 @@ public class SignatureHammingMethod {
                     for (IntIntCursor entry : possibleSequences) {
                         boolean isInSecondDict = sequencesWithChunks[entry.key] == 1;
                         if (isInSecondDict ||
-                                dict1.fixedkMersCount - k <= entry.value + chunks.size() - i) {
+                                dict1.chunksCount - k <= entry.value + chunks.size() - i) {
                             int add = isInSecondDict ? 1 : 0;
                             tmp.put(entry.key, entry.value + add);
                         }
@@ -85,7 +82,7 @@ public class SignatureHammingMethod {
             }
             for (IntIntCursor s : possibleSequences) {
                 if (seq != s.key
-                        && s.value >= dict1.fixedkMersCount - k) {
+                        && s.value >= dict1.chunksCount - k) {
                     comps++;
                     if (hammingDistance.apply(sample1.forHamming[seq], sample2.forHamming[s.key]) <= k) {
                         str.append(numbers.get(seq)).append(" ").append(numbers.get(s.key)).append("\n");
@@ -114,7 +111,8 @@ public class SignatureHammingMethod {
     }
 
     public static long run(Sample sample, KMerDictChunks dict, int k) throws IOException {
-        System.out.println("Start Signature Hamming method for " + sample.name + " k=" + k + " l=" + dict.l);
+        String chunks = dict.l == 0 ? " entropy-based chunks size" : " l=" + dict.l;
+        System.out.println("Start Signature Hamming method for " + sample.name + " k=" + k + chunks);
         expandNumbers(sample.sequences.length);
         long[] iter = {0, 0};
         int[] distances = new int[dict.sequencesLength];
@@ -142,29 +140,24 @@ public class SignatureHammingMethod {
             List<IntIntPair> sortedChunks = getSortedChunksOneSample(dict, seq);
             List<Integer> toCompare = new ArrayList<>();
             for (int i = 0; i < sortedChunks.size(); i++) {
-                if (i <= sortedChunks.size() - (dict.fixedkMersCount - k)) {
+                if (i <= sortedChunks.size() - (dict.chunksCount - k)) {
                     long start = System.nanoTime();
                     fillPossiblePairs(dict, hits, seq, sortedChunks, i);
                     fillTime += System.nanoTime() - start;
                 } else {
                     long start = System.nanoTime();
-                    if (i-1 == sortedChunks.size() - (dict.fixedkMersCount - k)){
+                    if (i-1 == sortedChunks.size() - (dict.chunksCount - k)){
                         possibleSequences = fillPossibleSequencesFromArray(hits);
                     }
                     possibleSequences = filterPossibleSequences(dict, possibleSequences, hits, seq, k, sortedChunks, i, toCompare);
                     filterTime += System.nanoTime() - start;
                 }
             }
-            //String h1 = sample.forHamming.get(seq);
-            char[] h1 = sample.sequencesChars[seq];
-            long[] c1 = dict.sequenceFixedPositionHashesList[seq];
             long start = System.currentTimeMillis();
             for (Integer s : toCompare) {
                 iter[1]++;
-                int apply = hammingDistance.apply(h1, sample.sequencesChars[s],
-                        c1, dict.sequenceFixedPositionHashesList[s],
-                        dict.l, k);
-                if (apply != -1) {
+                int apply = hammingDistance.apply(sample.sequences[seq], sample.sequences[s]);
+                if (apply <= k) {
                     length++;
                     str.append(numbers.get(seq)).append(" ").append(numbers.get(s)).append("\n");
                 }
@@ -204,11 +197,17 @@ public class SignatureHammingMethod {
     }
 
     public static Long runParallel(Sample sample, KMerDictChunks dict, int k) throws IOException {
-        System.out.println("Start Signature Hamming method parallel for " + sample.name + " k= " + k + " l= " + dict.l);
+        String chunks = dict.l == 0 ? " entropy-based chunks size" : " l=" + dict.l;
+        System.out.println("Start Signature Hamming method for " + sample.name + " k=" + k + chunks);
         expandNumbers(sample.sequences.length);
         Path path = Start.getOutputFilename(sample, "signature-hamming");
-        //divide sequences into parts for executor service
         int cores = Runtime.getRuntime().availableProcessors();
+
+        String threads = Start.settings.get("-threads");
+        if (threads != null){
+            cores = Integer.valueOf(threads);
+        }
+        System.out.println("Running threads = "+cores);
         ExecutorService service = Executors.newFixedThreadPool(cores);
         List<Map<Integer, String>> parts = new ArrayList<>();
         tasksIteration = 0;
@@ -287,11 +286,11 @@ public class SignatureHammingMethod {
             boolean isInDict = sequencesWithHashSet[candidate] == 1;
             // put if sequence hash l-mer for current fixed position or if it already has enough equal l-mers
             if (isInDict ||
-                    dict.fixedkMersCount - k <= hits[candidate] + chunks.size() - iter) {
+                    dict.chunksCount - k <= hits[candidate] + chunks.size() - iter) {
                 if (isInDict){
                     hits[candidate]++;
                 }
-                if (hits[candidate] >= dict.fixedkMersCount - k) {
+                if (hits[candidate] >= dict.chunksCount - k) {
                     toCompare.add(candidate);
                 } else {
                     tmp[last++] = candidate;
@@ -310,7 +309,7 @@ public class SignatureHammingMethod {
     private static List<IntIntPair> getSortedChunksOneSample(KMerDictChunks dict, int seq) {
         List<IntIntPair> result = new ArrayList<>();
         //for each fixed position
-        for (int i = 0; i < dict.fixedkMersCount; i++) {
+        for (int i = 0; i < dict.chunksCount; i++) {
             long hash = dict.sequenceFixedPositionHashesList[seq][i];
             if (dict.allHashesSet.contains(hash)) {
                 //add tuple -> (position, amount of sequences)
@@ -327,7 +326,7 @@ public class SignatureHammingMethod {
      */
     private static List<IntIntPair> getSortedChunksTwoSamples(KMerDictChunks dict1, KMerDictChunks dict2, int seq) {
         List<IntIntPair> result = new ArrayList<>();
-        for (int i = 0; i < dict1.fixedkMersCount; i++) {
+        for (int i = 0; i < dict1.chunksCount; i++) {
             long hash = dict1.sequenceFixedPositionHashesList[seq][i];
             if (dict2.allHashesSet.contains(hash)) {
                 result.add(new IntIntPair(i, dict2.chunksHashToSequencesMapArray[i].get(hash).length));
@@ -386,24 +385,20 @@ public class SignatureHammingMethod {
                 List<Integer> toCompare = new ArrayList<>();
                 int[] hits = new int[sample.sequences.length];
                 for (int i = 0; i < sortedChunks.size(); i++) {
-                    if (i <= sortedChunks.size() - (dict.fixedkMersCount - k)) {
+                    if (i <= sortedChunks.size() - (dict.chunksCount - k)) {
                         fillPossiblePairs(dict, hits, seq, sortedChunks, i);
                     } else {
-                        if (i-1 == sortedChunks.size() - (dict.fixedkMersCount - k)){
+                        if (i-1 == sortedChunks.size() - (dict.chunksCount - k)){
                             possibleSequences = fillPossibleSequencesFromArray(hits);
                         }
                         possibleSequences = filterPossibleSequences(dict, possibleSequences, hits, seq, k, sortedChunks, i, toCompare);
                     }
                 }
                 //String h1 = sample.forHamming.get(seq);
-                char[] h1 = sample.sequencesChars[seq];
-                long[] c1 = dict.sequenceFixedPositionHashesList[seq];
                 for (Integer s : toCompare) {
                     iters[1]++;
-                    int apply = hammingDistance.apply(h1, sample.sequencesChars[s],
-                            c1, dict.sequenceFixedPositionHashesList[s],
-                            dict.l, k);
-                    if (apply != -1) {
+                    int apply = hammingDistance.apply(sample.sequences[seq], sample.sequences[s]);
+                    if (apply <=k) {
                         iters[3]++;
                         str.append(numbers.get(seq)).append(" ").append(numbers.get(s)).append("\n");
                     }

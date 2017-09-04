@@ -25,7 +25,7 @@ public class SequencesTreeBuilder {
             sequences.add(new IntStrPair(i, sample.sequences[i]));
         }
         sequences.sort(Comparator.comparing(c -> c.r));
-        recursiveFillTree(0, sequences.size()-1, 0, tree.root, sequences);
+        recursiveFillTree(0, sequences.size() - 1, 0, tree.root, sequences);
         return tree;
     }
 
@@ -47,36 +47,36 @@ public class SequencesTreeBuilder {
         return tree;
     }
 
-    public static void printTree(SequencesTree tree){
+    public static void printTree(SequencesTree tree) {
         recursivePass(tree.root, 0);
     }
 
-    private static void recursivePass( SequencesTree.Node node, int level){
-        if (node.children == null || node.children.isEmpty()){
+    private static void recursivePass(SequencesTree.Node node, int level) {
+        if (node.children == null || node.children.isEmpty()) {
             StringBuilder str = new StringBuilder();
             for (int i = 0; i < level; i++) {
                 str.append("   ");
             }
-            System.out.println(str.toString()+node.key.length());
+            System.out.println(str.toString() + node.key.length());
         } else {
-            node.children.forEach( c -> recursivePass(c, level+1));
+            node.children.forEach(c -> recursivePass(c, level + 1));
             StringBuilder str = new StringBuilder();
             for (int i = 0; i < level; i++) {
                 str.append("   ");
             }
-            System.out.println(str.toString()+node.key.length()+" "+node.children.size());
+            System.out.println(str.toString() + node.key.length() + " " + node.children.size());
         }
     }
 
-    private static void recursiveFillNodeChunks(SequencesTree.Node node, int l){
+    private static void recursiveFillNodeChunks(SequencesTree.Node node, int l) {
         node.chunks = new LongArrayList();
         node.grams = new HashMap<>();
         Utils.fillNodeGramsAndChunks(node, l);
-        if ( node.chunks.size() > maxChunks){
+        if (node.chunks.size() > maxChunks) {
             maxChunks = node.chunks.size();
         }
         if (node.children != null) {
-            node.children.parallelStream().forEach( c -> recursiveFillNodeChunks(c, l));
+            node.children.parallelStream().forEach(c -> recursiveFillNodeChunks(c, l));
         }
     }
 
@@ -87,29 +87,29 @@ public class SequencesTreeBuilder {
             int maxLettersCount = 0;
             int maxBorder = -1;
             int maxPrefixLength = 0;
-            for (int i = 1; i < sequences.get(0).r.length() - prefixLength +1; i++) {
+            for (int i = 1; i < sequences.get(0).r.length() - prefixLength + 1; i++) {
                 int border = left;
-                while (border < end && sequences.get(border+1).r.startsWith(sequences.get(left).r.substring(0,prefixLength+i))){
+                while (border < end && sequences.get(border + 1).r.startsWith(sequences.get(left).r.substring(0, prefixLength + i))) {
                     border++;
                 }
-                if (i*(border-left+1) >= maxLettersCount){
-                    maxLettersCount = i*(border-left+1);
+                if (i * (border - left + 1) >= maxLettersCount) {
+                    maxLettersCount = i * (border - left + 1);
                     maxBorder = border;
                     maxPrefixLength = i;
                 }
             }
             SequencesTree.Node node = new SequencesTree.Node();
             node.parent = currentNode;
-            node.key = currentNode.key+sequences.get(left).r.substring(prefixLength,prefixLength+maxPrefixLength);
+            node.key = currentNode.key + sequences.get(left).r.substring(prefixLength, prefixLength + maxPrefixLength);
             currentNode.children.add(node);
-            if (prefixLength+maxPrefixLength == sequences.get(0).r.length()){
+            if (prefixLength + maxPrefixLength == sequences.get(0).r.length()) {
                 node.sequences = new HashMap<>();
                 for (int i = left; i <= maxBorder; i++) {
                     node.sequences.put(sequences.get(i).l, sequences.get(i).r);
                 }
-            }else{
+            } else {
                 node.children = new LinkedList<>();
-                recursiveFillTree(left, maxBorder, prefixLength+maxPrefixLength, node, sequences);
+                recursiveFillTree(left, maxBorder, prefixLength + maxPrefixLength, node, sequences);
             }
             left = maxBorder + 1;
         }

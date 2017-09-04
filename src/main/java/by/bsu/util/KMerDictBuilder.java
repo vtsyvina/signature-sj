@@ -1,14 +1,13 @@
 package by.bsu.util;
 
-import static by.bsu.util.Utils.convertLetterToDigit;
-
-import java.util.HashMap;
-
+import by.bsu.model.KMerDict;
+import by.bsu.model.Sample;
 import com.carrotsearch.hppc.IntScatterSet;
 import com.carrotsearch.hppc.LongScatterSet;
 
-import by.bsu.model.KMerDict;
-import by.bsu.model.Sample;
+import java.util.HashMap;
+
+import static by.bsu.util.Utils.convertLetterToDigit;
 
 /**
  * Class to build KMerDict for given Sequence
@@ -20,13 +19,13 @@ public class KMerDictBuilder {
         result.sampleName = sample.name;
         result.l = l;
         result.sequencesLength = sample.sequences[0].length();
-        result.fixedkMersCount = result.sequencesLength / l;
+        result.chunksCount = result.sequencesLength / l;
 
         result.sequencesNumber = sample.sequences.length;
-        result.wholeSampleFixedPositionHashesList = new LongScatterSet[result.fixedkMersCount];
+        result.wholeSampleFixedPositionHashesList = new LongScatterSet[result.chunksCount];
         result.sequenceFixedPositionHashesList = new long[sample.sequences.length][];
         result.allHashesSet = new LongScatterSet();
-        for (int i = 0; i < result.fixedkMersCount; i++) {
+        for (int i = 0; i < result.chunksCount; i++) {
             result.wholeSampleFixedPositionHashesList[i] = new LongScatterSet();
         }
 
@@ -38,7 +37,7 @@ public class KMerDictBuilder {
                 hashValue *= 4;
                 hashValue += convertLetterToDigit(sequence.charAt(j));
             }
-            result.sequenceFixedPositionHashesList[seq] = new long[result.fixedkMersCount];
+            result.sequenceFixedPositionHashesList[seq] = new long[result.chunksCount];
             result.sequenceFixedPositionHashesList[seq][0] = hashValue;
             result.wholeSampleFixedPositionHashesList[0].add(hashValue);
             if (!result.hashToSequencesMap.containsKey(hashValue)){
