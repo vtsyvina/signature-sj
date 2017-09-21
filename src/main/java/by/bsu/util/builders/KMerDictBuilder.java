@@ -1,7 +1,8 @@
-package by.bsu.util;
+package by.bsu.util.builders;
 
 import by.bsu.model.KMerDict;
 import by.bsu.model.Sample;
+import by.bsu.util.Utils;
 import com.carrotsearch.hppc.IntScatterSet;
 import com.carrotsearch.hppc.LongScatterSet;
 
@@ -22,11 +23,11 @@ public class KMerDictBuilder {
         result.chunksCount = result.sequencesLength / l;
 
         result.sequencesNumber = sample.sequences.length;
-        result.wholeSampleFixedPositionHashesList = new LongScatterSet[result.chunksCount];
-        result.sequenceFixedPositionHashesList = new long[sample.sequences.length][];
+        result.wholeSampleChunksHashesList = new LongScatterSet[result.chunksCount];
+        result.sequenceChunksHashesList = new long[sample.sequences.length][];
         result.allHashesSet = new LongScatterSet();
         for (int i = 0; i < result.chunksCount; i++) {
-            result.wholeSampleFixedPositionHashesList[i] = new LongScatterSet();
+            result.wholeSampleChunksHashesList[i] = new LongScatterSet();
         }
 
         result.hashToSequencesMap = new HashMap<>(result.sequencesNumber);
@@ -37,9 +38,9 @@ public class KMerDictBuilder {
                 hashValue *= 4;
                 hashValue += convertLetterToDigit(sequence.charAt(j));
             }
-            result.sequenceFixedPositionHashesList[seq] = new long[result.chunksCount];
-            result.sequenceFixedPositionHashesList[seq][0] = hashValue;
-            result.wholeSampleFixedPositionHashesList[0].add(hashValue);
+            result.sequenceChunksHashesList[seq] = new long[result.chunksCount];
+            result.sequenceChunksHashesList[seq][0] = hashValue;
+            result.wholeSampleChunksHashesList[0].add(hashValue);
             if (!result.hashToSequencesMap.containsKey(hashValue)){
                 result.hashToSequencesMap.put(hashValue, new IntScatterSet());
             }
@@ -55,8 +56,8 @@ public class KMerDictBuilder {
                 result.hashToSequencesMap.get(hashValue).add(seq);
                 result.allHashesSet.add(hashValue);
                 if (j % l == 0){
-                    result.sequenceFixedPositionHashesList[seq][j/l] = hashValue;
-                    result.wholeSampleFixedPositionHashesList[j/l].add(hashValue);
+                    result.sequenceChunksHashesList[seq][j/l] = hashValue;
+                    result.wholeSampleChunksHashesList[j/l].add(hashValue);
                 }
             }
         }

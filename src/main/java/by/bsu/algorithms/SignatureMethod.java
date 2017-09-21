@@ -7,6 +7,7 @@ import by.bsu.start.Start;
 import by.bsu.distance.HammingDistance;
 import by.bsu.distance.LevenshteinDistance;
 
+import com.carrotsearch.hppc.IntArrayList;
 import com.carrotsearch.hppc.IntIntHashMap;
 import com.carrotsearch.hppc.IntIntMap;
 import com.carrotsearch.hppc.IntScatterSet;
@@ -46,7 +47,13 @@ public class SignatureMethod {
     public static AtomicInteger coincidenceFilter = new AtomicInteger();
     public static AtomicInteger executionCount = new AtomicInteger();
 
-    public static long run(Sample sample1, Sample sample2, KMerDict dict1, KMerDict dict2, int k) throws IOException {
+    private Path output;
+    private Sample sample1;
+    private Sample sample2;
+
+    public long run(Sample sample1, Sample sample2, KMerDict dict1, KMerDict dict2, int k) throws IOException {
+        this.sample1 = sample1;
+        this.sample2 = sample2;
         int comps = 0;
         int kMerCoincidences = calculateCoincidences(dict1, dict2);
         executionCount.incrementAndGet();
@@ -56,7 +63,6 @@ public class SignatureMethod {
         }
         LevenshteinDistance distance = new LevenshteinDistance(k);
         HammingDistance hammingDistance = new HammingDistance();
-        Path path = Start.getOutputFilename(sample1, sample2, "signature");
         StringBuilder str = new StringBuilder();
         expandNumbers(sample1.sequences.length);
         expandNumbers(sample2.sequences.length);
@@ -66,9 +72,9 @@ public class SignatureMethod {
         for (int seq = 0; seq < sample1.sequences.length; seq++) {
             IntIntMap possibleSequences = new IntIntHashMap();
             List<IntIntPair> chunks = getSortedChunksTwoSamples(dict1, dict2, seq);
-            IntSet toCompare = new IntScatterSet();
+            IntArrayList toCompare = new IntArrayList();
             for (int i = 0; i < chunks.size(); i++) {
-                long chunkHash = dict1.sequenceFixedPositionHashesList[seq][chunks.get(i).l];
+                long chunkHash = dict1.sequenceChunksHashesList[seq][chunks.get(i).l];
                 if (i <= chunks.size() - (dict1.chunksCount - k)) {
                     for (IntCursor possibleSeq : dict2.hashToSequencesMap.get(chunkHash)) {
                         possibleSequences.putOrAdd(possibleSeq.value, 1, 1);
@@ -91,30 +97,32 @@ public class SignatureMethod {
                     possibleSequences = tmp;
                 }
             }
-            for (IntIntCursor s : possibleSequences) {
-                if (seq != s.key
-                        && s.value >= dict1.chunksCount - k) {
-                    comps++;
-                    if (hammingDistance.apply(sample1.forHamming[seq], sample2.forHamming[s.key]) <= k) {
-                        str.append(numbers.get(seq)).append(" ").append(numbers.get(s.key)).append("\n");
-                        reduce++;
-                        length++;
-                        continue;
-                    }
-                    int d = distance.apply(sample1.sequences[seq], sample2.sequences[s.key]);
-                    if (d != -1) {
-                        length++;
-                        str.append(numbers.get(seq)).append(" ").append(numbers.get(s.key)).append("\n");
-                    }
+            for (IntCursor s : toCompare) {
+                comps++;
+                if (hammingDistance.apply(sample1.forHamming[seq], sample2.forHamming[s.value]) <= k) {
+                    str.append(numbers.get(seq)).append(" ").append(numbers.get(s.value)).append("\n");
+                    reduce++;
+                    length++;
+                    continue;
+                }
+                int d = distance.apply(sample1.sequences[seq], sample2.sequences[s.value]);
+                if (d != -1) {
+                    length++;
+                    str.append(numbers.get(seq)).append(" ").append(numbers.get(s.value)).append("\n");
                 }
             }
             iteration++;
             if (iteration % 400 == 0) {
-                Files.write(path, str.toString().getBytes(), StandardOpenOption.APPEND);
+                if (str.length() > 0) {
+                    Files.write(getPath(), str.toString().getBytes(), StandardOpenOption.APPEND);
+                }
                 str = new StringBuilder();
             }
         }
-        Files.write(path, str.toString().getBytes(), StandardOpenOption.APPEND);
+        if (str.length() > 0) {
+            Files.write(getPath(), str.toString().getBytes(), StandardOpenOption.APPEND);
+        }
+
         if (DEBUG && comps > 0) {
             System.out.printf("%s %s%n", sample1.name, sample2.name);
             System.out.println("comps = " + comps);
@@ -124,13 +132,11 @@ public class SignatureMethod {
         }
         if (length > 0) {
             System.out.printf("Found %s %s. Length = %d\n", sample1.name, sample2.name, length);
-        } else {
-            Files.delete(path);
         }
         return length;
     }
 
-    public static long run(Sample sample, KMerDict dict, int k) throws IOException {
+    public long run(Sample sample, KMerDict dict, int k) throws IOException {
         System.out.println("Start Signature method for " + sample.name + " k=" + k + " l=" + dict.l);
         expandNumbers(sample.sequences.length);
         long[] iter = {0, 0, 0, 0};
@@ -141,33 +147,52 @@ public class SignatureMethod {
         Path path = Start.getOutputFilename(sample, "signature");
         long length = 0;
         iter[0] = 0;
+        long write = 0;
+        long fill = 0;
+        long filter = 0;
+        long h = 0;
+        long l = 0;
+        long sort = 0;
+        long start = 0;
         for (int seq = 0; seq < sample.sequences.length; seq++) {
             iter[0]++;
             //write to file each 400 iterations
             if (iter[0] % 400 == 0) {
+                start = System.nanoTime();
                 Files.write(path, str.toString().getBytes(), StandardOpenOption.APPEND);
                 str = new StringBuilder();
                 System.out.print("\r" + iter[0]);
+                write += System.nanoTime()- start;
             }
             IntIntMap possibleSequences = new IntIntHashMap();
+            start = System.nanoTime();
             List<IntIntPair> sortedChunks = getSortedChunksOneSample(dict, seq);
+            sort += System.nanoTime() - start;
             IntSet toCompare = new IntScatterSet();
             for (int i = 0; i < sortedChunks.size(); i++) {
                 if (i <= sortedChunks.size() - (dict.chunksCount - k)) {
+                    start = System.nanoTime();
                     fillPossiblePairs(dict, possibleSequences, seq, sortedChunks, i);
+                    fill += System.nanoTime() - start;
                 } else {
+                    start = System.nanoTime();
                     possibleSequences = filterPossibleSequences(dict, possibleSequences, seq, k, sortedChunks, i, toCompare);
+                    filter += System.nanoTime() - start;
                 }
             }
             String s1 = sample.sequences[seq];
             String h1 = sample.forHamming[seq];
             for (IntCursor s : toCompare) {
                 iter[1]++;
-                if (hammingDistance.apply(h1, sample.forHamming[s.value]) <= k) {
+                start = System.nanoTime();
+                int ham = hammingDistance.apply(h1, sample.forHamming[s.value]);
+                h += System.nanoTime() - start;
+                if (ham <= k) {
                     length++;
                     iter[2]++;
                     str.append(numbers.get(seq)).append(" ").append(numbers.get(s.value)).append("\n");
                 } else {
+                    start = System.nanoTime();
                     if (distance.apply(s1, sample.sequences[s.value]) != -1) {
                         length++;
                         str.append(numbers.get(seq)).append(" ").append(numbers.get(s.value)).append("\n");
@@ -175,6 +200,7 @@ public class SignatureMethod {
                         //int z = unlim.apply(sample.sequences.get(seq), sample.sequences.get(s.key));
                         //distances[z]++;
                     }
+                    l += System.nanoTime() - start;
                 }
             }
         }
@@ -186,24 +212,29 @@ public class SignatureMethod {
             System.out.println("comps = " + iter[1]);
             System.out.println("reduce = " + iter[2]);
             System.out.println("length = " + length);
-            System.out.println("distances = " + Arrays.toString(distances));
+            //System.out.println("distances = " + Arrays.toString(distances));
             System.out.println("levenshtein = " + (iter[1] - iter[2] - iter[3]));
-            System.out.println("c = " + iter[3]);
+            System.out.println("write = "+(write/1_000_000));
+            System.out.println("fill = "+(fill/1_000_000));
+            System.out.println("filter = "+(filter/1_000_000));
+            System.out.println("sort = "+(sort/1_000_000));
+            System.out.println("h = "+(h/1_000_000));
+            System.out.println("l = "+(l/1_000_000));
         }
         return length;
     }
 
-    public static Long runParallel(Sample sample, KMerDict dict, int k) throws IOException {
+    public Long runParallel(Sample sample, KMerDict dict, int k) throws IOException {
         System.out.println("Start Signature method parallel for " + sample.name + " k= " + k + " l= " + dict.l);
         expandNumbers(sample.sequences.length);
         Path path = Start.getOutputFilename(sample, "signature");
         //divide sequences into parts for executor service
         int cores = Runtime.getRuntime().availableProcessors();
         String threads = Start.settings.get("-threads");
-        if (threads != null){
+        if (threads != null) {
             cores = Integer.valueOf(threads);
         }
-        System.out.println("Running threads = "+cores);
+        System.out.println("Running threads = " + cores);
         ExecutorService service = Executors.newFixedThreadPool(cores);
         List<Map<Integer, String>> parts = new ArrayList<>();
         tasksIteration = 0;
@@ -257,10 +288,10 @@ public class SignatureMethod {
     /**
      * Fills possibleSequences with appearing sequences for given position(chunks.get(iter))
      */
-    private static void fillPossiblePairs(KMerDict dict, IntIntMap possibleSequences, int seq, List<IntIntPair> chunks, int iter) {
+    private void fillPossiblePairs(KMerDict dict, IntIntMap possibleSequences, int seq, List<IntIntPair> chunks, int iter) {
         for (IntCursor possibleSeq :
                 dict.hashToSequencesMap
-                        .get(dict.sequenceFixedPositionHashesList[seq][chunks.get(iter).l])
+                        .get(dict.sequenceChunksHashesList[seq][chunks.get(iter).l])
                 ) {
             //avoid equal pairs
             if (possibleSeq.value <= seq) {
@@ -276,9 +307,9 @@ public class SignatureMethod {
      * <p>
      * add sequence to toCompare set if it already reached necessary amount of hits so we don't need it in possibleSequences anymore
      */
-    private static IntIntMap filterPossibleSequences(KMerDict dict, IntIntMap possibleSequences, int seq, int k, List<IntIntPair> chunks, int iter, IntSet toCompare) {
+    private IntIntMap filterPossibleSequences(KMerDict dict, IntIntMap possibleSequences, int seq, int k, List<IntIntPair> chunks, int iter, IntSet toCompare) {
         IntIntMap tmp = new IntIntHashMap(possibleSequences.size());
-        long hash = dict.sequenceFixedPositionHashesList[seq][chunks.get(iter).l];
+        long hash = dict.sequenceChunksHashesList[seq][chunks.get(iter).l];
         IntSet sequencesWithHashSet = dict.hashToSequencesMap.get(hash);
         for (IntIntCursor entry : possibleSequences) {
             boolean isInDict = sequencesWithHashSet.contains(entry.key);
@@ -300,11 +331,11 @@ public class SignatureMethod {
      * Returns list of sorted chunks for current sequence entity by number of sequences that contain
      * l-mers from sequence entity fixed positions
      */
-    private static List<IntIntPair> getSortedChunksOneSample(KMerDict dict, int seq) {
+    private List<IntIntPair> getSortedChunksOneSample(KMerDict dict, int seq) {
         List<IntIntPair> result = new ArrayList<>();
         //for each fixed position
         for (int i = 0; i < dict.chunksCount; i++) {
-            long hash = dict.sequenceFixedPositionHashesList[seq][i];
+            long hash = dict.sequenceChunksHashesList[seq][i];
             if (dict.allHashesSet.contains(hash)) {
                 //add tuple -> (position, amount of sequences)
                 result.add(new IntIntPair(i, dict.hashToSequencesMap.get(hash).size()));
@@ -318,12 +349,12 @@ public class SignatureMethod {
     /**
      * see getSortedChunksOneSample
      */
-    private static List<IntIntPair> getSortedChunksTwoSamples(KMerDict dict1, KMerDict dict2, int seq) {
+    private List<IntIntPair> getSortedChunksTwoSamples(KMerDict dict1, KMerDict dict2, int seq) {
         List<IntIntPair> result = new ArrayList<>();
         for (int i = 0; i < dict1.chunksCount; i++) {
-            long hash = dict1.sequenceFixedPositionHashesList[seq][i];
+            long hash = dict1.sequenceChunksHashesList[seq][i];
             if (dict2.allHashesSet.contains(hash)) {
-                result.add(new  IntIntPair(i, dict2.hashToSequencesMap.get(hash).size()));
+                result.add(new IntIntPair(i, dict2.hashToSequencesMap.get(hash).size()));
             }
         }
         result.sort(Comparator.comparing(o -> o.r));
@@ -333,9 +364,9 @@ public class SignatureMethod {
     /**
      * Calculates how many l-mers from fixed positions from first dictionary are in second dictionary
      */
-    private static int calculateCoincidences(KMerDict dict1, KMerDict dict2) {
+    private int calculateCoincidences(KMerDict dict1, KMerDict dict2) {
         int kMerCoincidences = 0;
-        for (LongSet positionHashes : dict1.wholeSampleFixedPositionHashesList) {
+        for (LongSet positionHashes : dict1.wholeSampleChunksHashesList) {
             for (LongCursor hash : positionHashes) {
                 if (dict2.allHashesSet.contains(hash.value)) {
                     kMerCoincidences++;
@@ -350,7 +381,7 @@ public class SignatureMethod {
     /**
      * Class runs almost the same code as sequential run, but on different sequences set
      */
-    private static class ParallelTask implements Callable<long[]> {
+    private class ParallelTask implements Callable<long[]> {
         private Sample sample;
         private Map<Integer, String> sequences;
         private KMerDict dict;
@@ -424,4 +455,11 @@ public class SignatureMethod {
         }
     }
 
+    //lazy init for two samples problem
+    private Path getPath() throws IOException {
+        if (output == null) {
+            output = Start.getOutputFilename(sample1, sample2, "signature");
+        }
+        return output;
+    }
 }

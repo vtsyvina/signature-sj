@@ -25,11 +25,12 @@ public abstract class AbstractKMerDict {
     /**
      * for each sequence from sample stores hashes for l-mers on 0, 1*l, 2*l,... positions(in the amount of chunksCount)
      */
-    public long[][] sequenceFixedPositionHashesList;
+    public long[][] sequenceChunksHashesList;
+
     /**
      * for each position 0, 1*l, 2*l,... store set of hashes that occur at any sequence from sample
      */
-    public LongSet[] wholeSampleFixedPositionHashesList;
+    public LongSet[] wholeSampleChunksHashesList;
 
     /**
      * Length of l-mers partition

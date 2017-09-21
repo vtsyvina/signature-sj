@@ -1,5 +1,25 @@
 package by.bsu.start;
 
+import by.bsu.algorithms.BruteForce;
+import by.bsu.algorithms.BruteForceHamming;
+import by.bsu.algorithms.SVNMethod;
+import by.bsu.algorithms.SignatureHammingMethod;
+import by.bsu.algorithms.SignatureMethod;
+import by.bsu.algorithms.TreeMethod;
+import by.bsu.model.IntIntPair;
+import by.bsu.model.KMerDict;
+import by.bsu.model.KMerDictChunks;
+import by.bsu.model.SVNStructure;
+import by.bsu.model.Sample;
+import by.bsu.util.CallSignature;
+import by.bsu.util.FasReader;
+import by.bsu.util.SequencesTreeBuilder;
+import by.bsu.util.Utils;
+import by.bsu.util.builders.KMerDictBuilder;
+import by.bsu.util.builders.KMerDictChunksBuilder;
+import by.bsu.util.builders.SVNStructureBuilder;
+import org.openjdk.jmh.runner.RunnerException;
+
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
@@ -8,34 +28,19 @@ import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 
-import by.bsu.util.Utils;
-import org.openjdk.jmh.runner.RunnerException;
-
-import by.bsu.algorithms.BruteForce;
-import by.bsu.algorithms.BruteForceHamming;
-import by.bsu.algorithms.SignatureHammingMethod;
-import by.bsu.algorithms.SignatureMethod;
-import by.bsu.algorithms.TreeMethod;
-import by.bsu.model.IntIntPair;
-import by.bsu.model.KMerDict;
-import by.bsu.model.KMerDictChunks;
-import by.bsu.model.Sample;
-import by.bsu.util.CallSignature;
-import by.bsu.util.FasReader;
-import by.bsu.util.KMerDictBuilder;
-import by.bsu.util.KMerDictChunksBuilder;
-import by.bsu.util.SequencesTreeBuilder;
-
 
 public class Start {
+    public static final String ACGT = "ACGT-";
     private static Path folder = Paths.get("cleaned_independent_264");
     private static List<Sample> allFiles = new ArrayList<>();
     public static Map<String, String> settings = new HashMap<>();
@@ -52,7 +57,7 @@ public class Start {
         for (String arg : args) {
             if (arg.startsWith("-") && arg.length() > 1) {
                 key = arg;
-                if (key.equals("-help")){
+                if (key.equals("-help")) {
                     settings.put(key, "true");
                 }
             } else {
@@ -63,7 +68,7 @@ public class Start {
                 key = null;
             }
         }
-        if (settings.get("-help") != null){
+        if (settings.get("-help") != null) {
             helpOutput(null, false);
         }
         System.out.println("Waiting for start ('q' to exit)");
@@ -82,6 +87,12 @@ public class Start {
                     break;
                 case "signatureTest":
                     testDitichletAlgorithm(folder, k, l);
+                    break;
+                case "largeRelated":
+                    testLargeRelatedSamples(folder);
+                    break;
+                case "svn":
+                    testSVN();
                     break;
                 default:
                     helpOutput(settings.get("-m"), true);
@@ -197,12 +208,30 @@ public class Start {
         }
     }
 
+    private static void testSVN() throws IOException, ExecutionException, InterruptedException {
+        File dir = new File(settings.getOrDefault("-dir", "2svn/db1"));
+        for (File file : dir.listFiles()) {
+            Sample sample = FasReader.readOneLined(file);
+            long start;
+            start = System.currentTimeMillis();
+            double[][] profile = Utils.profile(sample, "ACGT-N");
+            System.out.println("Profile time " + (System.currentTimeMillis() - start));
+            Sample rot = FasReader.rowsColsRotate(sample, profile, "ACGT-");
+            System.out.println("rowsColsRotate " + (System.currentTimeMillis() - start));
+            double[][] rotProfile = Utils.profile(rot, "12");
+            SVNStructure structure = SVNStructureBuilder.build(rot, sample, profile);
+            System.out.println("structure " + (System.currentTimeMillis() - start));
+            new SVNMethod().run(rot, structure);
+           System.out.println("run " + (System.currentTimeMillis() - start));
+        }
+    }
+
     private static void runSigWithTime(int k, int l, Sample query) throws ExecutionException, InterruptedException, IOException {
         long start;
         start = System.currentTimeMillis();
         KMerDict k1 = KMerDictBuilder.getDict(query, l);
         System.out.println("Dict time " + (System.currentTimeMillis() - start));
-        SignatureMethod.runParallel(query, k1, k);
+        new SignatureMethod().run(query, k1, k);
         System.out.println("Signature time " + (System.currentTimeMillis() - start));
         System.out.println();
     }
@@ -214,7 +243,7 @@ public class Start {
         double[][] profile = Utils.profile(query);
         System.out.println("Profile time " + (System.currentTimeMillis() - start));
         KMerDictChunks dict = false ? KMerDictChunksBuilder.getDict(query, l) : KMerDictChunksBuilder.getDict(query, k + 7, profile);
-        SignatureHammingMethod.runParallel(query, dict, k);
+        new SignatureHammingMethod().runParallel(query, dict, k);
         System.out.println("Signature hamming time " + (System.currentTimeMillis() - start));
         System.out.println();
     }
@@ -224,7 +253,7 @@ public class Start {
         start = System.currentTimeMillis();
         KMerDict k1 = KMerDictBuilder.getDict(s1, l);
         KMerDict k2 = KMerDictBuilder.getDict(s2, l);
-        long length = SignatureMethod.run(s1, s2, k1, k2, k);
+        long length = new SignatureMethod().run(s1, s2, k1, k2, k);
         System.out.println("count " + length);
         System.out.println("Signature time " + (System.currentTimeMillis() - start));
         System.out.println();
@@ -268,6 +297,31 @@ public class Start {
         }
         Integer testNumber = Integer.valueOf(file.getName().substring(testsPrefix.length()));
         return ranges.stream().filter(r -> r.l <= testNumber && r.r >= testNumber).count() > 0;
+    }
+
+    private static void testLargeRelatedSamples(Path folder) throws IOException {
+        System.out.println("Start testLargeRelatedSamples");
+        loadAllFiles(folder);
+        Sample sample = allFiles.get(165);
+        Sample s1 = new Sample();
+        Sample s2 = new Sample();
+        s1.name = "left";
+        s2.name = "right";
+        s1.sequences = Arrays.copyOfRange(sample.sequences, 0, sample.sequences.length / 2);
+        s2.sequences = Arrays.copyOfRange(sample.sequences, sample.sequences.length / 2, sample.sequences.length);
+        s1.forHamming = Utils.stringsForHamming(s1.sequences);
+        s2.forHamming = Utils.stringsForHamming(s2.sequences);
+        KMerDict k1 = KMerDictBuilder.getDict(s1, 11);
+        KMerDict k2 = KMerDictBuilder.getDict(s2, 11);
+        long start = System.currentTimeMillis();
+        //System.out.println(s1.sequences.size()*s2.sequences.size());
+        new SignatureMethod().run(s1, s2, k1, k2, 3);
+        System.out.println("SignatureMethod time:");
+        System.out.println(System.currentTimeMillis() - start);
+        start = System.currentTimeMillis();
+        //BruteForce.run(s1,s2, 3);
+        System.out.println("BruteForce time:");
+        System.out.println(System.currentTimeMillis() - start);
     }
 
     public static Path getOutputFilename(Sample sample, String algName) throws IOException {

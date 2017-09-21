@@ -25,6 +25,6 @@ public class CallSignature implements Callable<Long> {
     }
     @Override
     public Long call() throws Exception {
-        return SignatureMethod.run(sample1, sample2, dict1, dict2, k);
+        return new SignatureMethod().run(sample1, sample2, dict1, dict2, k);
     }
 }

@@ -6,6 +6,7 @@ import java.util.Map;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 
+import by.bsu.util.builders.KMerDictChunksBuilder;
 import org.openjdk.jmh.annotations.Benchmark;
 import org.openjdk.jmh.annotations.BenchmarkMode;
 import org.openjdk.jmh.annotations.Fork;
@@ -67,8 +68,8 @@ public class Test {
         } catch (IOException e) {
             e.printStackTrace();
         }
-        h1 = dict.sequenceFixedPositionHashesList[left];
-        h2 = dict.sequenceFixedPositionHashesList[right];
+        h1 = dict.sequenceChunksHashesList[left];
+        h2 = dict.sequenceChunksHashesList[right];
     }
 
     //@Benchmark
