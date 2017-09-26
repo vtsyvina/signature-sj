@@ -2,14 +2,15 @@ package by.bsu.start;
 
 import by.bsu.algorithms.BruteForce;
 import by.bsu.algorithms.BruteForceHamming;
-import by.bsu.algorithms.SVNMethod;
+import by.bsu.algorithms.SNVMethod;
 import by.bsu.algorithms.SignatureHammingMethod;
 import by.bsu.algorithms.SignatureMethod;
 import by.bsu.algorithms.TreeMethod;
 import by.bsu.model.IntIntPair;
 import by.bsu.model.KMerDict;
 import by.bsu.model.KMerDictChunks;
-import by.bsu.model.SVNStructure;
+import by.bsu.model.PairEndRead;
+import by.bsu.model.SNVStructure;
 import by.bsu.model.Sample;
 import by.bsu.util.CallSignature;
 import by.bsu.util.FasReader;
@@ -17,7 +18,10 @@ import by.bsu.util.SequencesTreeBuilder;
 import by.bsu.util.Utils;
 import by.bsu.util.builders.KMerDictBuilder;
 import by.bsu.util.builders.KMerDictChunksBuilder;
-import by.bsu.util.builders.SVNStructureBuilder;
+import by.bsu.util.builders.SNVStructureBuilder;
+import htsjdk.samtools.SAMRecord;
+import htsjdk.samtools.SamReader;
+import htsjdk.samtools.SamReaderFactory;
 import org.openjdk.jmh.runner.RunnerException;
 
 import java.io.File;
@@ -28,10 +32,8 @@ import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
@@ -91,8 +93,11 @@ public class Start {
                 case "largeRelated":
                     testLargeRelatedSamples(folder);
                     break;
-                case "svn":
-                    testSVN();
+                case "snv":
+                    testSNV();
+                    break;
+                case "assembly-snv":
+                    assambling2SNV();
                     break;
                 default:
                     helpOutput(settings.get("-m"), true);
@@ -100,6 +105,46 @@ public class Start {
         } else {
             testBigDataSet(k, l);
         }
+    }
+
+    private static void assambling2SNV() {
+        File dir = new File("2snv/cdc/RT_pol_SAMfiles_for_Quasirecomb");
+        List<SAMRecord> reads = new ArrayList<>();
+        byte re = 0;
+        Map<String , List<SAMRecord>> readsSet = new HashMap<>();
+        for (File file : dir.listFiles()) {
+            if(!file.getName().startsWith("99_S2_L001_R1_001_2 (paired)-2 trimmed (paired) (Reads, Locally Realigned)")){
+                continue;
+            }
+                        SamReader open = SamReaderFactory.make().open(file);
+            for (SAMRecord anOpen : open) {
+                reads.add(anOpen);
+                if (!readsSet.containsKey(anOpen.getReadName())){
+                    readsSet.put(anOpen.getReadName(), new ArrayList<>());
+                }
+                readsSet.get(anOpen.getReadName()).add(anOpen);
+            }
+        }
+        List<PairEndRead> pairedReads = new ArrayList<>();
+        readsSet.forEach((key, value) -> {
+            if (value.size() == 1) {
+                pairedReads.add(new PairEndRead(Utils.byteArrayToString(value.get(0).getReadBases()),
+                        null,
+                        value.get(0).getAlignmentStart(),
+                        -1, key)
+                );
+            } else {
+                SAMRecord l = value.get(0);
+                SAMRecord r = value.get(0);
+                pairedReads.add(new PairEndRead(Utils.byteArrayToString(l.getReadBases()),
+                        Utils.byteArrayToString(l.getReadBases()),
+                        l.getAlignmentStart(),
+                        r.getAlignmentStart(),
+                        key)
+                );
+            }
+        });
+        System.out.println();
     }
 
     private static void helpOutput(String arg, boolean error) {
@@ -208,8 +253,8 @@ public class Start {
         }
     }
 
-    private static void testSVN() throws IOException, ExecutionException, InterruptedException {
-        File dir = new File(settings.getOrDefault("-dir", "2svn/db1"));
+    private static void testSNV() throws IOException, ExecutionException, InterruptedException {
+        File dir = new File(settings.getOrDefault("-dir", "2snv/db1"));
         for (File file : dir.listFiles()) {
             Sample sample = FasReader.readOneLined(file);
             long start;
@@ -219,9 +264,9 @@ public class Start {
             Sample rot = FasReader.rowsColsRotate(sample, profile, "ACGT-");
             System.out.println("rowsColsRotate " + (System.currentTimeMillis() - start));
             double[][] rotProfile = Utils.profile(rot, "12");
-            SVNStructure structure = SVNStructureBuilder.build(rot, sample, profile);
+            SNVStructure structure = SNVStructureBuilder.build(rot, sample, profile);
             System.out.println("structure " + (System.currentTimeMillis() - start));
-            new SVNMethod().run(rot, structure);
+            new SNVMethod().run(rot, structure);
            System.out.println("run " + (System.currentTimeMillis() - start));
         }
     }

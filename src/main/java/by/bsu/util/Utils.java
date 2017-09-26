@@ -280,4 +280,12 @@ public class Utils {
         }
         return major;
     }
+
+    public static String byteArrayToString(byte[] arr){
+        StringBuilder str = new StringBuilder();
+        for (byte b : arr) {
+            str.append((char)b);
+        }
+        return str.toString();
+    }
 }

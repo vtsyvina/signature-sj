@@ -1,6 +1,6 @@
 package by.bsu.util;
 
-import by.bsu.model.SVNSample;
+import by.bsu.model.SNVSample;
 import by.bsu.model.Sample;
 
 import java.io.File;
@@ -90,7 +90,7 @@ public class FasReader {
         return new Sample(file.getName(), readList(file.toPath()));
     }
 
-    public static SVNSample readOneLined(File file) throws IOException{
+    public static SNVSample readOneLined(File file) throws IOException{
         List<String> raw = Files.readAllLines(file.toPath());
         List<String> tmp = new ArrayList<>();
         List<String> N = new ArrayList<>();
@@ -109,7 +109,7 @@ public class FasReader {
             i++;
         }
 
-        return new SVNSample(file.getName(),
+        return new SNVSample(file.getName(),
                 Utils.stringsForHamming(tmp.toArray(new String[0]), 'N'),
                 offset.stream().mapToInt(o-> o).toArray(), readLength.stream().mapToInt(o-> o).toArray());
     }
@@ -117,7 +117,9 @@ public class FasReader {
     public static Sample rowsColsRotate(Sample sample, double[][] profile, String alphabet){
         int minorsCount = alphabet.length()-1;
         String[] sequences = new String[sample.sequences[0].length()*minorsCount];
+        String[] s2 = new String[sample.sequences.length];
         StringBuilder str = new StringBuilder();
+        StringBuilder str2 = new StringBuilder();
         for (int i = 0; i < sample.sequences[0].length(); i++) {
             int major = Utils.getMajorAllele(profile, i);//current major
             int minor = 0; //current minor
