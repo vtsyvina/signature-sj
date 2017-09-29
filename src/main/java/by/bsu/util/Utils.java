@@ -1,20 +1,14 @@
 package by.bsu.util;
 
-import by.bsu.distance.LevenshteinDistance;
 import by.bsu.model.Sample;
 import by.bsu.model.SequencesTree;
 import com.carrotsearch.hppc.LongHashSet;
 import com.carrotsearch.hppc.LongSet;
 import com.carrotsearch.hppc.ShortArrayList;
-import info.debatty.java.stringsimilarity.QGram;
 
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.stream.Collectors;
 
 /**
  * Just class with some useful functions

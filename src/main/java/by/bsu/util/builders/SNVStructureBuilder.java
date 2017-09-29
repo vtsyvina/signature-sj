@@ -12,14 +12,14 @@ public class SNVStructureBuilder {
         result.rowMinors = new int[rotated.sequences[0].length()][];
         IntArrayList[] cols = new IntArrayList[rotated.sequences.length];
         result.colMinors = new int[rotated.sequences.length][];
-        result.nCount = new int[src.sequences.length];
+        result.readsCount = new int[src.sequences.length];
         for (int i = 0; i < src.sequences.length; i++) {
-            result.nCount[i] = src.sequences.length;
+            result.readsCount[i] = src.sequences.length;
         }
         for (String sequence : src.sequences) {
             for (int i = 0; i < sequence.length(); i++) {
                 if (sequence.charAt(i) == 'N'){
-                    result.nCount[i]--;
+                    result.readsCount[i]--;
                 }
             }
         }

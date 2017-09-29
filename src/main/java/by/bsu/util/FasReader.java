@@ -114,32 +114,37 @@ public class FasReader {
                 offset.stream().mapToInt(o-> o).toArray(), readLength.stream().mapToInt(o-> o).toArray());
     }
 
-    public static Sample rowsColsRotate(Sample sample, double[][] profile, String alphabet){
+    /**
+     * Splits each column of the given sample into 4 columns for each minor. For example:
+     * Given alphabet as "ACGT-"
+     * for i-th column 'G' is major. then i-th column will split into 4 columns where first column will place '2' for each 'A' and '1' for any other allele,
+     * for second column will place '2' for each 'C' and '1' otherwise, for third '1' for each 'T' and for forth '1' for each '-'
+     * @param sample
+     * @param profile
+     * @param alphabet
+     * @return
+     */
+    public static Sample splitColumns(Sample sample, double[][] profile, String alphabet){
         int minorsCount = alphabet.length()-1;
-        String[] sequences = new String[sample.sequences[0].length()*minorsCount];
-        String[] s2 = new String[sample.sequences.length];
+        String[] sequences = new String[sample.sequences.length];
         StringBuilder str = new StringBuilder();
-        StringBuilder str2 = new StringBuilder();
-        for (int i = 0; i < sample.sequences[0].length(); i++) {
-            int major = Utils.getMajorAllele(profile, i);//current major
-            int minor = 0; //current minor
-            for (int j = 0; j < minorsCount; j++, minor++) { //change current minor + skip major, so we will have 4 rows for 4 different minors from 'ACGT-'
-                if (minor == major){
-                    minor++;
-                }
-                str.setLength(0);
-                for (int k = 0; k < sample.sequences.length; k++) {
-                    int allele = alphabet.indexOf(sample.sequences[k].charAt(i));
-                    if (allele == minor){
-                        str.append("2");
-                    } else {
-                        str.append("1");
+        for (int i = 0; i < sample.sequences.length; i++) {
+            str.setLength(0);
+            for (int j = 0; j < sample.sequences[i].length(); j++) {
+                int major = Utils.getMajorAllele(profile, j);
+                int minor = 0;
+                for (int k = 0; k < minorsCount; k++, minor++) {
+                    if (minor == major){
+                        minor++;
                     }
+                    int allele = alphabet.indexOf(sample.sequences[i].charAt(j));
+                    str.append(allele == minor ? "2" : "1");
                 }
-                sequences[i*minorsCount+j] = str.toString();
             }
+            sequences[i] = str.toString();
         }
-        return new Sample(sample.name+"_rotated", sequences);
+
+        return new Sample(sample.name+"_splitted", sequences);
     }
 
 }

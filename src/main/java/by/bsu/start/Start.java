@@ -22,7 +22,6 @@ import by.bsu.util.builders.SNVStructureBuilder;
 import htsjdk.samtools.SAMRecord;
 import htsjdk.samtools.SamReader;
 import htsjdk.samtools.SamReaderFactory;
-import org.openjdk.jmh.runner.RunnerException;
 
 import java.io.File;
 import java.io.IOException;
@@ -53,8 +52,7 @@ public class Start {
         }
     }
 
-    public static void main(String[] args) throws IOException, RunnerException, InterruptedException, ExecutionException {
-        //Main.main(args);
+    public static void main(String[] args) throws IOException, InterruptedException, ExecutionException {
         String key = null;
         for (String arg : args) {
             if (arg.startsWith("-") && arg.length() > 1) {
@@ -261,8 +259,8 @@ public class Start {
             start = System.currentTimeMillis();
             double[][] profile = Utils.profile(sample, "ACGT-N");
             System.out.println("Profile time " + (System.currentTimeMillis() - start));
-            Sample rot = FasReader.rowsColsRotate(sample, profile, "ACGT-");
-            System.out.println("rowsColsRotate " + (System.currentTimeMillis() - start));
+            Sample rot = FasReader.splitColumns(sample, profile, "ACGT-");
+            System.out.println("splitColumns " + (System.currentTimeMillis() - start));
             double[][] rotProfile = Utils.profile(rot, "12");
             SNVStructure structure = SNVStructureBuilder.build(rot, sample, profile);
             System.out.println("structure " + (System.currentTimeMillis() - start));
