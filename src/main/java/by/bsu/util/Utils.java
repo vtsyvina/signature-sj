@@ -175,6 +175,7 @@ public class Utils {
     public static String consensus(String[] sequences){
         return consensus(sequences, DEFAULT_ALPHABET);
     }
+
     public static String consensus(String[] sequences, String alphabet) {
         if (sequences.length == 0) {
             return "";
@@ -183,7 +184,7 @@ public class Utils {
         int[][] count = new int[alphabet.length()][l];
         for (String s : sequences) {
             for (int i = 0; i < s.length(); i++) {
-                count[convertLetterToDigit(s.charAt(i))][i]++;
+                count[convertLetterToDigit(s.charAt(i), alphabet)][i]++;
             }
         }
         StringBuilder str = new StringBuilder();
@@ -282,4 +283,14 @@ public class Utils {
         }
         return str.toString();
     }
+
+    public static double poissonBinomialAppr(int s, double p,int n){
+        double L = n*p;
+        double pr = 1;
+        for (int i = 1; i <= s; i++) {
+            pr *= L/i;
+        }
+        return pr*Math.exp(-L);
+    }
+
 }

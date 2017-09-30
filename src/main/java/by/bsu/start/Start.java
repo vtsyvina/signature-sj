@@ -31,8 +31,10 @@ import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
@@ -45,6 +47,7 @@ public class Start {
     private static Path folder = Paths.get("cleaned_independent_264");
     private static List<Sample> allFiles = new ArrayList<>();
     public static Map<String, String> settings = new HashMap<>();
+    public static List<Set<Integer>> snps = new ArrayList<>();
 
     private static void loadAllFiles(Path folder) throws IOException {
         if (allFiles.isEmpty()) {
@@ -53,6 +56,18 @@ public class Start {
     }
 
     public static void main(String[] args) throws IOException, InterruptedException, ExecutionException {
+        String[] strings = FasReader.readList(Paths.get("2snv/ClonesRef.fa"));
+        Sample sample = FasReader.readOneLined(new File("2snv/db1/reads.fas"));
+        String consensus = Utils.consensus(sample.sequences, "ACGT-N");
+
+        for (String string : strings) {
+            snps.add(new HashSet<>());
+            for (int i = 0; i < string.length(); i++) {
+                if (string.charAt(i) != consensus.charAt(i)){
+                    snps.get(snps.size()-1).add(i);
+                }
+            }
+        }
         String key = null;
         for (String arg : args) {
             if (arg.startsWith("-") && arg.length() > 1) {
@@ -259,12 +274,12 @@ public class Start {
             start = System.currentTimeMillis();
             double[][] profile = Utils.profile(sample, "ACGT-N");
             System.out.println("Profile time " + (System.currentTimeMillis() - start));
-            Sample rot = FasReader.splitColumns(sample, profile, "ACGT-");
+            Sample splitted = FasReader.splitColumns(sample, profile, "ACGT-");
             System.out.println("splitColumns " + (System.currentTimeMillis() - start));
-            double[][] rotProfile = Utils.profile(rot, "12");
-            SNVStructure structure = SNVStructureBuilder.build(rot, sample, profile);
+            double[][] rotProfile = Utils.profile(splitted, "12");
+            SNVStructure structure = SNVStructureBuilder.build(splitted, sample, profile);
             System.out.println("structure " + (System.currentTimeMillis() - start));
-            new SNVMethod().run(rot, structure);
+            new SNVMethod().run(splitted, structure, sample);
            System.out.println("run " + (System.currentTimeMillis() - start));
         }
     }
