@@ -5,6 +5,7 @@ import by.bsu.model.SequencesTree;
 import com.carrotsearch.hppc.LongHashSet;
 import com.carrotsearch.hppc.LongSet;
 import com.carrotsearch.hppc.ShortArrayList;
+import org.apache.commons.math3.distribution.BinomialDistribution;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -284,13 +285,8 @@ public class Utils {
         return str.toString();
     }
 
-    public static double poissonBinomialAppr(int s, double p,int n){
-        double L = n*p;
-        double pr = 1;
-        for (int i = 1; i <= s; i++) {
-            pr *= L/i;
-        }
-        return pr*Math.exp(-L);
+    public static double binomialPvalue(int s, double p,int n){
+        return 1 - new BinomialDistribution(n, p).cumulativeProbability(s);
     }
 
 }
