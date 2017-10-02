@@ -1,5 +1,7 @@
 package by.bsu.util;
 
+import by.bsu.model.IlluminaSNVSample;
+import by.bsu.model.PairEndRead;
 import by.bsu.model.Sample;
 import by.bsu.model.SequencesTree;
 import com.carrotsearch.hppc.LongHashSet;
@@ -123,7 +125,7 @@ public class Utils {
     }
 
     /**
-     * The number of hits between sequences' q-grams
+     * The number of hits between reads' q-grams
      */
     public static int qHits(String s1, String s2, int q) {
         long[] h1 = getSequenceHashesArray(s1, q);
@@ -224,6 +226,36 @@ public class Utils {
         for (int i = 0; i < alphabet.length(); i++) {
             for (int j = 0; j < l; j++) {
                 result[i][j] = count[i][j] / (double) sequences.length;
+            }
+        }
+        return result;
+    }
+
+    public static double[][] profile(IlluminaSNVSample sample, String alphabet){
+        List<PairEndRead> reads = sample.reads;
+        if (reads.size() == 0){
+            return new double[0][alphabet.length()];
+        }
+        int[][] count = new int[alphabet.length()][sample.referenceLength];
+        reads.forEach( r -> {
+            for (int i = 0; i < r.l.length(); i++) {
+                count[convertLetterToDigit(r.l.charAt(i), alphabet)][i+r.lOffset]++;
+            }
+            for (int i = 0; i < r.r.length(); i++) {
+                count[convertLetterToDigit(r.r.charAt(i), alphabet)][i+r.rOffset]++;
+            }
+        });
+        double[][] result = new double[alphabet.length()][sample.referenceLength];
+        for (int i = 0; i < count[0].length; i++) {
+            int sum = 0;
+            for (int[] aCount : count) {
+                sum += aCount[i];
+            }
+            if (sum == 0){
+                sum = 1;
+            }
+            for (int j = 0; j < count.length; j++) {
+                result[j][i] = count[j][i]/sum;
             }
         }
         return result;

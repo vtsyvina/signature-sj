@@ -2,26 +2,23 @@ package by.bsu.start;
 
 import by.bsu.algorithms.BruteForce;
 import by.bsu.algorithms.BruteForceHamming;
-import by.bsu.algorithms.SNVMethod;
+import by.bsu.algorithms.SNVPacBioMethod;
 import by.bsu.algorithms.SignatureHammingMethod;
 import by.bsu.algorithms.SignatureMethod;
 import by.bsu.algorithms.TreeMethod;
+import by.bsu.model.IlluminaSNVSample;
 import by.bsu.model.IntIntPair;
 import by.bsu.model.KMerDict;
 import by.bsu.model.KMerDictChunks;
-import by.bsu.model.PairEndRead;
 import by.bsu.model.SNVStructure;
 import by.bsu.model.Sample;
 import by.bsu.util.CallSignature;
-import by.bsu.util.FasReader;
+import by.bsu.util.DataReader;
 import by.bsu.util.SequencesTreeBuilder;
 import by.bsu.util.Utils;
 import by.bsu.util.builders.KMerDictBuilder;
 import by.bsu.util.builders.KMerDictChunksBuilder;
 import by.bsu.util.builders.SNVStructureBuilder;
-import htsjdk.samtools.SAMRecord;
-import htsjdk.samtools.SamReader;
-import htsjdk.samtools.SamReaderFactory;
 
 import java.io.File;
 import java.io.IOException;
@@ -30,6 +27,7 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -51,13 +49,13 @@ public class Start {
 
     private static void loadAllFiles(Path folder) throws IOException {
         if (allFiles.isEmpty()) {
-            allFiles = FasReader.readSampleList(folder.toString(), true);
+            allFiles = DataReader.readSampleList(folder.toString(), true);
         }
     }
 
     public static void main(String[] args) throws IOException, InterruptedException, ExecutionException {
-        String[] strings = FasReader.readList(Paths.get("2snv/ClonesRef.fa"));
-        Sample sample = FasReader.readOneLined(new File("2snv/db1/reads.fas"));
+        String[] strings = DataReader.readList(Paths.get("2snv/ClonesRef.fa"));
+        Sample sample = DataReader.readOneLined(new File("2snv/db1/reads.fas"));
         String consensus = Utils.consensus(sample.sequences, "ACGT-N");
 
         for (String string : strings) {
@@ -121,42 +119,16 @@ public class Start {
     }
 
     private static void assambling2SNV() {
-        File dir = new File("2snv/cdc/RT_pol_SAMfiles_for_Quasirecomb");
-        List<SAMRecord> reads = new ArrayList<>();
-        byte re = 0;
-        Map<String , List<SAMRecord>> readsSet = new HashMap<>();
-        for (File file : dir.listFiles()) {
-            if(!file.getName().startsWith("99_S2_L001_R1_001_2 (paired)-2 trimmed (paired) (Reads, Locally Realigned)")){
-                continue;
-            }
-                        SamReader open = SamReaderFactory.make().open(file);
-            for (SAMRecord anOpen : open) {
-                reads.add(anOpen);
-                if (!readsSet.containsKey(anOpen.getReadName())){
-                    readsSet.put(anOpen.getReadName(), new ArrayList<>());
-                }
-                readsSet.get(anOpen.getReadName()).add(anOpen);
-            }
-        }
-        List<PairEndRead> pairedReads = new ArrayList<>();
-        readsSet.forEach((key, value) -> {
-            if (value.size() == 1) {
-                pairedReads.add(new PairEndRead(Utils.byteArrayToString(value.get(0).getReadBases()),
-                        null,
-                        value.get(0).getAlignmentStart(),
-                        -1, key)
-                );
-            } else {
-                SAMRecord l = value.get(0);
-                SAMRecord r = value.get(0);
-                pairedReads.add(new PairEndRead(Utils.byteArrayToString(l.getReadBases()),
-                        Utils.byteArrayToString(l.getReadBases()),
-                        l.getAlignmentStart(),
-                        r.getAlignmentStart(),
-                        key)
-                );
-            }
-        });
+        IlluminaSNVSample reads = DataReader.getIlluminaPairedReads(new File("2snv/cdc/RT_pol_SAMfiles_for_Quasirecomb/99_S2_L001_R1_001_2 (paired)-2 trimmed (paired) (Reads, Locally Realigned).sam"));
+        long start = System.currentTimeMillis();
+        reads.reads.sort((r1, r2) -> r1.lOffset == r2.lOffset ? Integer.compare(r1.rOffset, r2.rOffset) : Integer.compare(r1.lOffset, r2.lOffset));
+        System.out.println(System.currentTimeMillis() - start);
+        double[][] profile = Utils.profile(reads, "ACTG-N");
+        System.out.println(System.currentTimeMillis() - start);
+        IlluminaSNVSample splittedReads = DataReader.splitColumns(reads, profile, "ACTG-N");
+        System.out.println(System.currentTimeMillis() - start);
+        SNVStructure snvStructure = SNVStructureBuilder.buildIllumina(splittedReads, reads, profile);
+        System.out.println(System.currentTimeMillis() - start);
         System.out.println();
     }
 
@@ -184,9 +156,9 @@ public class Start {
         System.out.println("Start testDitichletAlgorithm with k=" + k + " l=" + l);
         long start = System.currentTimeMillis();
         loadAllFiles(folder);
-        //allFiles.add(FasReader.readSampleFromFolder(new File("test_data/db1")));
-        //allFiles.add(FasReader.readSampleFromFolder(new File("test_data/db2")));
-        //allFiles.add(FasReader.readSampleFromFolder(new File("test_data/db3")));
+        //allFiles.add(DataReader.readSampleFromFolder(new File("test_data/db1")));
+        //allFiles.add(DataReader.readSampleFromFolder(new File("test_data/db2")));
+        //allFiles.add(DataReader.readSampleFromFolder(new File("test_data/db3")));
         KMerDict[] kdicts = new KMerDict[allFiles.size()];
         int cores = Runtime.getRuntime().availableProcessors();
         String threads = Start.settings.get("-threads");
@@ -220,7 +192,7 @@ public class Start {
         for (Future<Void> f : future) {
             f.get();
         }
-        System.out.println("Time to build dictionaries = " + (System.currentTimeMillis() - start));
+        System.out.println("Time to buildPacBio dictionaries = " + (System.currentTimeMillis() - start));
         executor.shutdown();
         executor = Executors.newFixedThreadPool(cores);
         List<Callable<Long>> taskList = new ArrayList<>();
@@ -246,7 +218,7 @@ public class Start {
         String[] algsToRun = settings.getOrDefault("-algsToRun", "signature").split(",");
         for (File file : dir.listFiles()) {
             if (isTestToRun(file)) {
-                Sample sample = FasReader.readSampleFromFolder(file, false);
+                Sample sample = DataReader.readSampleFromFolder(file, false);
                 if (Arrays.stream(algsToRun).filter(s -> s.equals("signature")).count() > 0) {
                     runSigWithTime(k, l, sample);
                 }
@@ -269,17 +241,17 @@ public class Start {
     private static void testSNV() throws IOException, ExecutionException, InterruptedException {
         File dir = new File(settings.getOrDefault("-dir", "2snv/db1"));
         for (File file : dir.listFiles()) {
-            Sample sample = FasReader.readOneLined(file);
+            Sample sample = DataReader.readOneLined(file);
             long start;
             start = System.currentTimeMillis();
             double[][] profile = Utils.profile(sample, "ACGT-N");
             System.out.println("Profile time " + (System.currentTimeMillis() - start));
-            Sample splitted = FasReader.splitColumns(sample, profile, "ACGT-");
+            Sample splitted = DataReader.splitColumns(sample, profile, "ACGT-");
             System.out.println("splitColumns " + (System.currentTimeMillis() - start));
             double[][] rotProfile = Utils.profile(splitted, "12");
-            SNVStructure structure = SNVStructureBuilder.build(splitted, sample, profile);
+            SNVStructure structure = SNVStructureBuilder.buildPacBio(splitted, sample, profile);
             System.out.println("structure " + (System.currentTimeMillis() - start));
-            new SNVMethod().run(splitted, structure, sample);
+            new SNVPacBioMethod().run(splitted, structure, sample);
            System.out.println("run " + (System.currentTimeMillis() - start));
         }
     }
@@ -372,7 +344,7 @@ public class Start {
         KMerDict k1 = KMerDictBuilder.getDict(s1, 11);
         KMerDict k2 = KMerDictBuilder.getDict(s2, 11);
         long start = System.currentTimeMillis();
-        //System.out.println(s1.sequences.size()*s2.sequences.size());
+        //System.out.println(s1.reads.size()*s2.reads.size());
         new SignatureMethod().run(s1, s2, k1, k2, 3);
         System.out.println("SignatureMethod time:");
         System.out.println(System.currentTimeMillis() - start);

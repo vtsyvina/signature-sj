@@ -11,7 +11,7 @@ import java.util.HashMap;
 import static by.bsu.util.Utils.convertLetterToDigit;
 
 /**
- * Class to build KMerDict for given Sequence
+ * Class to buildPacBio KMerDict for given Sequence
  */
 public class KMerDictBuilder {
 

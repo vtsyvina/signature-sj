@@ -6,19 +6,19 @@ import by.bsu.util.Utils;
 
 import java.io.IOException;
 
-public class SNVMethod {
+public class SNVPacBioMethod {
     static String al = "ACGT-";
 
-    public long run(Sample sample, SNVStructure struct, Sample src) throws IOException {
+    public long run(Sample splittedSample, SNVStructure struct, Sample src) {
         //TODO remove allHits
-        int[][] allHits = new int[sample.sequences[0].length()][];
+        int[][] allHits = new int[splittedSample.sequences[0].length()][];
         int count = 0;
-        for (int i = 0; i < sample.sequences[0].length(); i++) {
+        for (int i = 0; i < splittedSample.sequences[0].length(); i++) {
             int l = struct.rowMinors[i].length;
             if (l < 10) {
                 continue;
             }
-            int[] hits = getHits(sample.sequences[0], struct, struct.rowMinors[i], l);
+            int[] hits = getHits(struct, struct.rowMinors[i], l, splittedSample.sequences[i].length());
             allHits[i] = hits;
             for (int j = 0; j < hits.length; j++) {
                 //skip small amount of hits
@@ -47,7 +47,7 @@ public class SNVMethod {
                         }
                     }
 
-                    int o11 = sample.sequences.length - o12; //both 11 and 1N
+                    int o11 = splittedSample.sequences.length - o12; //both 11 and 1N
                     int minNColumn = struct.rowN[first].length < struct.rowN[second].length ? first : second;
                     int maxNColumn = struct.rowN[first].length > struct.rowN[second].length ? first : second;
                     //subtract 1N from 011
@@ -59,7 +59,7 @@ public class SNVMethod {
                     //amount of common reads for i and j column
                     int reads = o11+o12+o21+o22;
                     //start calculate p-value, starting with p
-                    //double p = struct.rowMinors[i].length/(double)(sample.sequences.length - struct.rowN[first].length);
+                    //double p = struct.rowMinors[i].length/(double)(sample.reads.length - struct.rowN[first].length);
                     double p = (o12*o21)/((double)o11*reads);
                     if (p < 1E-12) {
                         System.out.println(String.format("%d %d %c %c m1=%d m2=%d hits=%.2f p=%.3e zero",
@@ -82,8 +82,8 @@ public class SNVMethod {
         return 0;
     }
 
-    private int[] getHits(String sequence, SNVStructure struct, int[] rowMinor, int l) {
-        int[] hits = new int[sequence.length()];
+    private int[] getHits(SNVStructure struct, int[] rowMinor, int l, int columnsLength) {
+        int[] hits = new int[columnsLength];
 
         for (int j = 0; j < l; j++) {
             int[] column = struct.colMinors[rowMinor[j]];

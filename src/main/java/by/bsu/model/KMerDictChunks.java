@@ -27,7 +27,7 @@ public class KMerDictChunks extends AbstractKMerDict{
 
     /**
      *  how each position store map where key is l-chunk and value is array of all sequences that contain this l-chunk
-     *  each array in chunksHashToSequencesMapArray[i].get(hash) just stores list of all sequences indexes 
+     *  each array in chunksHashToSequencesMapArray[i].get(hash) just stores list of all sequences indexes
      *  that has given hash as i chunk
      *  {
      *      0 -> {14323123 -> [1, 4, 6, 7,...], 36321322 -> [1, 3, 6, 9,...]}
