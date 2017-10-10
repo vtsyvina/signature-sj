@@ -4,6 +4,7 @@ import by.bsu.model.IlluminaSNVSample;
 import by.bsu.model.PairEndRead;
 import by.bsu.model.SNVStructure;
 import by.bsu.model.Sample;
+import by.bsu.util.Utils;
 import com.carrotsearch.hppc.IntArrayList;
 
 public class SNVStructureBuilder {
@@ -27,8 +28,12 @@ public class SNVStructureBuilder {
 
         result.rowN = new int[src.sequences[0].length()][];
         IntArrayList[] rowN = initIntArrayList(src.sequences[0].length());
+
+        result.majorsInRow = new int[sample.sequences[0].length()];
+        String consensus = Utils.consensus(srcProfile, "ACGT-N");
         for (int i = 0; i < src.sequences.length; i++) {
             fillRowN(src.sequences[i], 0, i, rowN);
+            fillMajorsCount(src.sequences[i], 0, consensus, result.majorsInRow);
         }
 
         for (int i = 0; i < sample.sequences.length; i++) {
@@ -51,8 +56,13 @@ public class SNVStructureBuilder {
 
         result.rowN = new int[src.referenceLength][];
         IntArrayList[] rowN = initIntArrayList(src.referenceLength);
+
+        result.majorsInRow = new int[src.referenceLength];
+        String consensus = Utils.consensus(srcProfile, "ACGT-N");
         for (int i = 0; i < src.reads.size(); i++) {
             PairEndRead read = src.reads.get(i);
+            fillMajorsCount(read.l, read.lOffset, consensus, result.majorsInRow);
+            fillMajorsCount(read.r, read.rOffset, consensus, result.majorsInRow);
             fillRowN(read.l, read.lOffset, i, rowN);
             fillRowN(read.r, read.rOffset, i, rowN);
         }
@@ -81,7 +91,7 @@ public class SNVStructureBuilder {
     private static void fillRowN(String read, int offset, int readNumber, IntArrayList[] rowN) {
         for (int j = 0; j < read.length(); j++) {
             if (read.charAt(j) == 'N') {
-                rowN[readNumber].add(j + offset);
+                rowN[j+offset].add(readNumber);
             }
         }
     }
@@ -100,5 +110,13 @@ public class SNVStructureBuilder {
             result[i] = src[i].toArray();
         }
         return result;
+    }
+
+    private static void fillMajorsCount(String read, int offset, String consensus, int[] majorCount){
+        for (int i = 0; i < read.length(); i++) {
+            if (read.charAt(i) == consensus.charAt(i+offset)){
+                majorCount[i+offset]++;
+            }
+        }
     }
 }

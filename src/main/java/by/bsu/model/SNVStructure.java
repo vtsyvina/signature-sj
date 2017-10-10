@@ -5,4 +5,5 @@ public class SNVStructure {
     public int[][] rowMinors;
     public int[][] rowN;
     public int[][] colMinors;
+    public int[] majorsInRow;
 }

@@ -2,14 +2,17 @@ package by.bsu.start;
 
 import by.bsu.algorithms.BruteForce;
 import by.bsu.algorithms.BruteForceHamming;
+import by.bsu.algorithms.SNVIlluminaMethod;
 import by.bsu.algorithms.SNVPacBioMethod;
 import by.bsu.algorithms.SignatureHammingMethod;
 import by.bsu.algorithms.SignatureMethod;
 import by.bsu.algorithms.TreeMethod;
+import by.bsu.distance.HammingDistance;
 import by.bsu.model.IlluminaSNVSample;
 import by.bsu.model.IntIntPair;
 import by.bsu.model.KMerDict;
 import by.bsu.model.KMerDictChunks;
+import by.bsu.model.SNVResultContainer;
 import by.bsu.model.SNVStructure;
 import by.bsu.model.Sample;
 import by.bsu.util.CallSignature;
@@ -38,6 +41,7 @@ import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
+import java.util.stream.Collectors;
 
 
 public class Start {
@@ -46,6 +50,8 @@ public class Start {
     private static List<Sample> allFiles = new ArrayList<>();
     public static Map<String, String> settings = new HashMap<>();
     public static List<Set<Integer>> snps = new ArrayList<>();
+    public static String consensus;
+    public static String[] strings;
 
     private static void loadAllFiles(Path folder) throws IOException {
         if (allFiles.isEmpty()) {
@@ -54,15 +60,15 @@ public class Start {
     }
 
     public static void main(String[] args) throws IOException, InterruptedException, ExecutionException {
-        String[] strings = DataReader.readList(Paths.get("2snv/ClonesRef.fa"));
-        Sample sample = DataReader.readOneLined(new File("2snv/db1/reads.fas"));
-        String consensus = Utils.consensus(sample.sequences, "ACGT-N");
+        strings = DataReader.readList(Paths.get("2snv/ClonesRef.fa"));
+        Sample sample = DataReader.readOneLined(new File("2snv/realigned/reads.fas"));
+        consensus = Utils.consensus(sample.sequences, "ACGT-N");
 
         for (String string : strings) {
             snps.add(new HashSet<>());
             for (int i = 0; i < string.length(); i++) {
-                if (string.charAt(i) != consensus.charAt(i)){
-                    snps.get(snps.size()-1).add(i);
+                if (string.charAt(i) != consensus.charAt(i)) {
+                    snps.get(snps.size() - 1).add(i);
                 }
             }
         }
@@ -107,7 +113,7 @@ public class Start {
                 case "snv":
                     testSNV();
                     break;
-                case "assembly-snv":
+                case "snv-illumina":
                     assambling2SNV();
                     break;
                 default:
@@ -122,13 +128,15 @@ public class Start {
         IlluminaSNVSample reads = DataReader.getIlluminaPairedReads(new File("2snv/cdc/RT_pol_SAMfiles_for_Quasirecomb/99_S2_L001_R1_001_2 (paired)-2 trimmed (paired) (Reads, Locally Realigned).sam"));
         long start = System.currentTimeMillis();
         reads.reads.sort((r1, r2) -> r1.lOffset == r2.lOffset ? Integer.compare(r1.rOffset, r2.rOffset) : Integer.compare(r1.lOffset, r2.lOffset));
-        System.out.println(System.currentTimeMillis() - start);
+        System.out.println("read " + (System.currentTimeMillis() - start));
         double[][] profile = Utils.profile(reads, "ACTG-N");
-        System.out.println(System.currentTimeMillis() - start);
+        System.out.println("profile " + (System.currentTimeMillis() - start));
         IlluminaSNVSample splittedReads = DataReader.splitColumns(reads, profile, "ACTG-N");
-        System.out.println(System.currentTimeMillis() - start);
+        System.out.println("splitted " + (System.currentTimeMillis() - start));
         SNVStructure snvStructure = SNVStructureBuilder.buildIllumina(splittedReads, reads, profile);
-        System.out.println(System.currentTimeMillis() - start);
+        System.out.println("structure" + (System.currentTimeMillis() - start));
+        new SNVIlluminaMethod().run(splittedReads, snvStructure, reads);
+        System.out.println("run" + (System.currentTimeMillis() - start));
         System.out.println();
     }
 
@@ -239,21 +247,13 @@ public class Start {
     }
 
     private static void testSNV() throws IOException, ExecutionException, InterruptedException {
-        File dir = new File(settings.getOrDefault("-dir", "2snv/db1"));
-        for (File file : dir.listFiles()) {
-            Sample sample = DataReader.readOneLined(file);
-            long start;
-            start = System.currentTimeMillis();
-            double[][] profile = Utils.profile(sample, "ACGT-N");
-            System.out.println("Profile time " + (System.currentTimeMillis() - start));
-            Sample splitted = DataReader.splitColumns(sample, profile, "ACGT-");
-            System.out.println("splitColumns " + (System.currentTimeMillis() - start));
-            double[][] rotProfile = Utils.profile(splitted, "12");
-            SNVStructure structure = SNVStructureBuilder.buildPacBio(splitted, sample, profile);
-            System.out.println("structure " + (System.currentTimeMillis() - start));
-            new SNVPacBioMethod().run(splitted, structure, sample);
-           System.out.println("run " + (System.currentTimeMillis() - start));
-        }
+        File file = new File(settings.getOrDefault("-dir", "2snv/realigned/reads.fas"));
+        Sample sample = DataReader.readOneLined(file);
+        long start;
+        start = System.currentTimeMillis();
+        Set<SNVResultContainer> haplotypes = new SNVPacBioMethod().getHaplotypes(sample);
+        System.out.println("run " + (System.currentTimeMillis() - start));
+
     }
 
     private static void runSigWithTime(int k, int l, Sample query) throws ExecutionException, InterruptedException, IOException {

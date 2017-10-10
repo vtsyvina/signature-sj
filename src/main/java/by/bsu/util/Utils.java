@@ -12,6 +12,10 @@ import org.apache.commons.math3.distribution.BinomialDistribution;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.function.Function;
+import java.util.function.Predicate;
 
 /**
  * Just class with some useful functions
@@ -171,6 +175,8 @@ public class Utils {
                 return 'G';
             case 3:
                 return 'T';
+            case 4:
+                return '-';
         }
         return '_';
     }
@@ -191,9 +197,10 @@ public class Utils {
             }
         }
         StringBuilder str = new StringBuilder();
+        int alphabetLength = alphabet.indexOf('N') == -1 ? alphabet.length() : alphabet.length() - 1;
         for (int i = 0; i < l; i++) {
             int max = 0;
-            for (int j = 1; j < alphabet.length(); j++) {
+            for (int j = 1; j < alphabetLength; j++) {
                 if (count[j][i] > count[max][i]) {
                     max = j;
                 }
@@ -205,6 +212,21 @@ public class Utils {
 
     public static String consensus(Sample sample) {
         return consensus(sample.sequences);
+    }
+
+    /**
+     * Return consensus for given profile. Put $ if all profile values equals 0
+     * @param profile sample profile
+     * @param alphabet alphabet for profile
+     * @return consensus
+     */
+    public static String consensus(double[][] profile, String alphabet){
+        char[] majors = new char[profile[0].length];
+        for (int j = 0; j < profile[0].length; j++) {
+            int majorAllele = Utils.getMajorAllele(profile, j);
+            majors[j] = majorAllele == -1 ? '$' :  alphabet.charAt(majorAllele);
+        }
+        return new String(majors);
     }
 
     public static double[][] profile(Sample sample){
@@ -255,7 +277,7 @@ public class Utils {
                 sum = 1;
             }
             for (int j = 0; j < count.length; j++) {
-                result[j][i] = count[j][i]/sum;
+                result[j][i] = count[j][i]/(double)sum;
             }
         }
         return result;
@@ -306,7 +328,8 @@ public class Utils {
                 major = j;
             }
         }
-        return major;
+        //in case there is no reads covering this position
+        return profile[major][i] < 0.001 ? -1 : major;
     }
 
     public static String byteArrayToString(byte[] arr){
@@ -321,4 +344,8 @@ public class Utils {
         return 1 - new BinomialDistribution(n, p).cumulativeProbability(s);
     }
 
+    public static <T> Predicate<T> distinctByKey(Function<? super T, ?> keyExtractor) {
+        Map<Object,Boolean> seen = new ConcurrentHashMap<>();
+        return t -> seen.putIfAbsent(keyExtractor.apply(t), Boolean.TRUE) == null;
+    }
 }
