@@ -33,12 +33,21 @@ public class SNVPacBioMethod {
      */
     public Set<SNVResultContainer> getHaplotypes(Sample sample) {
         String consensus = Utils.consensus(sample.sequences, al);
+        System.out.println("Start 2SNV method");
+        System.out.print("Compute profile");
         double[][] profile = Utils.profile(sample, al);
+        System.out.println(" - DONE");
+        System.out.print("Compute split columns");
         Sample splitted = DataReader.splitColumns(sample, profile, "ACGT-");
+        System.out.println(" - DONE");
+        System.out.print("Compute SNV data structure");
         SNVStructure structure = SNVStructureBuilder.buildPacBio(splitted, sample, profile);
+        System.out.println(" - DONE");
+        System.out.print("Compute cliques");
         //run first time to get cliques
         Set<Set<Integer>> cliques = run(splitted, structure, sample, false);
-
+        System.out.println(" - DONE");
+        System.out.print("Remove reads with low quality ");
         //remove bad reads( >23 mistakes outside of cliques positions)
         List<Integer> allPositionsInCliques = cliques.stream().flatMap(s -> s.stream().map(c -> c / 4)).distinct().sorted().collect(Collectors.toList());
         int[] mistakes = new int[2000];
@@ -62,13 +71,25 @@ public class SNVPacBioMethod {
             }
         }
         sample.sequences = newSequences.toArray(new String[newSequences.size()]);
+        System.out.println(" - DONE");
+        System.out.print("Compute profile");
         //after removing all bad reads, rerun whole process again
         profile = Utils.profile(sample, al);
+        System.out.println(" - DONE");
+        System.out.print("Compute split columns");
         splitted = DataReader.splitColumns(sample, profile, "ACGT-");
+        System.out.println(" - DONE");
+        System.out.print("Compute SNV data structure");
         structure = SNVStructureBuilder.buildPacBio(splitted, sample, profile);
-        cliques = run(splitted, structure, sample, true);
+        System.out.println(" - DONE");
+        System.out.print("Compute cliques");
+        cliques = run(splitted, structure, sample, false);
+        System.out.println(" - DONE");
+        System.out.print("Start getting haplotypes");
         // divide by clusters and find haplotypes
-        return processCliques(cliques, structure, sample, true);
+        Set<SNVResultContainer> snvResultContainers = processCliques(cliques, structure, sample, false);
+        System.out.println(" - DONE");
+        return snvResultContainers;
     }
 
     /**

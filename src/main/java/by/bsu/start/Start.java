@@ -7,7 +7,6 @@ import by.bsu.algorithms.SNVPacBioMethod;
 import by.bsu.algorithms.SignatureHammingMethod;
 import by.bsu.algorithms.SignatureMethod;
 import by.bsu.algorithms.TreeMethod;
-import by.bsu.distance.HammingDistance;
 import by.bsu.model.IlluminaSNVSample;
 import by.bsu.model.IntIntPair;
 import by.bsu.model.KMerDict;
@@ -28,9 +27,9 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.nio.file.StandardOpenOption;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -148,6 +147,7 @@ public class Start {
         System.out.println("-k 10 -- threshold for sequence similarity(10 is default value)");
         System.out.println("-l 11 -- l-mer length for Signature method(11 is default value). Used only for equal chunks, entropy-based is used by default");
         System.out.println("-dir /usr/name/tmp/ -- folder with input. (cleaned_independent_264 is default value, except of bigData)");
+        System.out.println("-in /usr/name/tmp/reads.fas -- input file(2snv/realigned/reads.fas is default for snv method)");
         System.out.println("-outDir /usr/name/tmp/ -- folder with output.");
         System.out.println("-m bigData -- run one of predefined methods. Methods are: bigData, signatureTest. bigData is default");
         System.out.println("-algsToRun signature,tree -- which methods run for bigData method. Methods are: signature, signature-hamming, tree, brute. signature is default");
@@ -247,12 +247,21 @@ public class Start {
     }
 
     private static void testSNV() throws IOException, ExecutionException, InterruptedException {
-        File file = new File(settings.getOrDefault("-dir", "2snv/realigned/reads.fas"));
+        File file = new File(settings.getOrDefault("-in", "2snv/realigned/reads.fas"));
         Sample sample = DataReader.readOneLined(file);
         long start;
         start = System.currentTimeMillis();
-        Set<SNVResultContainer> haplotypes = new SNVPacBioMethod().getHaplotypes(sample);
-        System.out.println("run " + (System.currentTimeMillis() - start));
+        List<SNVResultContainer> haplotypes = new SNVPacBioMethod().getHaplotypes(sample).stream().sorted((s1, s2) -> Integer.compare(s2.cluster.size(),s1.cluster.size())).collect(Collectors.toList());
+        System.out.println(String.format("SNV got %d haplotypes\n", haplotypes.size()));
+        System.out.println(haplotypes);
+        String snvOutput = settings.getOrDefault("-outDir", "snv_output/");
+        if (!snvOutput.endsWith("/")){
+            snvOutput+="/";
+        }
+        Path path = preparePath(snvOutput+(sample.name == null?"snv_output.txt" : sample.name.substring(0, sample.name.indexOf('.'))+".txt"));
+        Files.write(path, String.format("SNV got %d haplotypes\n", haplotypes.size()).getBytes(), StandardOpenOption.WRITE);
+        Files.write(path, haplotypes.toString().getBytes(), StandardOpenOption.APPEND);
+        System.out.println("time,ms " + (System.currentTimeMillis() - start));
 
     }
 

@@ -48,4 +48,12 @@ public class SNVResultContainer {
         result = 31 * result + (sourceClique != null ? sourceClique.hashCode() : 0);
         return result;
     }
+
+    @Override
+    public String toString() {
+        return "{\n" +
+                "snvs=" + haploClique +
+                ",\n haplotype='" + haplotype + "\n\'" +
+                "}";
+    }
 }
