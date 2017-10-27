@@ -12,7 +12,6 @@ import by.bsu.model.IntIntPair;
 import by.bsu.model.KMerDict;
 import by.bsu.model.KMerDictChunks;
 import by.bsu.model.SNVResultContainer;
-import by.bsu.model.SNVStructure;
 import by.bsu.model.Sample;
 import by.bsu.util.CallSignature;
 import by.bsu.util.DataReader;
@@ -20,7 +19,6 @@ import by.bsu.util.SequencesTreeBuilder;
 import by.bsu.util.Utils;
 import by.bsu.util.builders.KMerDictBuilder;
 import by.bsu.util.builders.KMerDictChunksBuilder;
-import by.bsu.util.builders.SNVStructureBuilder;
 
 import java.io.File;
 import java.io.IOException;
@@ -51,6 +49,7 @@ public class Start {
     public static List<Set<Integer>> snps = new ArrayList<>();
     public static String consensus;
     public static String[] strings;
+    public static String[] savage;
 
     private static void loadAllFiles(Path folder) throws IOException {
         if (allFiles.isEmpty()) {
@@ -123,19 +122,28 @@ public class Start {
         }
     }
 
-    private static void assambling2SNV() {
-        IlluminaSNVSample reads = DataReader.getIlluminaPairedReads(new File("2snv/cdc/RT_pol_SAMfiles_for_Quasirecomb/99_S2_L001_R1_001_2 (paired)-2 trimmed (paired) (Reads, Locally Realigned).sam"));
+    private static void assambling2SNV() throws IOException {
         long start = System.currentTimeMillis();
-        reads.reads.sort((r1, r2) -> r1.lOffset == r2.lOffset ? Integer.compare(r1.rOffset, r2.rOffset) : Integer.compare(r1.lOffset, r2.lOffset));
-        System.out.println("read " + (System.currentTimeMillis() - start));
-        double[][] profile = Utils.profile(reads, "ACTG-N");
-        System.out.println("profile " + (System.currentTimeMillis() - start));
-        IlluminaSNVSample splittedReads = DataReader.splitColumns(reads, profile, "ACTG-N");
-        System.out.println("splitted " + (System.currentTimeMillis() - start));
-        SNVStructure snvStructure = SNVStructureBuilder.buildIllumina(splittedReads, reads, profile);
-        System.out.println("structure" + (System.currentTimeMillis() - start));
-        new SNVIlluminaMethod().run(splittedReads, snvStructure, reads);
-        System.out.println("run" + (System.currentTimeMillis() - start));
+        savage = DataReader.readList(Paths.get("2snv/savage/savage_hiv1_res_trimmed.fas"));
+        for (int i = 0; i < savage.length; i++) {
+            savage[i] = savage[i].substring(savage[i].indexOf("GGTCTCTCTGGTTAGACCAGATC"), Math.min(savage[i].length(), savage[i].indexOf("GGTCTCTCTGGTTAGACCAGATC")+9181));
+        }
+        String[] strings = DataReader.readList(Paths.get("2snv/influensa/clone1.fasta"));
+        List<String> s = new ArrayList<>();
+        s.add(strings[0]);
+//        strings = DataReader.readList(Paths.get("2snv/influensa/clone2.fasta"));
+//        s.add(strings[0]);
+        strings = DataReader.readList(Paths.get("2snv/influensa/clone3.fasta"));
+        s.add(strings[0]);
+        savage = s.toArray(new String[s.size()]);
+        IlluminaSNVSample sample = DataReader.getIlluminaPairedReads(new File("2snv/influensa/clones_1_3.sam"));
+        System.out.println("read "+(System.currentTimeMillis()-start));
+        sample.reads = new SNVIlluminaMethod().processOverlaps(sample.reads);
+
+        sample.reads.sort((r1, r2) -> r1.lOffset == r2.lOffset ? Integer.compare(r1.rOffset, r2.rOffset) : Integer.compare(r1.lOffset, r2.lOffset));
+
+        List<SNVResultContainer> collect = new SNVIlluminaMethod().getHaplotypes(sample).stream().sorted((s1, s2) -> Integer.compare(s2.illuminaCluster.size(), s1.illuminaCluster.size())).collect(Collectors.toList());
+
         System.out.println();
     }
 
@@ -149,10 +157,10 @@ public class Start {
         System.out.println("-dir /usr/name/tmp/ -- folder with input. (cleaned_independent_264 is default value, except of bigData)");
         System.out.println("-in /usr/name/tmp/reads.fas -- input file(2snv/realigned/reads.fas is default for snv method)");
         System.out.println("-outDir /usr/name/tmp/ -- folder with output.");
-        System.out.println("-m bigData -- run one of predefined methods. Methods are: bigData, signatureTest. bigData is default");
-        System.out.println("-algsToRun signature,tree -- which methods run for bigData method. Methods are: signature, signature-hamming, tree, brute. signature is default");
-        System.out.println("-testsToRun 1,2-4,6 -- which tests to run for bigData test. Run all tests by default. Can be any combination with commas and dashes");
-        System.out.println("-testsPrefix db -- which prefix do you use for all eligible tests. Then, program will run tests from folders/files db1,db2,db3,... By default program reads from folder");
+        System.out.println("-m bigData -- getMergedCluques one of predefined methods. Methods are: bigData, signatureTest. bigData is default");
+        System.out.println("-algsToRun signature,tree -- which methods getMergedCluques for bigData method. Methods are: signature, signature-hamming, tree, brute. signature is default");
+        System.out.println("-testsToRun 1,2-4,6 -- which tests to getMergedCluques for bigData test. Run all tests by default. Can be any combination with commas and dashes");
+        System.out.println("-testsPrefix db -- which prefix do you use for all eligible tests. Then, program will getMergedCluques tests from folders/files db1,db2,db3,... By default program reads from folder");
         System.out.println("-threads 4 -- how many threads to use in parallel. Usually just the number of cores is the best choice");
         System.out.println("Final command can look as follows:");
         System.out.println("java -jar sequence-comparison.jar -k 10 -testsToRun 1,3-5,8 -algsToRun signature-hamming -outDir output");
@@ -251,7 +259,7 @@ public class Start {
         Sample sample = DataReader.readOneLined(file);
         long start;
         start = System.currentTimeMillis();
-        List<SNVResultContainer> haplotypes = new SNVPacBioMethod().getHaplotypes(sample).stream().sorted((s1, s2) -> Integer.compare(s2.cluster.size(),s1.cluster.size())).collect(Collectors.toList());
+        List<SNVResultContainer> haplotypes = new SNVPacBioMethod().getHaplotypes(sample).stream().sorted((s1, s2) -> Integer.compare(s2.pacBioCluster.size(),s1.pacBioCluster.size())).collect(Collectors.toList());
         System.out.println(String.format("SNV got %d haplotypes\n", haplotypes.size()));
         System.out.println(haplotypes);
         String snvOutput = settings.getOrDefault("-outDir", "snv_output/");

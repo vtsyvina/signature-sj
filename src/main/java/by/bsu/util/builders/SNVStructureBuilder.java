@@ -59,12 +59,15 @@ public class SNVStructureBuilder {
 
         result.majorsInRow = new int[src.referenceLength];
         String consensus = Utils.consensus(srcProfile, "ACGT-N");
+        IntArrayList[] readsAtPositions = initIntArrayList(src.referenceLength);
         for (int i = 0; i < src.reads.size(); i++) {
             PairEndRead read = src.reads.get(i);
             fillMajorsCount(read.l, read.lOffset, consensus, result.majorsInRow);
             fillMajorsCount(read.r, read.rOffset, consensus, result.majorsInRow);
             fillRowN(read.l, read.lOffset, i, rowN);
             fillRowN(read.r, read.rOffset, i, rowN);
+            fillReadsAtPosition(read.l, read.lOffset, i, readsAtPositions);
+            fillReadsAtPosition(read.r, read.rOffset, i, readsAtPositions);
         }
         for (int i = 0; i < sample.reads.size(); i++) {
             PairEndRead read = sample.reads.get(i);
@@ -75,6 +78,7 @@ public class SNVStructureBuilder {
         result.rowN = copyFromIntListToArray(rowN);
         result.colMinors = copyFromIntListToArray(cols);
         result.rowMinors = copyFromIntListToArray(rows);
+        result.readsAtPosition = copyFromIntListToArray(readsAtPositions);
         result.profile = srcProfile;
         return result;
     }
@@ -82,8 +86,8 @@ public class SNVStructureBuilder {
     private static void fillRowsAndCols(String read, int offset, int readNumber, IntArrayList[] cols, IntArrayList[] rows) {
         for (int j = 0; j < read.length(); j++) {
             if (read.charAt(j) == '2') {
-                cols[readNumber].add(offset + j);
-                rows[offset + j].add(readNumber);
+                cols[readNumber].add(offset+j);
+                rows[offset+j].add(readNumber);
             }
         }
     }
@@ -92,6 +96,14 @@ public class SNVStructureBuilder {
         for (int j = 0; j < read.length(); j++) {
             if (read.charAt(j) == 'N') {
                 rowN[j+offset].add(readNumber);
+            }
+        }
+    }
+
+    private static void fillReadsAtPosition(String read, int offset, int readNumber, IntArrayList[] readsAtPosition) {
+        for (int j = 0; j < read.length(); j++) {
+            if (read.charAt(j) != 'N') {
+                readsAtPosition[j + offset].add(readNumber);
             }
         }
     }

@@ -2,7 +2,6 @@ package by.bsu.util;
 
 import by.bsu.model.IlluminaSNVSample;
 import by.bsu.model.PairEndRead;
-import by.bsu.model.SNVSample;
 import by.bsu.model.Sample;
 import htsjdk.samtools.SAMRecord;
 import htsjdk.samtools.SamReader;
@@ -97,7 +96,7 @@ public class DataReader {
         return new Sample(file.getName(), readList(file.toPath()));
     }
 
-    public static SNVSample readOneLined(File file) throws IOException {
+    public static Sample readOneLined(File file) throws IOException {
         List<String> raw = Files.readAllLines(file.toPath());
         List<String> tmp = new ArrayList<>();
         List<String> N = new ArrayList<>();
@@ -116,9 +115,8 @@ public class DataReader {
             i++;
         }
 
-        return new SNVSample(file.getName(),
-                Utils.stringsForHamming(tmp.toArray(new String[0]), 'N'),
-                offset.stream().mapToInt(o -> o).toArray(), readLength.stream().mapToInt(o -> o).toArray());
+        return new Sample(file.getName(),
+                Utils.stringsForHamming(tmp.toArray(new String[0]), 'N'));
     }
 
     /**
@@ -136,7 +134,7 @@ public class DataReader {
         String[] sequences = new String[sample.sequences.length];
         int i = 0;
         for (String sequence : sample.sequences) {
-            sequences[i++] = getSplittedRead(sequence, profile, alphabet);
+            sequences[i++] = getSplittedRead(sequence, 0, profile, alphabet);
         }
         return new Sample(sample.name + "_splitted", sequences);
     }
@@ -145,7 +143,7 @@ public class DataReader {
         int minorCount = alphabet.length() - 1;
         List<PairEndRead> splittedReads = new ArrayList<>();
         sample.reads.forEach(r ->{
-            splittedReads.add(new PairEndRead(getSplittedRead(r.l, profile, alphabet), getSplittedRead(r.r, profile, alphabet),
+            splittedReads.add(new PairEndRead(getSplittedRead(r.l, r.lOffset, profile, alphabet), getSplittedRead(r.r, r.rOffset, profile, alphabet),
                     r.lOffset*minorCount, r.rOffset*minorCount, r.name));
         });
         return new IlluminaSNVSample(sample.name + "_splitted", splittedReads, sample.referenceLength * minorCount);
@@ -155,39 +153,63 @@ public class DataReader {
         Map<String, List<SAMRecord>> readsSet = new HashMap<>();
         SamReader open = SamReaderFactory.make().open(file);
         for (SAMRecord anOpen : open) {
+            if (anOpen.getReadUnmappedFlag()){
+                continue;
+            }
             if (!readsSet.containsKey(anOpen.getReadName())) {
                 readsSet.put(anOpen.getReadName(), new ArrayList<>());
             }
             readsSet.get(anOpen.getReadName()).add(anOpen);
         }
+        SAM4WebLogo sam4WebLogo = new SAM4WebLogo(open);
 
         List<PairEndRead> pairedReads = new ArrayList<>();
         readsSet.forEach((key, value) -> {
             if (value.size() == 1) {
-                pairedReads.add(new PairEndRead(Utils.byteArrayToString(value.get(0).getReadBases()),
+                //TODO rewrite this shit
+                pairedReads.add(new PairEndRead(sam4WebLogo.printRead(value.get(0)).replaceAll("^-*", "").replaceAll("-$*", ""),
                         "",
-                        value.get(0).getAlignmentStart(),
+                        value.get(0).getAlignmentStart()-1,
                         -1, key)
                 );
             } else {
-                SAMRecord l = value.get(0);
-                SAMRecord r = value.get(0);
-                pairedReads.add(new PairEndRead(Utils.byteArrayToString(l.getReadBases()),
-                        Utils.byteArrayToString(l.getReadBases()),
-                        l.getAlignmentStart(),
-                        r.getAlignmentStart(),
-                        key)
-                );
+                for (int i = 0; i < value.size(); i++) {
+                    for (int j = 0; j < value.size(); j++) {
+                        if (value.get(i).getMateAlignmentStart() == value.get(j).getAlignmentStart()
+                                && value.get(i).getAlignmentStart() <= value.get(j).getAlignmentStart()){
+                            if (i == j){
+                                pairedReads.add(new PairEndRead(sam4WebLogo.printRead(value.get(i)).replaceAll("^-*", "").replaceAll("-$*", ""),
+                                        "",
+                                        value.get(i).getAlignmentStart()-1,
+                                        -1, key)
+                                );
+                            } else{
+                                pairedReads.add(new PairEndRead(sam4WebLogo.printRead(value.get(i)).replaceAll("^-*", "").replaceAll("-$*", ""),
+                                        sam4WebLogo.printRead(value.get(j)).replaceAll("^-*", "").replaceAll("-$*", ""),
+                                        value.get(i).getAlignmentStart()-1,
+                                        value.get(j).getAlignmentStart()-1,
+                                        key)
+                                );
+                            }
+                        }
+                    }
+                }
+                //TODO think about it later
+//                for (int i = 0; i < l.getBaseQualities().length; i++) {
+//                    if (l.getBaseQualities()[i] < 30){
+//                        strL.replace(i, i+1, "N");
+//                    }
+//                }
             }
         });
         return new IlluminaSNVSample(file.getName(), pairedReads,
                 pairedReads.parallelStream().mapToInt(r -> Math.max(r.lOffset + r.l.length(), r.rOffset + r.r.length())).max().orElse(0));
     }
 
-    private static String getSplittedRead(String read, double[][] profile, String alphabet) {
+    private static String getSplittedRead(String read, int offset, double[][] profile, String alphabet) {
         StringBuilder str = new StringBuilder();
         for (int j = 0; j < read.length(); j++) {
-            int major = Utils.getMajorAllele(profile, j);
+            int major = Utils.getMajorAllele(profile, offset+j);
             int minor = 0;
             for (int k = 0; k < alphabet.length() - 1; k++, minor++) {
                 if (minor == major) {

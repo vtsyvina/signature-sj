@@ -6,4 +6,6 @@ public class SNVStructure {
     public int[][] rowN;
     public int[][] colMinors;
     public int[] majorsInRow;
+    //for Illumina only
+    public int[][] readsAtPosition;
 }

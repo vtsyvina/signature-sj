@@ -12,7 +12,6 @@ import by.bsu.util.builders.SNVStructureBuilder;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -20,9 +19,8 @@ import java.util.stream.Collectors;
 
 import static by.bsu.util.Utils.distinctByKey;
 
-public class SNVPacBioMethod {
-    public static String al = "ACGT-N";
-    public static int minorCount = al.length() - 2;
+public class SNVPacBioMethod extends AbstractSNV {
+
 
     /**
      * Main method for SNV method on PacBio reads input
@@ -106,9 +104,9 @@ public class SNVPacBioMethod {
         //TODO remove allHits
         int[][] allHits = new int[splittedSample.sequences[0].length()][];
         String consensus = Utils.consensus(struct.profile, al);
-        List<Set<Integer>> adjacencyMatrix = new ArrayList<>();
+        List<Set<Integer>> adjacencyList = new ArrayList<>();
         for (int i = 0; i < splittedSample.sequences[0].length(); i++) {
-            adjacencyMatrix.add(new HashSet<>());
+            adjacencyList.add(new HashSet<>());
             int l = struct.rowMinors[i].length;
             if (l < 10) {
                 continue;
@@ -166,26 +164,41 @@ public class SNVPacBioMethod {
                             }
                         }
                     }
-                    //amount of common reads for i and j column
-                    int reads = src.sequences[0].length();
+                    //amount of common reads for i and j column (first two summands to get amount of 1 in j(major and all minors that turned to 1)), then add 21 and 22. We need inly to subtract 1N
+                    int reads = src.sequences.length - struct.rowN[first].length + o22 + o21;
+                    int ni = 0;
+                    int nj = 0;
+                    int nn = 0;
+                    while (ni < struct.rowN[first].length && nj < struct.rowN[second].length) {
+                        if (struct.rowN[first][ni] < struct.rowN[second][nj]) {
+                            ni++;
+                        } else if (struct.rowN[first][ni] < struct.rowN[second][nj]) {
+                            nj++;
+                        } else {
+                            nn++;
+                            ni++;
+                            nj++;
+                        }
+                    }
+                    //subtract 1N from reads
+                    reads -= struct.rowN[second].length - nn;
                     //start calculate p-value, starting with p
                     //double p = struct.rowMinors[i].length/(double)(sample.reads.length - struct.rowN[first].length);
                     double p = (o12 * o21) / ((double) o11 * reads);
                     //p = struct.profile[allele1][first] * struct.profile[allele2][second];
+                    double hitsM = 100 * hits[j] / Math.min((double) l, (double) struct.rowMinors[j].length);
                     if (p < 1E-12) {
-                        double hitsM = 100 * hits[j] / Math.min((double) l, (double) struct.rowMinors[j].length);
                         if (log)
                             System.out.println(String.format("%d %d %c %c m1=%d m2=%d hits=%.2f p=%.3e zero",
                                     first, second, m1, m2, l, struct.rowMinors[j].length, hitsM, p));
-                        adjacencyMatrix.get(i).add(j);
+                        adjacencyList.get(i).add(j);
                     } else {
                         double pvalue = Utils.binomialPvalue(o22, p, reads);
-                        double hitsM = 100 * hits[j] / Math.min((double) l, (double) struct.rowMinors[j].length);
                         if (pvalue < 0.00001 / (reads * (reads - 1) / 2)) {
                             if (log)
                                 System.out.println(String.format("%d %d %c %c m1=%d m2=%d hits=%.2f p=%.3e",
                                         first, second, m1, m2, l, struct.rowMinors[j].length, hitsM, pvalue));
-                            adjacencyMatrix.get(i).add(j);
+                            adjacencyList.get(i).add(j);
                         }
                     }
 
@@ -197,41 +210,11 @@ public class SNVPacBioMethod {
          *   if for any 2 positions we have edges like  X <-> Y and X <-> Z,
          *   then we delete edge with less frequency of second allele(to avoid false positive cliques)
          */
-        for (int i = 0; i < splittedSample.sequences[0].length(); i++) {
-            //convert adjacencyMatrix for each position into map (position -> all correlated alleles in this position)
-            Map<Integer, Set<Integer>> columnsEdges = new HashMap<>();
-            adjacencyMatrix.get(i).forEach(j -> {
-                if (!columnsEdges.containsKey(j / minorCount)) {
-                    columnsEdges.put(j / minorCount, new HashSet<>());
-                }
-                columnsEdges.get(j / minorCount).add(j);
-            });
-
-            int finalI1 = i;
-            // for evry position where we have more than 1 edge
-            columnsEdges.entrySet().stream().filter(e -> e.getValue().size() > 1).forEach(e -> {
-                final double[] max = {0};
-                final int[] maxM = {0};
-                e.getValue().forEach(m -> {
-                    if (struct.profile[al.indexOf(minor(m, struct))][m / minorCount] > max[0]) {
-                        max[0] = struct.profile[al.indexOf(minor(m, struct))][m / minorCount];
-                        maxM[0] = m;
-                    }
-                });
-                //remove all non-maximum frequency edges
-                e.getValue().forEach(m -> {
-                    if (m != maxM[0]) {
-                        adjacencyMatrix.get(finalI1).remove(m);
-                        adjacencyMatrix.get(m).remove(finalI1);
-                        if (log)
-                            System.out.println("remove " + finalI1 / minorCount + " " + m / minorCount + " " + minor(finalI1, struct) + " " + minor(m, struct));
-                    }
-                });
-            });
-        }
-        return getMergedCliques(adjacencyMatrix);
+        removeEdgesForSecondMinors(adjacencyList, struct, log);
+        return getMergedCliques(adjacencyList);
 
     }
+
 
     /**
      * Methods process computed cliques. At first it separate reads into clusters and then compute consensus for each cluster and some additional information
@@ -263,22 +246,7 @@ public class SNVPacBioMethod {
             }
             Clique haplotypeClique = new Clique(snps, struct);
             SNVResultContainer container = new SNVResultContainer(s.getKey(), cluster, haplotypeClique, haplotype);
-            for (Clique clique : cliquesSet) {
-                boolean fl = true;
-                for (int i = 0; i < clique.snps.size(); i++) {
-                    if (s.getKey().charAt(allPositionsInCliques.indexOf(clique.snps.get(i))) != clique.minors.charAt(i)) {
-                        fl = false;
-                        break;
-                    }
-                }
-                if (fl) {
-                    container.sourceClique = clique;
-                    //small hack. If clique is empty than fl will be true for any source clique
-                    if (clique.minors.length() > 0) {
-                        break;
-                    }
-                }
-            }
+            container.sourceClique = getSourceClique(allPositionsInCliques, cliquesSet, s.getKey(), container);
             return container;
         }).collect(Collectors.toSet());
         return haplotypes.stream().filter(distinctByKey(p -> p.haplotype)).collect(Collectors.toSet());
@@ -327,110 +295,6 @@ public class SNVPacBioMethod {
         return clusters;
     }
 
-    /**
-     * Transform each clique into a string of equal length. The string corresponds to clique representation in all positions
-     * that are covered by any clique. If clique doesn't have some position in it, than consensus allele will be in this position
-     *
-     * @param struct                SNV structure
-     * @param consensus             Consensus string
-     * @param cliques               Set of cliques in form of splitted SNPs(where position and minor are encoded in a single number)
-     * @param allPositionsInCliques List of all positions covered by any clique
-     * @return list with strings representing given cliques
-     */
-    private List<String> getAllCliquesCharacters(SNVStructure struct, String consensus, Set<Set<Integer>> cliques, List<Integer> allPositionsInCliques) {
-        List<String> allCliquesCharacters = new ArrayList<>();
-        StringBuilder str = new StringBuilder();
-        allPositionsInCliques.forEach(i -> str.append(consensus.charAt(i)));
-        Set<Clique> clicuesSet = new HashSet<>();
-        cliques.forEach(c -> clicuesSet.add(new Clique(c, struct)));
-        clicuesSet.forEach(c -> {
-            StringBuilder tmp = new StringBuilder(str);
-            for (int i = 0; i < c.snps.size(); i++) {
-                int snpPosition = allPositionsInCliques.indexOf(c.snps.get(i));
-                tmp.replace(snpPosition, snpPosition + 1, String.valueOf(c.minors.charAt(i)));
-            }
-            allCliquesCharacters.add(tmp.toString());
-        });
-        return allCliquesCharacters;
-    }
-
-    /**
-     * Method to build all cliques based on adjacencyMatrix for SNPs.
-     * Also it merges cliques if they have more than 50% of edges in common into 'pseudoclique'
-     *
-     * @param adjacencyMatrix Matrix with edges (in splitted sample)
-     * @return set of cliques (clique - set of splitted positions that encode position + minor)
-     */
-    private Set<Set<Integer>> getMergedCliques(List<Set<Integer>> adjacencyMatrix) {
-        Set<Integer> p = new HashSet<>();
-        for (int i = 0; i < adjacencyMatrix.size(); i++) {
-            p.add(i);
-        }
-        Set<Set<Integer>> cliques = new BronKerbosch().findCliques(new HashSet<>(), p, new HashSet<>(), adjacencyMatrix).stream().filter(c -> c.size() > 1).collect(Collectors.toSet());
-        //trying to merge cliques
-        Set<Set<Integer>> mergedCliques = new HashSet<>();
-        Set<Set<Integer>> alreadyMerged = new HashSet<>();
-        boolean fl = true;
-        while (fl) {
-            fl = false;
-            for (Set<Integer> clique : cliques) {
-                int bestScore = 0;
-                Set<Integer> bestClique = null;
-                if (alreadyMerged.contains(clique)) {
-                    continue;
-                }
-                //fing best merging score for current clique
-                for (Set<Integer> clique2 : cliques) {
-                    if (clique == clique2 || alreadyMerged.contains(clique2)) {
-                        continue;
-                    }
-                    int score = mergeScore(clique, clique2, adjacencyMatrix);
-                    if (score > bestScore) {
-                        bestScore = score;
-                        bestClique = clique2;
-                    }
-                }
-                // merge two cliques if they have more than 50% of edges in common
-                if (bestScore > 0 && 2 * bestScore > clique.size() * bestClique.size()) {
-                    HashSet<Integer> newClique = new HashSet<>(clique);
-                    newClique.addAll(bestClique);
-                    mergedCliques.add(newClique);
-                    alreadyMerged.add(bestClique);
-                    alreadyMerged.add(clique);
-                    fl = true;
-                } else {
-                    mergedCliques.add(clique);
-                    alreadyMerged.add(clique);
-                }
-            }
-            cliques = mergedCliques;
-            mergedCliques = new HashSet<>();
-            alreadyMerged = new HashSet<>();
-        }
-        return cliques;
-    }
-
-    /**
-     * Calculates hits for given row of minors.
-     * Gets all minors in column for a certain position for minorRow and increments appropriate hits position
-     *
-     * @param struct          SNV data structure
-     * @param rowMinor        array for all minors for some position
-     * @param referenceLength Reference length
-     * @return array with all minor hits for given row
-     */
-    private int[] getHits(SNVStructure struct, int[] rowMinor, int referenceLength) {
-        int[] hits = new int[referenceLength];
-
-        for (int j = 0; j < rowMinor.length; j++) {
-            int[] column = struct.colMinors[rowMinor[j]];
-            for (int aColumn : column) {
-                hits[aColumn]++;
-            }
-        }
-        return hits;
-    }
-
     //TODO remove method, it's just for debugging
     private int getHitsBetweenPositions(int i, int j, char m1, char m2, int[][] allHits, SNVStructure struct, Sample src) {
         int allele1 = al.indexOf(m1) >= Utils.getMajorAllele(struct.profile, i) ? al.indexOf(m1) - 1 : al.indexOf(m1);
@@ -445,69 +309,6 @@ public class SNVPacBioMethod {
         }
 
         return allHits[first][second];
-    }
-
-    /**
-     * Gives corresponding minot for given splitted snp
-     */
-    private char minor(int splittedSnp, SNVStructure structure) {
-        int allele1 = splittedSnp % minorCount >= Utils.getMajorAllele(structure.profile, splittedSnp / minorCount) ?
-                splittedSnp % minorCount + 1 :
-                splittedSnp % minorCount;
-        return al.charAt(allele1);
-    }
-
-    /**
-     * Transforms position + minor into splitted SNP position
-     */
-    private int splittedPosition(int pos, char minor, SNVStructure structure) {
-        int r = pos * minorCount;
-        int allele = al.indexOf(minor) >= Utils.getMajorAllele(structure.profile, pos) ? al.indexOf(minor) - 1 : al.indexOf(minor);
-        return r + allele;
-    }
-
-    /**
-     * Compute amount of common edges between the two given cliques. Returns 0 if cliques have common position but different minors
-     */
-    private int mergeScore(Set<Integer> c1, Set<Integer> c2, List<Set<Integer>> adjacencyMatrix) {
-        int matches = 0;
-        for (Integer i : c1) {
-            for (Integer i2 : c2) {
-                if (i / minorCount == i2 / minorCount && i % minorCount != i2 % minorCount) {
-                    return 0;
-                }
-                if (adjacencyMatrix.get(i).contains(i2)) {
-                    matches++;
-                }
-            }
-        }
-        return matches;
-    }
-
-    /**
-     * Simple implementation of Bron - Kerbosch algorithm for finding all maximum cliques (psedocode is on Wiki)
-     */
-    class BronKerbosch {
-        Set<Set<Integer>> findCliques(Set<Integer> clique, Set<Integer> p, Set<Integer> x, List<Set<Integer>> adjacencyMatrix) {
-            Set<Set<Integer>> result = new HashSet<>();
-            if (p.isEmpty() && x.isEmpty()) {
-                result.add(clique);
-            }
-            Iterator<Integer> it = p.iterator();
-            while (it.hasNext()) {
-                Integer v = it.next();
-                Set<Integer> newCLique = new HashSet<>(clique);
-                newCLique.add(v);
-                Set<Integer> pIntersection = new HashSet<>(p);
-                Set<Integer> xIntersection = new HashSet<>(x);
-                pIntersection.retainAll(adjacencyMatrix.get(v));
-                xIntersection.retainAll(adjacencyMatrix.get(v));
-                result.addAll(findCliques(newCLique, pIntersection, xIntersection, adjacencyMatrix));
-                it.remove();
-                x.add(v);
-            }
-            return result;
-        }
     }
 }
 
