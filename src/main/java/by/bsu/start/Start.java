@@ -136,7 +136,7 @@ public class Start {
         strings = DataReader.readList(Paths.get("2snv/influensa/clone3.fasta"));
         s.add(strings[0]);
         savage = s.toArray(new String[s.size()]);
-        IlluminaSNVSample sample = DataReader.getIlluminaPairedReads(new File("2snv/influensa/clones_1_3.sam"));
+        IlluminaSNVSample sample = DataReader.getIlluminaPairedReads(new File("2snv/influensa/flu_simseq/clones_1_3.sam"));
         System.out.println("read "+(System.currentTimeMillis()-start));
         sample.reads = new SNVIlluminaMethod().processOverlaps(sample.reads);
 

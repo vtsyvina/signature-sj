@@ -571,15 +571,26 @@ public class SNVIlluminaMethod extends AbstractSNV {
             for (String c : allCliquesCharacters) {
                 int d = 0;
                 int coincidences = 0;
+                boolean isConsensusClique = c.equals(consensusClique);
                 for (int i = 0; i < allPositionsInCliques.size(); i++) {
-                    if (readCharAtPosition(read, allPositionsInCliques.get(i)) != c.charAt(i)) {
-                        d++;
-                    }
-                    if (readHasPosition(read, allPositionsInCliques.get(i)) && c.charAt(i) != consensus.charAt(allPositionsInCliques.get(i))) {
-                        coincidences++;
+                    char charAtPosition = readCharAtPosition(read, allPositionsInCliques.get(i));
+                    //increase distance
+                    if (charAtPosition != 'N'){
+                        if (charAtPosition != c.charAt(i)) {
+                            d++;
+                        }
+                        //coincidence with current clique
+                        if (c.charAt(i) != consensus.charAt(allPositionsInCliques.get(i))) {
+                            coincidences++;
+                        }
+                        //coincidence with any cluque snp. Only for consensus clique
+                        if (isConsensusClique){
+                            coincidences++;
+                        }
                     }
                 }
-                if (coincidences == 0 && !c.equals(consensusClique)) {
+
+                if (coincidences == 0) {
                     d = 1_000_000;
                 }
                 distancesFromCliques.add(d);
