@@ -18,6 +18,7 @@ import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
 /**
@@ -151,9 +152,13 @@ public class DataReader {
 
     public static IlluminaSNVSample getIlluminaPairedReads(File file) {
         Map<String, List<SAMRecord>> readsSet = new HashMap<>();
+        System.out.println("Start read sam");
         SamReader open = SamReaderFactory.make().open(file);
         for (SAMRecord anOpen : open) {
-            if (anOpen.getReadUnmappedFlag()){
+            if (readsSet.size() % 1_000 == 0){
+		System.out.print("\r"+ readsSet.size());
+	     }
+		if (anOpen.getReadUnmappedFlag()){
                 continue;
             }
             if (!readsSet.containsKey(anOpen.getReadName())) {
@@ -161,13 +166,18 @@ public class DataReader {
             }
             readsSet.get(anOpen.getReadName()).add(anOpen);
         }
+	System.out.println(" DONE");
         SAM4WebLogo sam4WebLogo = new SAM4WebLogo(open);
-
-        List<PairEndRead> pairedReads = new ArrayList<>();
+        System.out.println("Start convert");
+        List<PairEndRead> pairedReads = new ArrayList<>(readsSet.size());
+        Pattern begin = Pattern.compile("^-*");
+        Pattern end = Pattern.compile("-$*");
         readsSet.forEach((key, value) -> {
             if (value.size() == 1) {
                 //TODO rewrite this shit
-                pairedReads.add(new PairEndRead(sam4WebLogo.printRead(value.get(0)).replaceAll("^-*", "").replaceAll("-$*", ""),
+                String s = sam4WebLogo.printRead(value.get(0));
+                s = end.matcher(begin.matcher(s).replaceAll("")).replaceAll("");
+                pairedReads.add(new PairEndRead(s,
                         "",
                         value.get(0).getAlignmentStart()-1,
                         -1, key)
@@ -178,14 +188,20 @@ public class DataReader {
                         if (value.get(i).getMateAlignmentStart() == value.get(j).getAlignmentStart()
                                 && value.get(i).getAlignmentStart() <= value.get(j).getAlignmentStart()){
                             if (i == j){
-                                pairedReads.add(new PairEndRead(sam4WebLogo.printRead(value.get(i)).replaceAll("^-*", "").replaceAll("-$*", ""),
+                                String s = sam4WebLogo.printRead(value.get(i));
+                                s = end.matcher(begin.matcher(s).replaceAll("")).replaceAll("");
+                                pairedReads.add(new PairEndRead(s,
                                         "",
                                         value.get(i).getAlignmentStart()-1,
                                         -1, key)
                                 );
                             } else{
-                                pairedReads.add(new PairEndRead(sam4WebLogo.printRead(value.get(i)).replaceAll("^-*", "").replaceAll("-$*", ""),
-                                        sam4WebLogo.printRead(value.get(j)).replaceAll("^-*", "").replaceAll("-$*", ""),
+                                String s = sam4WebLogo.printRead(value.get(i));
+                                s = end.matcher(begin.matcher(s).replaceAll("")).replaceAll("");
+                                String s2 = sam4WebLogo.printRead(value.get(j));
+                                s2 = end.matcher(begin.matcher(s2).replaceAll("")).replaceAll("");
+                                pairedReads.add(new PairEndRead(s,
+                                        s2,
                                         value.get(i).getAlignmentStart()-1,
                                         value.get(j).getAlignmentStart()-1,
                                         key)
@@ -201,7 +217,11 @@ public class DataReader {
 //                    }
 //                }
             }
+            if (pairedReads.size() % 1_000 == 0){
+                System.out.print("\r"+pairedReads.size());
+            }
         });
+        System.out.println(" DONE");
         return new IlluminaSNVSample(file.getName(), pairedReads,
                 pairedReads.parallelStream().mapToInt(r -> Math.max(r.lOffset + r.l.length(), r.rOffset + r.r.length())).max().orElse(0));
     }

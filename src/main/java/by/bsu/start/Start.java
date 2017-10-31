@@ -58,18 +58,18 @@ public class Start {
     }
 
     public static void main(String[] args) throws IOException, InterruptedException, ExecutionException {
-        strings = DataReader.readList(Paths.get("2snv/ClonesRef.fa"));
-        Sample sample = DataReader.readOneLined(new File("2snv/realigned/reads.fas"));
-        consensus = Utils.consensus(sample.sequences, "ACGT-N");
-
-        for (String string : strings) {
-            snps.add(new HashSet<>());
-            for (int i = 0; i < string.length(); i++) {
-                if (string.charAt(i) != consensus.charAt(i)) {
-                    snps.get(snps.size() - 1).add(i);
-                }
-            }
-        }
+//        strings = DataReader.readList(Paths.get("2snv/ClonesRef.fa"));
+//        Sample sample = DataReader.readOneLined(new File("2snv/realigned/reads.fas"));
+//        consensus = Utils.consensus(sample.sequences, "ACGT-N");
+//
+//        for (String string : strings) {
+//            snps.add(new HashSet<>());
+//            for (int i = 0; i < string.length(); i++) {
+//                if (string.charAt(i) != consensus.charAt(i)) {
+//                    snps.get(snps.size() - 1).add(i);
+//                }
+//            }
+//        }
         String key = null;
         for (String arg : args) {
             if (arg.startsWith("-") && arg.length() > 1) {
@@ -124,27 +124,43 @@ public class Start {
 
     private static void assambling2SNV() throws IOException {
         long start = System.currentTimeMillis();
-        savage = DataReader.readList(Paths.get("2snv/savage/savage_hiv1_res_trimmed.fas"));
-        for (int i = 0; i < savage.length; i++) {
-            savage[i] = savage[i].substring(savage[i].indexOf("GGTCTCTCTGGTTAGACCAGATC"), Math.min(savage[i].length(), savage[i].indexOf("GGTCTCTCTGGTTAGACCAGATC")+9181));
-        }
-        String[] strings = DataReader.readList(Paths.get("2snv/influensa/clone1.fasta"));
+//        savage = DataReader.readList(Paths.get("2snv/savage/savage_hiv1_res_trimmed.fas"));
+//        for (int i = 0; i < savage.length; i++) {
+//            savage[i] = savage[i].substring(savage[i].indexOf("GGTCTCTCTGGTTAGACCAGATC"), Math.min(savage[i].length(), savage[i].indexOf("GGTCTCTCTGGTTAGACCAGATC")+9181));
+//        }
+        String[] strings = DataReader.readList(Paths.get("2snv/clone1.fasta"));
         List<String> s = new ArrayList<>();
         s.add(strings[0]);
 //        strings = DataReader.readList(Paths.get("2snv/influensa/clone2.fasta"));
 //        s.add(strings[0]);
-        strings = DataReader.readList(Paths.get("2snv/influensa/clone3.fasta"));
+        strings = DataReader.readList(Paths.get("2snv/clone2.fasta"));
+        s.add(strings[0]);
+        strings = DataReader.readList(Paths.get("2snv/clone3.fasta"));
+        s.add(strings[0]);
+        strings = DataReader.readList(Paths.get("2snv/clone4.fasta"));
+        s.add(strings[0]);
+        strings = DataReader.readList(Paths.get("2snv/clone5.fasta"));
+        s.add(strings[0]);
+        strings = DataReader.readList(Paths.get("2snv/clone6.fasta"));
+        s.add(strings[0]);
+        strings = DataReader.readList(Paths.get("2snv/clone7.fasta"));
+        s.add(strings[0]);
+        strings = DataReader.readList(Paths.get("2snv/clone8.fasta"));
+        s.add(strings[0]);
+        strings = DataReader.readList(Paths.get("2snv/clone9.fasta"));
+        s.add(strings[0]);
+        strings = DataReader.readList(Paths.get("2snv/clone10.fasta"));
         s.add(strings[0]);
         savage = s.toArray(new String[s.size()]);
-        IlluminaSNVSample sample = DataReader.getIlluminaPairedReads(new File("2snv/influensa/flu_simseq/clones_1_3.sam"));
+        IlluminaSNVSample sample = DataReader.getIlluminaPairedReads(new File("2snv/influensa/clones_1_3.sam"));
         System.out.println("read "+(System.currentTimeMillis()-start));
         sample.reads = new SNVIlluminaMethod().processOverlaps(sample.reads);
 
         sample.reads.sort((r1, r2) -> r1.lOffset == r2.lOffset ? Integer.compare(r1.rOffset, r2.rOffset) : Integer.compare(r1.lOffset, r2.lOffset));
 
         List<SNVResultContainer> collect = new SNVIlluminaMethod().getHaplotypes(sample).stream().sorted((s1, s2) -> Integer.compare(s2.illuminaCluster.size(), s1.illuminaCluster.size())).collect(Collectors.toList());
-
-        System.out.println();
+        System.out.println(String.format("SNV got %d haplotypes\n", collect.size()));
+        System.out.println(collect);
     }
 
     private static void helpOutput(String arg, boolean error) {
