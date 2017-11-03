@@ -1,6 +1,5 @@
 package by.bsu.algorithms;
 
-import by.bsu.distance.HammingDistance;
 import by.bsu.model.Clique;
 import by.bsu.model.IlluminaSNVSample;
 import by.bsu.model.PairEndRead;
@@ -20,6 +19,12 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.Callable;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Collectors;
 
 import static by.bsu.util.Utils.distinctByKey;
@@ -28,6 +33,7 @@ public class SNVIlluminaMethod extends AbstractSNV {
     private static String al = "ACGT-N";
     public static int minorCount = al.length() - 2;
     public static List<Clique> savageHaplo;
+    private static AtomicInteger y = new AtomicInteger();
     private class CorrelationContainer{
         public int o11;
         public int o12;
@@ -57,7 +63,13 @@ public class SNVIlluminaMethod extends AbstractSNV {
         System.out.println("Start 2SNV method");
         System.out.print("Compute profile");
         double[][] profile = Utils.profile(sample, al);
+        //TODO remove this hack
+        double t= profile[1][617];
+        profile[1][617] = profile[3][617];
+        profile[3][617] = t;
         System.out.println(" - DONE " + (System.currentTimeMillis() - start));
+        System.out.println("Profile 617: C "+sample.reads.parallelStream().filter(s -> readHasCharAtPosition(s, 617,'C')).count()+" T "
+        +sample.reads.parallelStream().filter(s -> readHasCharAtPosition(s, 617,'T')).count());
         System.out.print("Compute split columns");
         IlluminaSNVSample splitted = DataReader.splitColumns(sample, profile, "ACGT-");
         System.out.println(" - DONE " + (System.currentTimeMillis() - start));
@@ -66,6 +78,10 @@ public class SNVIlluminaMethod extends AbstractSNV {
         System.out.println(" - DONE " + (System.currentTimeMillis() - start));
         System.out.print("Compute cliques");
         String consensus = Utils.consensus(structure.profile, al);
+        //TODO think about it
+        StringBuilder tmp = new StringBuilder(consensus);
+        tmp.setCharAt(617, 'C');
+        consensus = tmp.toString();
         //TODO remove it
         savageHaplo = new ArrayList<>();
         for (String s : Start.savage) {
@@ -79,71 +95,9 @@ public class SNVIlluminaMethod extends AbstractSNV {
         }
         System.out.println("Answers:");
         System.out.println(savageHaplo);
-        try {
-            System.in.read();
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
         //getMergedCluques first time to get cliques
-        Set<Set<Integer>> cliques = run(splitted, structure, sample, true, true);
-        System.out.println(" - DONE " + (System.currentTimeMillis() - start));
-        SNVStructure finalStructure = structure;
-        System.out.println("Found cliques:"+cliques.stream().map(s -> new Clique(s, finalStructure)).collect(Collectors.toList()));
-        try {
-            int c = System.in.read();
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-        System.out.print("Remove reads with low quality ");
-        //remove bad reads( >23 mistakes outside of cliques positions)
-        List<Integer> allPositionsInCliques = cliques.stream().flatMap(s -> s.stream().map(c -> c / 4)).distinct().sorted().collect(Collectors.toList());
-        List<PairEndRead>[] mistakes = new ArrayList[splitted.referenceLength];
-        HammingDistance h = new HammingDistance();
-        for (PairEndRead read : sample.reads) {
-            int apply = h.apply(read.l, consensus.substring(read.lOffset, read.lOffset + read.l.length()));
-            if (read.r.length() > 0) {
-                apply += h.apply(read.r, consensus.substring(read.rOffset, read.rOffset + read.r.length()));
-            }
-            for (int i = 0; i < read.l.length(); i++) {
-                if (read.l.charAt(i) == 'N') {
-                    apply--;
-                }
-            }
-            for (int i = 0; i < read.r.length(); i++) {
-                if (read.r.charAt(i) == 'N') {
-                    apply--;
-                }
-            }
-            for (Integer i : allPositionsInCliques) {
-                if (readCharAtPosition(read, i) != 'N' && readCharAtPosition(read, i) != consensus.charAt(i)) {
-                    apply--;
-                }
-            }
-            if (mistakes[apply] == null) {
-                mistakes[apply] = new ArrayList<>();
-            }
-            mistakes[apply].add(read);
-        }
-        sample.reads = new ArrayList<>();
-        for (int i = 0; i < 5; i++) {
-            if (mistakes[i] != null) {
-                sample.reads.addAll(mistakes[i]);
-            }
-        }
-        System.out.println(" - DONE " + (System.currentTimeMillis() - start));
-        System.out.print("Compute profile");
-        //after removing all bad reads, rerun whole process again
-        profile = Utils.profile(sample, al);
-        System.out.println(" - DONE " + (System.currentTimeMillis() - start));
-        System.out.print("Compute split columns");
-        splitted = DataReader.splitColumns(sample, profile, "ACGT-");
-        System.out.println(" - DONE " + (System.currentTimeMillis() - start));
-        System.out.print("Compute SNV data structure");
-        structure = SNVStructureBuilder.buildIllumina(splitted, sample, profile);
-        System.out.println(" - DONE " + (System.currentTimeMillis() - start));
-        System.out.print("Compute cliques");
-        cliques = run(splitted, structure, sample, true, false);
-        System.out.println("Found cliques:"+cliques.stream().map(s -> new Clique(s, finalStructure)).collect(Collectors.toList()));
+        Set<Set<Integer>> cliques = run(splitted, structure, sample, true, false);
+        System.out.println("Found cliques:"+cliques.stream().map(s -> new Clique(s, structure)).collect(Collectors.toList()));
         System.out.println(" - DONE " + (System.currentTimeMillis() - start));
         System.out.print("Start getting haplotypes");
         // divide by clusters and find haplotypes
@@ -158,7 +112,42 @@ public class SNVIlluminaMethod extends AbstractSNV {
         correlationMap = new HashMap<>();
         int more = 0;
         String consensus = Utils.consensus(struct.profile, al);
+        //TODO remove hack
+        StringBuilder str = new StringBuilder(consensus);
+        str.setCharAt(617, 'C');
+        consensus = str.toString();
         List<Set<Integer>> adjacencyList = new ArrayList<>();
+        int[][] commonReads = new int[src.referenceLength][src.referenceLength];
+        System.out.println("Common reads martix calculation");
+
+        int cores = Runtime.getRuntime().availableProcessors();
+        List<Callable<Boolean>> tasks = new ArrayList<>();
+
+        for (int i = 0; i < src.referenceLength; i++) {
+            tasks.add(new ParallelTask(i, commonReads, struct, src));
+        }
+        ExecutorService service = Executors.newFixedThreadPool(cores);
+        try {
+            List<Future<Boolean>> futures = service.invokeAll(tasks);
+            service.shutdown();
+            futures.forEach(future -> {
+                try {
+                    future.get();
+                } catch (InterruptedException | ExecutionException e) {
+                    System.err.println("Error! Parallel tasks were not successful on get");
+                    e.printStackTrace();
+                }
+            });
+        } catch (InterruptedException e) {
+            System.err.println("Error! Parallel tasks were not successful on invoke");
+            e.printStackTrace();
+        }
+        System.out.println();
+        try {
+            int c = System.in.read();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
         //maybe we will remove second minors
         int[] firstMinors = new int[src.referenceLength];
         for (int i = 0; i < firstMinors.length; i++) {
@@ -179,21 +168,21 @@ public class SNVIlluminaMethod extends AbstractSNV {
             }
             firstMinors[i] = minorJ;
         }
+        int count = 0;
         for (int i = 0; i < splittedSample.referenceLength; i++) {
             adjacencyList.add(new HashSet<>());
             int l = struct.rowMinors[i].length;
             int first = i / minorCount;
-            if (getAllele(i, struct) != firstMinors[i/minorCount]){
-                continue;
-            }
-            if (l < thresholdForPositions(struct.readsAtPosition[first].length, struct.readsAtPosition[first].length)) {
+            if (l < thresholdForPositions(commonReads[first][first])) {
                 continue;
             }
             int[] hits = getHits(struct, struct.rowMinors[i], splittedSample.referenceLength);
             for (int j = 0; j < hits.length; j++) {
                 //skip small amount of hits
                 int second = j / minorCount;
-                if (first != second && hits[j] >= thresholdForPositions(struct.readsAtPosition[first].length, struct.readsAtPosition[second].length) && Math.abs(first - second) >= 5) {
+                int reads = commonReads[first][second];
+                if ((first != second && hits[j] >= thresholdForPositions(reads)
+                        && Math.abs(first - second) >= 5)) {
                     //get unsplitted columns, minors, o_kl
 
                     int allele1 = getAllele(i, struct);
@@ -201,13 +190,6 @@ public class SNVIlluminaMethod extends AbstractSNV {
 
                     char m1 = al.charAt(allele1);
                     char m2 = al.charAt(allele2);
-                    //skip second and other less frequent minors
-                    if (allele2 != firstMinors[second]){
-                        continue;
-                    }
-                    if (m1 == '-' || m2 == '-') {
-                        continue;
-                    }
                     /*
                      * false 1 means that in actual sample it has another minor or N in given position
                      */
@@ -218,8 +200,12 @@ public class SNVIlluminaMethod extends AbstractSNV {
                     o21 = calculateO21(o21, second, i, src, struct, consensus);
                     if (o21 == 0) {
                         if (log)
-                            System.out.println(String.format("%d %d %c %c m1=%d m2=%d hits=%d p=%.3e zero",
-                                    first, second, m1, m2, l, struct.rowMinors[j].length, hits[j], 0.0));
+                            System.out.println(String.format("%d %d %c %c m1=%d m2=%d hits=%d p=%.3e reads=%d",
+                                    first, second, m1, m2, l, struct.rowMinors[j].length, hits[j], 0.0, reads));
+                        o12 = calculateO12(o12, first, j, src, struct, consensus);
+
+                        int o11 = getO11(struct, src, consensus, i, j, first, second, o22, o21, o12, reads);
+                        correlationMap.put(getCorrelationKey(first, second, m1, m2), new CorrelationContainer(o11, o12, o21, o22, reads));
                         adjacencyList.get(i).add(j);
                         continue;
                     }
@@ -227,16 +213,16 @@ public class SNVIlluminaMethod extends AbstractSNV {
                     o12 = calculateO12(o12, first, j, src, struct, consensus);
                     if (o12 == 0) {
                         if (log)
-                            System.out.println(String.format("%d %d %c %c m1=%d m2=%d hits=%d p=%.3e zero",
-                                    first, second, m1, m2, l, struct.rowMinors[j].length, hits[j], 0.0));
+                            System.out.println(String.format("%d %d %c %c m1=%d m2=%d hits=%d p=%.3e reads=%d",
+                                    first, second, m1, m2, l, struct.rowMinors[j].length, hits[j], 0.0, reads));
+                        int o11 = getO11(struct, src, consensus, i, j, first, second, o22, o21, o12, reads);
+                        correlationMap.put(getCorrelationKey(first, second, m1, m2), new CorrelationContainer(o11, o12, o21, o22, reads));
                         adjacencyList.get(i).add(j);
                         continue;
                     }
 
-                    //amount of common reads for i and j column (first two summands to get amount of 1 in j(major and all minors that turned to 1)), then add 21 and 22. We need inly to subtract 1N
-                    //subtract 1N from reads
-                    int reads = getCommonReadsCount(struct.readsAtPosition[first], struct.readsAtPosition[second]);
 
+                    //subtract 1N from reads
                     int o11 = getO11(struct, src, consensus, i, j, first, second, o22, o21, o12, reads);
                     if (o11 == 0) {
                         int tmp = o11;
@@ -246,29 +232,27 @@ public class SNVIlluminaMethod extends AbstractSNV {
                     //start calculate p-value, starting with p
                     //double p = struct.rowMinors[i].length/(double)(sample.reads.length - struct.rowN[first].length);
                     double p = (o12 * o21) / ((double) o11 * reads);
-
+                    if (first == 2258 && second == 1814 && al.charAt(getAllele(i, struct)) == 'A'){
+                        double pvalue = Utils.binomialPvalue(o22, p, reads);
+                        System.out.println(String.format("%d %d %c %c m1=%d m2=%d hits=%d p=%.3e reads=%d uuu",
+                                first, second, m1, m2, l, struct.rowMinors[j].length, hits[j], pvalue, reads));
+                    }
                     if (p > 1) {
                         more++;
                         continue;
                     }
                     if (p < 1E-12) {
                         if (log)
-                            System.out.println(String.format("%d %d %c %c m1=%d m2=%d hits=%d p=%.3e zero",
-                                    first, second, m1, m2, l, struct.rowMinors[j].length, hits[j], p));
+                            System.out.println(String.format("%d %d %c %c m1=%d m2=%d hits=%d p=%.3e reads=%d",
+                                    first, second, m1, m2, l, struct.rowMinors[j].length, hits[j], p, reads));
+                        correlationMap.put(getCorrelationKey(first, second, m1, m2), new CorrelationContainer(o11, o12, o21, o22, reads));
                         adjacencyList.get(i).add(j);
                     } else {
                         double pvalue = Utils.binomialPvalue(o22, p, reads);
-                        if (pvalue < 0.0000001 / (splittedSample.referenceLength * (splittedSample.referenceLength - 1) / 2)) {
+                        if (pvalue < 0.00001 / (splittedSample.referenceLength * (splittedSample.referenceLength - 1) / 2)) {
                             if (log)
                                 System.out.println(String.format("%d %d %c %c m1=%d m2=%d hits=%d p=%.3e reads=%d",
                                         first, second, m1, m2, l, struct.rowMinors[j].length, hits[j], pvalue,reads));
-                            if (l < 100 && struct.rowMinors[j].length < 100){
-                                List<PairEndRead> count1 = src.reads.parallelStream().filter(s -> readHasCharAtPosition(s, first, m1) && readHasCharAtPosition(s, second, m2)).collect(Collectors.toList());
-                                System.out.println("Count for "+first+" "+second+" "+m1+" "+m2+" "+count1.size());
-                                if (count1.size() < 20){
-                                    count1.forEach(s -> System.out.println(s.name+" "+s.lOffset));
-                                }
-                            }
                             correlationMap.put(getCorrelationKey(first, second, m1, m2), new CorrelationContainer(o11, o12, o21, o22, reads));
                             adjacencyList.get(i).add(j);
                         }
@@ -331,14 +315,12 @@ public class SNVIlluminaMethod extends AbstractSNV {
         }
         List<Set<Integer>> cliques = AlgorithmUtils.findCliques(new HashSet<>(), p, new HashSet<>(), adjacencyList).stream().filter(c -> c.size() > 1).collect(Collectors.toList());
         System.out.println("Cliques before merge " + cliques.size());
+        cliques.stream().map(c -> new Clique(c, structure)).forEach(System.out::println);
         List<Set<Integer>> cliquesAdjacencyMatrix = new ArrayList<>();
         cliques.forEach(i -> cliquesAdjacencyMatrix.add(new HashSet<>()));
         for (int i = 0; i < cliques.size(); i++) {
-            for (int j = 0; j < cliques.size(); j++) {
-                if (i == j) {
-                    continue;
-                }
-                if (mergeScore(cliques.get(i), cliques.get(j), adjacencyList) > 2) {
+            for (int j = i+1; j < cliques.size(); j++) {
+                if (mergeScore(cliques.get(i), cliques.get(j), adjacencyList) > 0) {
                     cliquesAdjacencyMatrix.get(i).add(j);
                     cliquesAdjacencyMatrix.get(j).add(i);
                     edges++;
@@ -357,6 +339,31 @@ public class SNVIlluminaMethod extends AbstractSNV {
         System.out.println("Edges between cliques in total " + edges);
         System.out.println("Merged cliques " + mergedCliques.size());
         return new HashSet<>(mergedCliques.values());
+    }
+
+    @Override
+    protected int mergeScore(Set<Integer> c1, Set<Integer> c2, List<Set<Integer>> adjacencyList) {
+        HashSet<Integer> tmp = new HashSet<>(c1);
+        tmp.retainAll(c2);
+        int intersection = tmp.size();
+        if (intersection > 1){
+            return 1;
+        }
+        if (intersection < 1){
+            return 0;
+        }
+        int matches = 0;
+        for (Integer i : c1) {
+            for (Integer i2 : c2) {
+                if (i / minorCount == i2 / minorCount && i % minorCount != i2 % minorCount) {
+                    return 0;
+                }
+                if (adjacencyList.get(i).contains(i2) && !tmp.contains(i) && !tmp.contains(i2)) {
+                    matches++;
+                }
+            }
+        }
+        return matches;
     }
 
     private int getO11(SNVStructure struct, IlluminaSNVSample src, String consensus, int i, int j, int first, int second, int o22, int o21, int o12, int reads) {
@@ -516,7 +523,11 @@ public class SNVIlluminaMethod extends AbstractSNV {
      * @return Set of containers with results. Each container contains haplotype itself and some additional helpful information
      */
     private Set<SNVResultContainer> processCliques(Set<Set<Integer>> cliques, SNVStructure struct, IlluminaSNVSample src, boolean log) {
-        String consensus = Utils.consensus(struct.profile, al);
+        String z = Utils.consensus(struct.profile, al);
+        //TODO remove hack
+        StringBuilder tmp = new StringBuilder(z);
+        tmp.setCharAt(617, 'C');
+        String consensus = tmp.toString();
         //add consensus clique only if we have correlated minors with less than 40% frequency
         boolean addConsensus = false;
         outer:for (Set<Integer> clique : cliques) {
@@ -535,7 +546,8 @@ public class SNVIlluminaMethod extends AbstractSNV {
                 }
             }
         }
-        if (addConsensus){
+        //TODO think about the rule
+        if (true || addConsensus){
             cliques.add(new HashSet<>());
         }
         List<Integer> allPositionsInCliques = cliques.stream().flatMap(s -> s.stream().map(c -> c / minorCount)).distinct().sorted().collect(Collectors.toList());
@@ -655,9 +667,8 @@ public class SNVIlluminaMethod extends AbstractSNV {
         return clusters;
     }
 
-    private int thresholdForPositions(int readsAtFirst, int readsAtSecond){
-        int min = Math.min(readsAtFirst, readsAtSecond);
-        return 10*(1+min/30_000);
+    private int thresholdForPositions(int reads){
+        return 10*(1+reads/30_000);
     }
 
     private int calculateO12(int o12, int first, int j, IlluminaSNVSample src, SNVStructure struct, String consensus){
@@ -703,5 +714,36 @@ public class SNVIlluminaMethod extends AbstractSNV {
     private String getCorrelationKey(int first, int second, char m1, char m2) {
         return first+m1+"_"+second+m2;
     }
+
+    private class ParallelTask implements Callable<Boolean>{
+        private int i;
+        private int[][] commonReads;
+        private SNVStructure struct;
+        private IlluminaSNVSample src;
+
+        ParallelTask(int i, int[][] commonReads, SNVStructure struct, IlluminaSNVSample src){
+            this.i = i;
+            this.commonReads = commonReads;
+            this.struct = struct;
+            this.src = src;
+        }
+        @Override
+        public Boolean call() throws Exception {
+            System.out.print("\r"+y.incrementAndGet());
+            for (int j = i; j < src.referenceLength; j++) {
+                if (i == j){
+                    commonReads[i][j] = struct.readsAtPosition[i].length;
+                }
+                if (Math.abs(i - j) < 5){
+                    continue;
+                }
+                commonReads[i][j] = getCommonReadsCount(struct.readsAtPosition[i], struct.readsAtPosition[j]);
+                commonReads[j][i] = commonReads[i][j];
+            }
+            return null;
+        }
+    }
+
+
 }
 

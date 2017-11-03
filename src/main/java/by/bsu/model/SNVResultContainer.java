@@ -37,6 +37,7 @@ public class SNVResultContainer {
     public String toString() {
         return "{\n" +
                 "snps=" + haploClique +
+                ",\n sourse clique='" + sourceClique + "\n\'" +
                 ",\n haplotype='" + haplotype + "\n\'" +
                 "}";
     }

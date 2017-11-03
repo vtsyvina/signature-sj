@@ -171,7 +171,7 @@ public class DataReader {
         System.out.println("Start convert");
         List<PairEndRead> pairedReads = new ArrayList<>(readsSet.size());
         Pattern begin = Pattern.compile("^-*");
-        Pattern end = Pattern.compile("-$*");
+        Pattern end = Pattern.compile("-*$");
         readsSet.forEach((key, value) -> {
             if (value.size() == 1) {
                 //TODO rewrite this shit
