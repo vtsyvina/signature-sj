@@ -15,6 +15,7 @@ public class SNVResultContainer {
     public String haplotype;
     public String clusterString;
     public Clique sourceClique;
+    public double frequency;
 
 
     public SNVResultContainer(String clusterString, Set<String> pacBioCluster, Clique haplotypeClique, String haplotype) {
@@ -37,7 +38,8 @@ public class SNVResultContainer {
     public String toString() {
         return "{\n" +
                 "snps=" + haploClique +
-                ",\n sourse clique='" + sourceClique + "\n\'" +
+                ",\n sourse clique='" + sourceClique +
+                ",\n frequency='" + frequency +
                 ",\n haplotype='" + haplotype + "\n\'" +
                 "}";
     }

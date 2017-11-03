@@ -143,9 +143,9 @@ public class DataReader {
     public static IlluminaSNVSample splitColumns(IlluminaSNVSample sample, double[][] profile, String alphabet) {
         int minorCount = alphabet.length() - 1;
         List<PairEndRead> splittedReads = new ArrayList<>();
-        sample.reads.forEach(r ->{
+        sample.reads.forEach(r -> {
             splittedReads.add(new PairEndRead(getSplittedRead(r.l, r.lOffset, profile, alphabet), getSplittedRead(r.r, r.rOffset, profile, alphabet),
-                    r.lOffset*minorCount, r.rOffset*minorCount, r.name));
+                    r.lOffset * minorCount, r.rOffset * minorCount, r.name));
         });
         return new IlluminaSNVSample(sample.name + "_splitted", splittedReads, sample.referenceLength * minorCount);
     }
@@ -155,10 +155,10 @@ public class DataReader {
         System.out.println("Start read sam");
         SamReader open = SamReaderFactory.make().open(file);
         for (SAMRecord anOpen : open) {
-            if (readsSet.size() % 1_000 == 0){
-		System.out.print("\r"+ readsSet.size());
-	     }
-		if (anOpen.getReadUnmappedFlag()){
+            if (readsSet.size() % 1_000 == 0) {
+                System.out.print("\r" + readsSet.size());
+            }
+            if (anOpen.getReadUnmappedFlag()) {
                 continue;
             }
             if (!readsSet.containsKey(anOpen.getReadName())) {
@@ -166,7 +166,7 @@ public class DataReader {
             }
             readsSet.get(anOpen.getReadName()).add(anOpen);
         }
-	System.out.println(" DONE");
+        System.out.println(" DONE");
         SAM4WebLogo sam4WebLogo = new SAM4WebLogo(open);
         System.out.println("Start convert");
         List<PairEndRead> pairedReads = new ArrayList<>(readsSet.size());
@@ -179,31 +179,31 @@ public class DataReader {
                 s = end.matcher(begin.matcher(s).replaceAll("")).replaceAll("");
                 pairedReads.add(new PairEndRead(s,
                         "",
-                        value.get(0).getAlignmentStart()-1,
+                        value.get(0).getAlignmentStart() - 1,
                         -1, key)
                 );
             } else {
                 for (int i = 0; i < value.size(); i++) {
                     for (int j = 0; j < value.size(); j++) {
                         if (value.get(i).getMateAlignmentStart() == value.get(j).getAlignmentStart()
-                                && value.get(i).getAlignmentStart() <= value.get(j).getAlignmentStart()){
-                            if (i == j){
+                                && value.get(i).getAlignmentStart() <= value.get(j).getAlignmentStart()) {
+                            if (i == j) {
                                 String s = sam4WebLogo.printRead(value.get(i));
                                 s = end.matcher(begin.matcher(s).replaceAll("")).replaceAll("");
                                 pairedReads.add(new PairEndRead(s,
                                         "",
-                                        value.get(i).getAlignmentStart()-1,
+                                        value.get(i).getAlignmentStart() - 1,
                                         -1, key)
                                 );
-                            } else{
+                            } else {
                                 String s = sam4WebLogo.printRead(value.get(i));
                                 s = end.matcher(begin.matcher(s).replaceAll("")).replaceAll("");
                                 String s2 = sam4WebLogo.printRead(value.get(j));
                                 s2 = end.matcher(begin.matcher(s2).replaceAll("")).replaceAll("");
                                 pairedReads.add(new PairEndRead(s,
                                         s2,
-                                        value.get(i).getAlignmentStart()-1,
-                                        value.get(j).getAlignmentStart()-1,
+                                        value.get(i).getAlignmentStart() - 1,
+                                        value.get(j).getAlignmentStart() - 1,
                                         key)
                                 );
                             }
@@ -217,8 +217,8 @@ public class DataReader {
 //                    }
 //                }
             }
-            if (pairedReads.size() % 1_000 == 0){
-                System.out.print("\r"+pairedReads.size());
+            if (pairedReads.size() % 1_000 == 0) {
+                System.out.print("\r" + pairedReads.size());
             }
         });
         System.out.println(" DONE");
@@ -229,7 +229,7 @@ public class DataReader {
     private static String getSplittedRead(String read, int offset, double[][] profile, String alphabet) {
         StringBuilder str = new StringBuilder();
         for (int j = 0; j < read.length(); j++) {
-            int major = Utils.getMajorAllele(profile, offset+j);
+            int major = Utils.getMajorAllele(profile, offset + j);
             int minor = 0;
             for (int k = 0; k < alphabet.length() - 1; k++, minor++) {
                 if (minor == major) {

@@ -1,5 +1,6 @@
 package by.bsu.algorithms;
 
+import by.bsu.algorithms.EM.PacBioEM;
 import by.bsu.distance.HammingDistance;
 import by.bsu.model.Clique;
 import by.bsu.model.SNVResultContainer;
@@ -29,7 +30,7 @@ public class SNVPacBioMethod extends AbstractSNV {
      * @return Return set of containers with result info, such as haplotypes them self,
      * human-friendly representation of haplotypes, clique and cluster of reads from which it was obtained
      */
-    public Set<SNVResultContainer> getHaplotypes(Sample sample) {
+    public List<SNVResultContainer> getHaplotypes(Sample sample) {
         String consensus = Utils.consensus(sample.sequences, al);
         System.out.println("Start 2SNV method");
         System.out.print("Compute profile");
@@ -85,7 +86,7 @@ public class SNVPacBioMethod extends AbstractSNV {
         System.out.println(" - DONE");
         System.out.print("Start getting haplotypes");
         // divide by clusters and find haplotypes
-        Set<SNVResultContainer> snvResultContainers = processCliques(cliques, structure, sample, false);
+        List<SNVResultContainer> snvResultContainers = processCliques(cliques, structure, sample, false);
         System.out.println(" - DONE");
         return snvResultContainers;
     }
@@ -225,7 +226,7 @@ public class SNVPacBioMethod extends AbstractSNV {
      * @param log     boolean value if we want to see some additional info during algorithm's work (debug purposes)
      * @return Set of containers with results. Each container contains haplotype itself and some additional helpful information
      */
-    public Set<SNVResultContainer> processCliques(Set<Set<Integer>> cliques, SNVStructure struct, Sample src, boolean log) {
+    public List<SNVResultContainer> processCliques(Set<Set<Integer>> cliques, SNVStructure struct, Sample src, boolean log) {
         String consensus = Utils.consensus(struct.profile, al);
         cliques.add(new HashSet<>());
         List<Integer> allPositionsInCliques = cliques.stream().flatMap(s -> s.stream().map(c -> c / minorCount)).distinct().sorted().collect(Collectors.toList());
@@ -249,7 +250,13 @@ public class SNVPacBioMethod extends AbstractSNV {
             container.sourceClique = getSourceClique(allPositionsInCliques, cliquesSet, s.getKey(), container);
             return container;
         }).collect(Collectors.toSet());
-        return haplotypes.stream().filter(distinctByKey(p -> p.haplotype)).collect(Collectors.toSet());
+        List<SNVResultContainer> result = haplotypes.stream().filter(distinctByKey(p -> p.haplotype)).collect(Collectors.toList());
+        List<String> h = result.stream().map(s -> s.haplotype).collect(Collectors.toList());
+        List<Double> frequencies = new PacBioEM().frequencies(h, src);
+        for (int i = 0; i < frequencies.size(); i++) {
+            result.get(i).frequency = frequencies.get(i);
+        }
+        return result.stream().sorted((s1,s2) -> -Double.compare(s1.frequency, s2.frequency)).collect(Collectors.toList());
     }
 
     /**

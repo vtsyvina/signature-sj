@@ -152,14 +152,14 @@ public class Start {
         strings = DataReader.readList(Paths.get("2snv/clone10.fasta"));
         s.add(strings[0]);
         savage = s.toArray(new String[s.size()]);
-        String pathname = settings.getOrDefault("-in","2snv/all_samples.sam");
+        String pathname = settings.getOrDefault("-in", "2snv/all_samples.sam");
         IlluminaSNVSample sample = DataReader.getIlluminaPairedReads(new File(pathname));
-        System.out.println("read "+(System.currentTimeMillis()-start));
+        System.out.println("read " + (System.currentTimeMillis() - start));
         sample.reads = new SNVIlluminaMethod().processOverlaps(sample.reads);
 
         sample.reads.sort((r1, r2) -> r1.lOffset == r2.lOffset ? Integer.compare(r1.rOffset, r2.rOffset) : Integer.compare(r1.lOffset, r2.lOffset));
 
-        List<SNVResultContainer> collect = new SNVIlluminaMethod().getHaplotypes(sample).stream().sorted((s1, s2) -> Integer.compare(s2.illuminaCluster.size(), s1.illuminaCluster.size())).collect(Collectors.toList());
+        List<SNVResultContainer> collect = new SNVIlluminaMethod().getHaplotypes(sample);
         System.out.println(String.format("SNV got %d haplotypes\n", collect.size()));
         System.out.println(collect);
     }
@@ -276,14 +276,14 @@ public class Start {
         Sample sample = DataReader.readOneLined(file);
         long start;
         start = System.currentTimeMillis();
-        List<SNVResultContainer> haplotypes = new SNVPacBioMethod().getHaplotypes(sample).stream().sorted((s1, s2) -> Integer.compare(s2.pacBioCluster.size(),s1.pacBioCluster.size())).collect(Collectors.toList());
+        List<SNVResultContainer> haplotypes = new SNVPacBioMethod().getHaplotypes(sample);
         System.out.println(String.format("SNV got %d haplotypes\n", haplotypes.size()));
         System.out.println(haplotypes);
         String snvOutput = settings.getOrDefault("-outDir", "snv_output/");
-        if (!snvOutput.endsWith("/")){
-            snvOutput+="/";
+        if (!snvOutput.endsWith("/")) {
+            snvOutput += "/";
         }
-        Path path = preparePath(snvOutput+(sample.name == null?"snv_output.txt" : sample.name.substring(0, sample.name.indexOf('.'))+".txt"));
+        Path path = preparePath(snvOutput + (sample.name == null ? "snv_output.txt" : sample.name.substring(0, sample.name.indexOf('.')) + ".txt"));
         Files.write(path, String.format("SNV got %d haplotypes\n", haplotypes.size()).getBytes(), StandardOpenOption.WRITE);
         Files.write(path, haplotypes.toString().getBytes(), StandardOpenOption.APPEND);
         System.out.println("time,ms " + (System.currentTimeMillis() - start));
