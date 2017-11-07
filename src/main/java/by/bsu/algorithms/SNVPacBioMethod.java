@@ -30,26 +30,30 @@ public class SNVPacBioMethod extends AbstractSNV {
      * @return Return set of containers with result info, such as haplotypes them self,
      * human-friendly representation of haplotypes, clique and cluster of reads from which it was obtained
      */
-    public List<SNVResultContainer> getHaplotypes(Sample sample) {
+    public List<SNVResultContainer> getHaplotypes(Sample sample, boolean log) {
         String consensus = Utils.consensus(sample.sequences, al);
-        System.out.println("Start 2SNV method");
-        System.out.print("Compute profile");
+        if (log) System.out.println("Start 2SNV method");
+        if (log) System.out.print("Compute profile");
         double[][] profile = Utils.profile(sample, al);
-        System.out.println(" - DONE");
-        System.out.print("Compute split columns");
+        if (log) System.out.println(" - DONE");
+        if (log) System.out.print("Compute split columns");
         Sample splitted = DataReader.splitColumns(sample, profile, "ACGT-");
-        System.out.println(" - DONE");
-        System.out.print("Compute SNV data structure");
+        if (log) System.out.println(" - DONE");
+        if (log) System.out.print("Compute SNV data structure");
         SNVStructure structure = SNVStructureBuilder.buildPacBio(splitted, sample, profile);
-        System.out.println(" - DONE");
-        System.out.print("Compute cliques");
+        if (log) System.out.println(" - DONE");
+        if (log) System.out.print("Compute cliques");
         //run first time to get cliques
-        Set<Set<Integer>> cliques = run(splitted, structure, sample, false);
-        System.out.println(" - DONE");
-        System.out.print("Remove reads with low quality ");
+        Set<Set<Integer>> cliques = run(splitted, structure, sample, log);
+        if (log) System.out.println(" - DONE");
+        if (log) System.out.print("Remove reads with low quality ");
         //remove bad reads( >23 mistakes outside of cliques positions)
         List<Integer> allPositionsInCliques = cliques.stream().flatMap(s -> s.stream().map(c -> c / 4)).distinct().sorted().collect(Collectors.toList());
         int[] mistakes = new int[2000];
+        List<String>[] m = new ArrayList[2000];
+        for (int i = 0; i < 2000; i++) {
+            m[i] = new ArrayList<>();
+        }
         List<String> newSequences = new ArrayList<>();
         for (String sequence : sample.sequences) {
             int apply = new HammingDistance().apply(sequence, consensus);
@@ -64,30 +68,36 @@ public class SNVPacBioMethod extends AbstractSNV {
                 }
             }
             mistakes[apply]++;
-            //TODO remove only 10 percent
-            if (apply <= 23) {
-                newSequences.add(sequence);
+            m[apply].add(sequence);
+        }
+        outer: for (List<String> strings : m) {
+            for (String r : strings) {
+                if (newSequences.size() < 0.9*sample.sequences.length){
+                    newSequences.add(r);
+                }else {
+                    break outer;
+                }
             }
         }
-        sample.sequences = newSequences.toArray(new String[newSequences.size()]);
-        System.out.println(" - DONE");
-        System.out.print("Compute profile");
+        Sample newSample = new Sample(sample.name, newSequences.toArray(new String[newSequences.size()]));
+        if (log) System.out.println(" - DONE");
+        if (log) System.out.print("Compute profile");
         //after removing all bad reads, rerun whole process again
-        profile = Utils.profile(sample, al);
-        System.out.println(" - DONE");
-        System.out.print("Compute split columns");
-        splitted = DataReader.splitColumns(sample, profile, "ACGT-");
-        System.out.println(" - DONE");
-        System.out.print("Compute SNV data structure");
-        structure = SNVStructureBuilder.buildPacBio(splitted, sample, profile);
-        System.out.println(" - DONE");
-        System.out.print("Compute cliques");
-        cliques = run(splitted, structure, sample, false);
-        System.out.println(" - DONE");
-        System.out.print("Start getting haplotypes");
+        profile = Utils.profile(newSample, al);
+        if (log) System.out.println(" - DONE");
+        if (log) System.out.print("Compute split columns");
+        splitted = DataReader.splitColumns(newSample, profile, "ACGT-");
+        if (log) System.out.println(" - DONE");
+        if (log) System.out.print("Compute SNV data structure");
+        SNVStructure newStructure = SNVStructureBuilder.buildPacBio(splitted, newSample, profile);
+        if (log) System.out.println(" - DONE");
+        if (log) System.out.print("Compute cliques");
+        cliques = run(splitted, newStructure, newSample, log);
+        if (log) System.out.println(" - DONE");
+        if (log) System.out.print("Start getting haplotypes");
         // divide by clusters and find haplotypes
-        List<SNVResultContainer> snvResultContainers = processCliques(cliques, structure, sample, false);
-        System.out.println(" - DONE");
+        List<SNVResultContainer> snvResultContainers = processCliques(cliques, structure, sample, log);
+        if (log) System.out.println(" - DONE");
         return snvResultContainers;
     }
 
@@ -112,7 +122,7 @@ public class SNVPacBioMethod extends AbstractSNV {
             if (l < 10) {
                 continue;
             }
-            int[] hits = getHits(struct, struct.rowMinors[i], splittedSample.sequences[i].length());
+            int[] hits = getHits(struct, struct.rowMinors[i], splittedSample.sequences[0].length());
             allHits[i] = hits;
             for (int j = 0; j < hits.length; j++) {
                 //skip small amount of hits
@@ -212,6 +222,7 @@ public class SNVPacBioMethod extends AbstractSNV {
          *   then we delete edge with less frequency of second allele(to avoid false positive cliques)
          */
         removeEdgesForSecondMinors(adjacencyList, struct, log);
+        if (log) System.out.println("Edges found "+adjacencyList.stream().mapToInt(Set::size).sum());
         return getMergedCliques(adjacencyList);
 
     }
@@ -234,10 +245,10 @@ public class SNVPacBioMethod extends AbstractSNV {
 
         Set<Clique> cliquesSet = new HashSet<>();
         cliques.forEach(c -> cliquesSet.add(new Clique(c, struct)));
-        Map<String, Set<String>> clusters = buildClusters(src, allPositionsInCliques, allCliquesCharacters);
+        Map<String, List<String>> clusters = buildClusters(src, allPositionsInCliques, allCliquesCharacters, consensus);
         //skip clusters with less than 10 reads. Do some stuff for transforming output into human-friendly format
-        Set<SNVResultContainer> haplotypes = clusters.entrySet().stream().filter(s -> s.getValue().size() > 10).map(s -> {
-            Set<String> cluster = s.getValue();
+        List<SNVResultContainer> haplotypes = clusters.entrySet().stream().filter(s -> s.getValue().size() > 10).map(s -> {
+            List<String> cluster = s.getValue();
             String haplotype = Utils.consensus(cluster.toArray(new String[cluster.size()]), al);
             Set<Integer> snps = new HashSet<>();
             for (int i = 0; i < haplotype.length(); i++) {
@@ -249,7 +260,7 @@ public class SNVPacBioMethod extends AbstractSNV {
             SNVResultContainer container = new SNVResultContainer(s.getKey(), cluster, haplotypeClique, haplotype);
             container.sourceClique = getSourceClique(allPositionsInCliques, cliquesSet, s.getKey(), container);
             return container;
-        }).collect(Collectors.toSet());
+        }).collect(Collectors.toList());
         List<SNVResultContainer> result = haplotypes.stream().filter(distinctByKey(p -> p.haplotype)).collect(Collectors.toList());
         List<String> h = result.stream().map(s -> s.haplotype).collect(Collectors.toList());
         List<Double> frequencies = new PacBioEM().frequencies(h, src);
@@ -268,33 +279,65 @@ public class SNVPacBioMethod extends AbstractSNV {
      *                              Has consensus allele if clique doesn't include particular position from allPositionsInCliques
      * @return Map with clusters, where key is string of clique characters, value is a set of reads
      */
-    private Map<String, Set<String>> buildClusters(Sample src, List<Integer> allPositionsInCliques, List<String> allCliquesCharacters) {
-        Map<String, Set<String>> clusters = new HashMap<>();
-        allCliquesCharacters.forEach(s -> clusters.put(s, new HashSet<>()));
+    private Map<String, List<String>> buildClusters(Sample src, List<Integer> allPositionsInCliques, List<String> allCliquesCharacters, String consensus) {
+        Map<String, List<String>> clusters = new HashMap<>();
+        allCliquesCharacters.forEach(s -> clusters.put(s, new ArrayList<>()));
         class DistanceContainer {
             public String sequence;
             public int distance;
+            public int coincidences;
 
-            private DistanceContainer(String key, int distance) {
+            private DistanceContainer(String key, int distance, int coincidences) {
                 this.sequence = key;
                 this.distance = distance;
+                this.coincidences = coincidences;
+            }
+        }
+        String consensusClique = "";
+        for (String characters : allCliquesCharacters) {
+            boolean fl = true;
+            for (int i = 0; i < characters.length(); i++) {
+                if (characters.charAt(i) != consensus.charAt(allPositionsInCliques.get(i))) {
+                    fl = false;
+                    break;
+                }
+            }
+            if (fl) {
+                consensusClique = characters;
             }
         }
         for (String s : src.sequences) {
             List<DistanceContainer> distancesFromCliques = new ArrayList<>();
             for (String c : allCliquesCharacters) {
                 int d = 0;
+                int coincidences = 0;
+                boolean isConsensusClique = c.equals(consensusClique);
                 for (int i = 0; i < allPositionsInCliques.size(); i++) {
                     if (s.charAt(allPositionsInCliques.get(i)) != c.charAt(i)) {
                         d++;
                     }
+                    //coincidence with current clique
+                    if (c.charAt(i) != consensus.charAt(allPositionsInCliques.get(i))) {
+                        coincidences++;
+                    }
+                    //coincidence with current clique
+                    if (c.charAt(i) != consensus.charAt(allPositionsInCliques.get(i))) {
+                        coincidences++;
+                    }
+                    //coincidence with any cluque snp. Only for consensus clique
+                    if (isConsensusClique) {
+                        coincidences++;
+                    }
                 }
-                distancesFromCliques.add(new DistanceContainer(s, d));
+                distancesFromCliques.add(new DistanceContainer(s, d, coincidences));
             }
             int minDistance = distancesFromCliques.stream().mapToInt(c -> c.distance).min().getAsInt();
+            if (distancesFromCliques.stream().filter(c -> c.distance == minDistance).count() > 1){
+                continue;
+            }
             for (int i = 0; i < distancesFromCliques.size(); i++) {
                 DistanceContainer c = distancesFromCliques.get(i);
-                if (c.distance == minDistance) {
+                if (c.distance == minDistance && c.distance != c.coincidences) {
                     clusters.get(allCliquesCharacters.get(i)).add(c.sequence);
                 }
             }

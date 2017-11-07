@@ -87,7 +87,7 @@ public class SNVIlluminaMethod extends AbstractSNV {
         consensus = tmp.toString();
         //TODO remove it
         savageHaplo = new ArrayList<>();
-        for (String s : Start.savage) {
+        for (String s : Start.answers) {
             Set<Integer> snps = new HashSet<>();
             for (int i = 0; i < Math.min(s.length(), consensus.length()); i++) {
                 if (s.charAt(i) != consensus.charAt(i)) {
@@ -533,10 +533,10 @@ public class SNVIlluminaMethod extends AbstractSNV {
 
         Set<Clique> cliquesSet = new HashSet<>();
         cliques.forEach(c -> cliquesSet.add(new Clique(c, struct)));
-        Map<String, Set<PairEndRead>> clusters = buildClusters(src, allPositionsInCliques, allCliquesCharacters, consensus);
+        Map<String, List<PairEndRead>> clusters = buildClusters(src, allPositionsInCliques, allCliquesCharacters, consensus);
         //skip clusters with less than 10 reads. Do some stuff for transforming output into human-friendly format
         Set<SNVResultContainer> haplotypes = clusters.entrySet().stream().filter(s -> s.getValue().size() > 10).map(s -> {
-            Set<PairEndRead> cluster = s.getValue();
+            List<PairEndRead> cluster = s.getValue();
             IlluminaSNVSample snvSample = new IlluminaSNVSample("tmp", new ArrayList<>(cluster), src.referenceLength);
             //if there is no reads, put consensus there
             double[][] profile = Utils.profile(snvSample, al);
@@ -583,9 +583,9 @@ public class SNVIlluminaMethod extends AbstractSNV {
      *                              Has consensus allele if clique doesn't include particular position from allPositionsInCliques
      * @return Map with clusters, where key is string of clique characters, value is a set of reads
      */
-    private Map<String, Set<PairEndRead>> buildClusters(IlluminaSNVSample src, List<Integer> allPositionsInCliques, List<String> allCliquesCharacters, String consensus) {
-        Map<String, Set<PairEndRead>> clusters = new HashMap<>();
-        allCliquesCharacters.forEach(s -> clusters.put(s, new HashSet<>()));
+    private Map<String, List<PairEndRead>> buildClusters(IlluminaSNVSample src, List<Integer> allPositionsInCliques, List<String> allCliquesCharacters, String consensus) {
+        Map<String, List<PairEndRead>> clusters = new HashMap<>();
+        allCliquesCharacters.forEach(s -> clusters.put(s, new ArrayList<>()));
         String consensusClique = "";
         class Container {
             private int distance;

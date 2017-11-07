@@ -1,5 +1,6 @@
 package by.bsu.model;
 
+import java.util.List;
 import java.util.Set;
 
 
@@ -9,8 +10,8 @@ import java.util.Set;
  */
 public class SNVResultContainer {
 
-    public Set<String> pacBioCluster;
-    public Set<PairEndRead> illuminaCluster;
+    public List<String> pacBioCluster;
+    public List<PairEndRead> illuminaCluster;
     public Clique haploClique;
     public String haplotype;
     public String clusterString;
@@ -18,14 +19,14 @@ public class SNVResultContainer {
     public double frequency;
 
 
-    public SNVResultContainer(String clusterString, Set<String> pacBioCluster, Clique haplotypeClique, String haplotype) {
+    public SNVResultContainer(String clusterString, List<String> pacBioCluster, Clique haplotypeClique, String haplotype) {
         this.pacBioCluster = pacBioCluster;
         this.haploClique = haplotypeClique;
         this.haplotype = haplotype;
         this.clusterString = clusterString;
     }
 
-    public SNVResultContainer(String clusterString,  Clique haplotypeClique, String haplotype, Set<PairEndRead> illuminaCluster) {
+    public SNVResultContainer(String clusterString,  Clique haplotypeClique, String haplotype, List<PairEndRead> illuminaCluster) {
         this.illuminaCluster = illuminaCluster;
         this.haploClique = haplotypeClique;
         this.haplotype = haplotype;

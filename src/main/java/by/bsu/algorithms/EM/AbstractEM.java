@@ -57,6 +57,9 @@ public abstract class AbstractEM {
             for (int j = 0; j < haplotypesCount; j++) {
 
                 for (int i = 0; i < readsCount; i++) {
+                    if (denominators[i] == 0.0){
+                        continue;
+                    }
                     m[j] += oldFrequencies[j] * h[j][i] / denominators[i];
                 }
                 sum += m[j];

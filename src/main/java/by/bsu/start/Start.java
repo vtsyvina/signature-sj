@@ -29,7 +29,6 @@ import java.nio.file.StandardOpenOption;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -38,7 +37,7 @@ import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
-import java.util.stream.Collectors;
+import java.util.stream.IntStream;
 
 
 public class Start {
@@ -49,12 +48,42 @@ public class Start {
     public static List<Set<Integer>> snps = new ArrayList<>();
     public static String consensus;
     public static String[] strings;
-    public static String[] savage;
+    public static String[] answers;
 
     private static void loadAllFiles(Path folder) throws IOException {
         if (allFiles.isEmpty()) {
             allFiles = DataReader.readSampleList(folder.toString(), true);
         }
+    }
+
+    static {
+        try {
+            String[] strings = DataReader.readList(Paths.get("2snv/clone1.fasta"));
+            List<String> s = new ArrayList<>();
+            s.add(strings[0]);
+            strings = DataReader.readList(Paths.get("2snv/clone2.fasta"));
+            s.add(strings[0]);
+            strings = DataReader.readList(Paths.get("2snv/clone3.fasta"));
+            s.add(strings[0]);
+            strings = DataReader.readList(Paths.get("2snv/clone4.fasta"));
+            s.add(strings[0]);
+            strings = DataReader.readList(Paths.get("2snv/clone5.fasta"));
+            s.add(strings[0]);
+            strings = DataReader.readList(Paths.get("2snv/clone6.fasta"));
+            s.add(strings[0]);
+            strings = DataReader.readList(Paths.get("2snv/clone7.fasta"));
+            s.add(strings[0]);
+            strings = DataReader.readList(Paths.get("2snv/clone8.fasta"));
+            s.add(strings[0]);
+            strings = DataReader.readList(Paths.get("2snv/clone9.fasta"));
+            s.add(strings[0]);
+            strings = DataReader.readList(Paths.get("2snv/clone10.fasta"));
+            s.add(strings[0]);
+            answers = s.toArray(new String[s.size()]);
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+
     }
 
     public static void main(String[] args) throws IOException, InterruptedException, ExecutionException {
@@ -111,6 +140,9 @@ public class Start {
                 case "snv":
                     testSNV();
                     break;
+                case "snv-sub":
+                    testSNVSub();
+                    break;
                 case "snv-illumina":
                     assambling2SNV();
                     break;
@@ -124,34 +156,6 @@ public class Start {
 
     private static void assambling2SNV() throws IOException {
         long start = System.currentTimeMillis();
-//        savage = DataReader.readList(Paths.get("2snv/savage/savage_hiv1_res_trimmed.fas"));
-//        for (int i = 0; i < savage.length; i++) {
-//            savage[i] = savage[i].substring(savage[i].indexOf("GGTCTCTCTGGTTAGACCAGATC"), Math.min(savage[i].length(), savage[i].indexOf("GGTCTCTCTGGTTAGACCAGATC")+9181));
-//        }
-        String[] strings = DataReader.readList(Paths.get("2snv/clone1.fasta"));
-        List<String> s = new ArrayList<>();
-        s.add(strings[0]);
-//        strings = DataReader.readList(Paths.get("2snv/influensa/clone2.fasta"));
-//        s.add(strings[0]);
-        strings = DataReader.readList(Paths.get("2snv/clone2.fasta"));
-        s.add(strings[0]);
-        strings = DataReader.readList(Paths.get("2snv/clone3.fasta"));
-        s.add(strings[0]);
-        strings = DataReader.readList(Paths.get("2snv/clone4.fasta"));
-        s.add(strings[0]);
-        strings = DataReader.readList(Paths.get("2snv/clone5.fasta"));
-        s.add(strings[0]);
-        strings = DataReader.readList(Paths.get("2snv/clone6.fasta"));
-        s.add(strings[0]);
-        strings = DataReader.readList(Paths.get("2snv/clone7.fasta"));
-        s.add(strings[0]);
-        strings = DataReader.readList(Paths.get("2snv/clone8.fasta"));
-        s.add(strings[0]);
-        strings = DataReader.readList(Paths.get("2snv/clone9.fasta"));
-        s.add(strings[0]);
-        strings = DataReader.readList(Paths.get("2snv/clone10.fasta"));
-        s.add(strings[0]);
-        savage = s.toArray(new String[s.size()]);
         String pathname = settings.getOrDefault("-in", "2snv/all_samples.sam");
         IlluminaSNVSample sample = DataReader.getIlluminaPairedReads(new File(pathname));
         System.out.println("read " + (System.currentTimeMillis() - start));
@@ -276,7 +280,7 @@ public class Start {
         Sample sample = DataReader.readOneLined(file);
         long start;
         start = System.currentTimeMillis();
-        List<SNVResultContainer> haplotypes = new SNVPacBioMethod().getHaplotypes(sample);
+        List<SNVResultContainer> haplotypes = new SNVPacBioMethod().getHaplotypes(sample, true);
         System.out.println(String.format("SNV got %d haplotypes\n", haplotypes.size()));
         System.out.println(haplotypes);
         String snvOutput = settings.getOrDefault("-outDir", "snv_output/");
@@ -288,6 +292,46 @@ public class Start {
         Files.write(path, haplotypes.toString().getBytes(), StandardOpenOption.APPEND);
         System.out.println("time,ms " + (System.currentTimeMillis() - start));
 
+    }
+
+    private static void testSNVSub() throws IOException, ExecutionException, InterruptedException {
+        String[] sizes = {"500","1000","2000","4000","8000","16000"};
+        for (String size : sizes) {
+            System.out.println("Start "+size);
+            int[] f = new int[10];
+            double[] fr = new double[10];
+            int time = 0;
+            int falseP = 0;
+            for (int i = 1; i <= 10; i++) {
+                int found = 0;
+                File file = new File(settings.getOrDefault("-in", "/alina-data0/research_data/sasha/IAV_UCLA/sim/"+i+"/"+size+"_uw.fas"));
+                Sample sample = DataReader.readSampleFromFile(file);
+                long start;
+                start = System.currentTimeMillis();
+                List<SNVResultContainer> haplotypes = new SNVPacBioMethod().getHaplotypes(sample, false);
+                time += System.currentTimeMillis() - start;
+                for (int j = 0; j < answers.length; j++) {
+                    boolean fl = false;
+                    for (SNVResultContainer haplotype : haplotypes) {
+                        if (answers[j].replaceAll("-", "").equals(haplotype.haplotype.replaceAll("-", ""))) {
+                            fl = true;
+                            found++;
+                            f[j]++;
+                            fr[j] += haplotype.frequency;
+                            break;
+                        }
+                    }
+                    System.out.print((fl?1:0)+" ");
+                }
+                System.out.println();
+                falseP = haplotypes.size() - found;
+            }
+            System.out.println("Time   "+time/10);
+            System.out.println("FalseP "+falseP/10.0);
+            System.out.println("Founds "+Arrays.toString(f));
+            System.out.println("Freq   "+Arrays.toString(IntStream.range(0,10).mapToDouble(i -> fr[i]/f[i]*100).toArray()));
+            System.in.read();
+        }
     }
 
     private static void runSigWithTime(int k, int l, Sample query) throws ExecutionException, InterruptedException, IOException {
