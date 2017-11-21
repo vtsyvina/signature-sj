@@ -2,33 +2,26 @@ package by.bsu.start;
 
 import by.bsu.algorithms.BruteForce;
 import by.bsu.algorithms.BruteForceHamming;
-import by.bsu.algorithms.SNVIlluminaMethod;
-import by.bsu.algorithms.SNVPacBioMethod;
 import by.bsu.algorithms.SignatureHammingMethod;
 import by.bsu.algorithms.SignatureMethod;
-import by.bsu.algorithms.TreeMethod;
-import by.bsu.model.IlluminaSNVSample;
-import by.bsu.model.IntIntPair;
 import by.bsu.model.KMerDict;
 import by.bsu.model.KMerDictChunks;
-import by.bsu.model.SNVResultContainer;
 import by.bsu.model.Sample;
-import by.bsu.util.CallSignature;
+import by.bsu.util.tasks.CallEditSignature;
 import by.bsu.util.DataReader;
-import by.bsu.util.SequencesTreeBuilder;
 import by.bsu.util.Utils;
 import by.bsu.util.builders.KMerDictBuilder;
 import by.bsu.util.builders.KMerDictChunksBuilder;
+import by.bsu.util.tasks.CallHammingSignature;
 
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.nio.file.StandardOpenOption;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -37,68 +30,17 @@ import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
-import java.util.stream.IntStream;
 
 
 public class Start {
-    public static final String ACGT = "ACGT-";
-    private static Path folder = Paths.get("cleaned_independent_264");
-    private static List<Sample> allFiles = new ArrayList<>();
     public static Map<String, String> settings = new HashMap<>();
-    public static List<Set<Integer>> snps = new ArrayList<>();
-    public static String consensus;
-    public static String[] strings;
-    public static String[] answers;
 
-    private static void loadAllFiles(Path folder) throws IOException {
-        if (allFiles.isEmpty()) {
-            allFiles = DataReader.readSampleList(folder.toString(), true);
-        }
-    }
-
-    static {
-        try {
-            String[] strings = DataReader.readList(Paths.get("2snv/clone1.fasta"));
-            List<String> s = new ArrayList<>();
-            s.add(strings[0]);
-            strings = DataReader.readList(Paths.get("2snv/clone2.fasta"));
-            s.add(strings[0]);
-            strings = DataReader.readList(Paths.get("2snv/clone3.fasta"));
-            s.add(strings[0]);
-            strings = DataReader.readList(Paths.get("2snv/clone4.fasta"));
-            s.add(strings[0]);
-            strings = DataReader.readList(Paths.get("2snv/clone5.fasta"));
-            s.add(strings[0]);
-            strings = DataReader.readList(Paths.get("2snv/clone6.fasta"));
-            s.add(strings[0]);
-            strings = DataReader.readList(Paths.get("2snv/clone7.fasta"));
-            s.add(strings[0]);
-            strings = DataReader.readList(Paths.get("2snv/clone8.fasta"));
-            s.add(strings[0]);
-            strings = DataReader.readList(Paths.get("2snv/clone9.fasta"));
-            s.add(strings[0]);
-            strings = DataReader.readList(Paths.get("2snv/clone10.fasta"));
-            s.add(strings[0]);
-            answers = s.toArray(new String[s.size()]);
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-
-    }
 
     public static void main(String[] args) throws IOException, InterruptedException, ExecutionException {
-//        strings = DataReader.readList(Paths.get("2snv/ClonesRef.fa"));
-//        Sample sample = DataReader.readOneLined(new File("2snv/realigned/reads.fas"));
-//        consensus = Utils.consensus(sample.sequences, "ACGT-N");
-//
-//        for (String string : strings) {
-//            snps.add(new HashSet<>());
-//            for (int i = 0; i < string.length(); i++) {
-//                if (string.charAt(i) != consensus.charAt(i)) {
-//                    snps.get(snps.size() - 1).add(i);
-//                }
-//            }
-//        }
+        List<String> strings = Files.readAllLines(Paths.get("output/db1-brute-hamming-output.txt"));
+        List<String> strings2 = Files.readAllLines(Paths.get("output/db1-signature-hamming-output.txt"));
+        Set<String> s1 = new HashSet<>(strings);
+        Set<String> s2 = new HashSet<>(strings2);
         String key = null;
         for (String arg : args) {
             if (arg.startsWith("-") && arg.length() > 1) {
@@ -125,50 +67,31 @@ public class Start {
 
         int k = Integer.parseInt(settings.getOrDefault("-k", "10"));
         int l = Integer.parseInt(settings.getOrDefault("-l", "11"));
-        folder = Paths.get(settings.getOrDefault("-dir", "cleaned_independent_264"));
+        File input = new File(settings.getOrDefault("-in", "cleaned_independent_264/AMC_P01_1b.fas"));
         if (settings.get("-m") != null) {
             switch (settings.get("-m")) {
-                case "bigData":
-                    testBigDataSet(k, l);
+                case "edit-single":
+                    runEditDistance(input, k, l);
                     break;
-                case "signatureTest":
-                    testDitichletAlgorithm(folder, k, l);
+                case "hamming-single":
+                    runHammingDistance(input, k, l);
                     break;
-                case "largeRelated":
-                    testLargeRelatedSamples(folder);
+                case "edit-multi":
+                    runMulti(input, k, l, true);
                     break;
-                case "snv":
-                    testSNV();
-                    break;
-                case "snv-sub":
-                    testSNVSub();
-                    break;
-                case "snv-illumina":
-                    assambling2SNV();
+                case "hamming-multi":
+                    runMulti(input, k, l, false);
                     break;
                 default:
                     helpOutput(settings.get("-m"), true);
             }
         } else {
-            testBigDataSet(k, l);
+            helpOutput(null, false);
         }
     }
 
-    private static void assambling2SNV() throws IOException {
-        long start = System.currentTimeMillis();
-        String pathname = settings.getOrDefault("-in", "2snv/all_samples.sam");
-        IlluminaSNVSample sample = DataReader.getIlluminaPairedReads(new File(pathname));
-        System.out.println("read " + (System.currentTimeMillis() - start));
-        sample.reads = new SNVIlluminaMethod().processOverlaps(sample.reads);
-
-        sample.reads.sort((r1, r2) -> r1.lOffset == r2.lOffset ? Integer.compare(r1.rOffset, r2.rOffset) : Integer.compare(r1.lOffset, r2.lOffset));
-
-        List<SNVResultContainer> collect = new SNVIlluminaMethod().getHaplotypes(sample);
-        System.out.println(String.format("SNV got %d haplotypes\n", collect.size()));
-        System.out.println(collect);
-    }
-
     private static void helpOutput(String arg, boolean error) {
+        //TODO rewrite this
         if (error) {
             System.out.println("Error! Wrong argument value: " + arg + " . No argument name in for of -key");
         }
@@ -188,15 +111,38 @@ public class Start {
         System.exit(1);
     }
 
-
-    private static void testDitichletAlgorithm(Path folder, int k, int l) throws IOException, InterruptedException, ExecutionException {
-        System.out.println("Start testDitichletAlgorithm with k=" + k + " l=" + l);
+    private static void runEditDistance(File file, int k, int l) throws IOException {
+        Sample sample = getSample(file);
+        if (sample == null) return;
         long start = System.currentTimeMillis();
-        loadAllFiles(folder);
-        //allFiles.add(DataReader.readSampleFromFolder(new File("test_data/db1")));
-        //allFiles.add(DataReader.readSampleFromFolder(new File("test_data/db2")));
-        //allFiles.add(DataReader.readSampleFromFolder(new File("test_data/db3")));
-        KMerDict[] kdicts = new KMerDict[allFiles.size()];
+        KMerDict dict = KMerDictBuilder.getDict(sample, l);
+        new SignatureMethod().runParallel(sample, dict, k);
+        System.out.println("Total run time: " + (System.currentTimeMillis() - start) + ", ms");
+    }
+
+
+    private static void runHammingDistance(File file, int k, int l) throws IOException {
+        Sample sample = getSample(file);
+        long start = System.currentTimeMillis();
+        double[][] profile = Utils.profile(sample);
+        KMerDictChunks dict = KMerDictChunksBuilder.getDict(sample, k + 7, profile);
+        new SignatureHammingMethod().run(sample, dict, k);
+        new SignatureHammingMethod().runParallel(sample, dict, k);
+        System.out.println("Total run time: " + (System.currentTimeMillis() - start) + ", ms");
+    }
+
+
+    private static void runMulti(File folder, int k, int l, boolean edit) throws IOException, InterruptedException, ExecutionException {
+        if (folder.isDirectory()){
+            System.out.println("Input is not a directory");
+        }
+        List<Sample> samples = DataReader.readSampleList(folder, true);
+        String method = edit ? "edit distance" : "hamming distance";
+        System.out.println("Start "+method+" multi run for t=" + k);
+        System.out.println("Total number of sample = "+samples.size());
+        long start = System.currentTimeMillis();
+        KMerDict[] merDicts = new KMerDict[samples.size()];
+        KMerDictChunks[] chunkDicts = new KMerDictChunks[samples.size()];
         int cores = Runtime.getRuntime().availableProcessors();
         String threads = Start.settings.get("-threads");
         if (threads != null) {
@@ -205,22 +151,29 @@ public class Start {
         System.out.println("Running threads = " + cores);
         ExecutorService executor = Executors.newFixedThreadPool(cores);
         List<Callable<Void>> kmerTaskList = new ArrayList<>();
-        for (int j = 0; j < allFiles.size(); j++) {
+        for (int j = 0; j < samples.size(); j++) {
             int finalJ = j;
             kmerTaskList.add(new Callable<Void>() {
                 @Override
                 public Void call() throws Exception {
-                    k1[index] = KMerDictBuilder.getDict(s1, l);
+                    if (edit){
+                        mers[index] = KMerDictBuilder.getDict(s1, l);
+                    } else {
+                        //TODO think about how to run with entropy-based chunks
+                        chunks[index] = KMerDictChunksBuilder.getDict(s1, l);
+                    }
                     return null;
                 }
 
                 private Sample s1;
-                private KMerDict[] k1;
+                private KMerDict[] mers;
                 private int index;
+                private KMerDictChunks[] chunks;
 
                 {
-                    s1 = allFiles.get(finalJ);
-                    k1 = kdicts;
+                    s1 = samples.get(finalJ);
+                    mers = merDicts;
+                    chunks = chunkDicts;
                     index = finalJ;
                 }
             });
@@ -229,13 +182,18 @@ public class Start {
         for (Future<Void> f : future) {
             f.get();
         }
-        System.out.println("Time to buildPacBio dictionaries = " + (System.currentTimeMillis() - start));
+        System.out.println("Time to build dictionaries = " + (System.currentTimeMillis() - start));
         executor.shutdown();
         executor = Executors.newFixedThreadPool(cores);
         List<Callable<Long>> taskList = new ArrayList<>();
-        for (int j = 0; j < allFiles.size(); j++) {
-            for (int fIndex = j + 1; fIndex < allFiles.size(); fIndex++) {
-                taskList.add(new CallSignature(allFiles.get(j), allFiles.get(fIndex), kdicts[j], kdicts[fIndex], k));
+        for (int j = 0; j < samples.size(); j++) {
+            for (int fIndex = j + 1; fIndex < samples.size(); fIndex++) {
+                if (edit){
+                    taskList.add(new CallEditSignature(samples.get(j), samples.get(fIndex), merDicts[j], merDicts[fIndex], k));
+                } else {
+                    taskList.add(new CallHammingSignature(samples.get(j), samples.get(fIndex), chunkDicts[j], chunkDicts[fIndex], k));
+                }
+
             }
         }
         List<Future<Long>> futures = executor.invokeAll(taskList);
@@ -244,94 +202,8 @@ public class Start {
             fut.get();
         }
         executor.shutdown();
-        System.out.println("testDitichletAlgorithm has ended with time = " + (System.currentTimeMillis() - start));
-        System.out.println("coincidenceFilter=" + SignatureMethod.coincidenceFilter);
-        System.out.println("executionCount=" + SignatureMethod.executionCount);
+        System.out.println(method+" run has ended with time = " + (System.currentTimeMillis() - start));
         System.out.println();
-    }
-
-    private static void testBigDataSet(int k, int l) throws IOException, ExecutionException, InterruptedException {
-        File dir = new File(settings.getOrDefault("-dir", "test_data"));
-        String[] algsToRun = settings.getOrDefault("-algsToRun", "signature").split(",");
-        for (File file : dir.listFiles()) {
-            if (isTestToRun(file)) {
-                Sample sample = DataReader.readSampleFromFolder(file, false);
-                if (Arrays.stream(algsToRun).filter(s -> s.equals("signature")).count() > 0) {
-                    runSigWithTime(k, l, sample);
-                }
-                if (Arrays.stream(algsToRun).filter(s -> s.equals("signature-hamming")).count() > 0) {
-                    runSigHamWithTime(k, l, sample);
-                }
-                if (Arrays.stream(algsToRun).filter(s -> s.equals("tree")).count() > 0) {
-                    runTreeWithTime(k, l, sample);
-                }
-                if (Arrays.stream(algsToRun).filter(s -> s.equals("brute")).count() > 0) {
-                    runBruteWithTime(k, sample);
-                }
-                if (Arrays.stream(algsToRun).filter(s -> s.equals("brute-hamming")).count() > 0) {
-                    runBruteHammingWithTime(k, sample);
-                }
-            }
-        }
-    }
-
-    private static void testSNV() throws IOException, ExecutionException, InterruptedException {
-        File file = new File(settings.getOrDefault("-in", "2snv/realigned/reads.fas"));
-        Sample sample = DataReader.readOneLined(file);
-        long start;
-        start = System.currentTimeMillis();
-        List<SNVResultContainer> haplotypes = new SNVPacBioMethod().getHaplotypes(sample, true);
-        System.out.println(String.format("SNV got %d haplotypes\n", haplotypes.size()));
-        System.out.println(haplotypes);
-        String snvOutput = settings.getOrDefault("-outDir", "snv_output/");
-        if (!snvOutput.endsWith("/")) {
-            snvOutput += "/";
-        }
-        Path path = preparePath(snvOutput + (sample.name == null ? "snv_output.txt" : sample.name.substring(0, sample.name.indexOf('.')) + ".txt"));
-        Files.write(path, String.format("SNV got %d haplotypes\n", haplotypes.size()).getBytes(), StandardOpenOption.WRITE);
-        Files.write(path, haplotypes.toString().getBytes(), StandardOpenOption.APPEND);
-        System.out.println("time,ms " + (System.currentTimeMillis() - start));
-
-    }
-
-    private static void testSNVSub() throws IOException, ExecutionException, InterruptedException {
-        String[] sizes = {"500","1000","2000","4000","8000","16000"};
-        for (String size : sizes) {
-            System.out.println("Start "+size);
-            int[] f = new int[10];
-            double[] fr = new double[10];
-            int time = 0;
-            int falseP = 0;
-            for (int i = 1; i <= 10; i++) {
-                int found = 0;
-                File file = new File(settings.getOrDefault("-in", "/alina-data0/research_data/sasha/IAV_UCLA/sim/"+i+"/"+size+"_uw.fas"));
-                Sample sample = DataReader.readSampleFromFile(file);
-                long start;
-                start = System.currentTimeMillis();
-                List<SNVResultContainer> haplotypes = new SNVPacBioMethod().getHaplotypes(sample, false);
-                time += System.currentTimeMillis() - start;
-                for (int j = 0; j < answers.length; j++) {
-                    boolean fl = false;
-                    for (SNVResultContainer haplotype : haplotypes) {
-                        if (answers[j].replaceAll("-", "").equals(haplotype.haplotype.replaceAll("-", ""))) {
-                            fl = true;
-                            found++;
-                            f[j]++;
-                            fr[j] += haplotype.frequency;
-                            break;
-                        }
-                    }
-                    System.out.print((fl?1:0)+" ");
-                }
-                System.out.println();
-                falseP = haplotypes.size() - found;
-            }
-            System.out.println("Time   "+time/10);
-            System.out.println("FalseP "+falseP/10.0);
-            System.out.println("Founds "+Arrays.toString(f));
-            System.out.println("Freq   "+Arrays.toString(IntStream.range(0,10).mapToDouble(i -> fr[i]/f[i]*100).toArray()));
-            System.in.read();
-        }
     }
 
     private static void runSigWithTime(int k, int l, Sample query) throws ExecutionException, InterruptedException, IOException {
@@ -345,25 +217,13 @@ public class Start {
     }
 
     private static void runSigHamWithTime(int k, int l, Sample query) throws ExecutionException, InterruptedException, IOException {
-
         long start;
         start = System.currentTimeMillis();
         double[][] profile = Utils.profile(query);
         System.out.println("Profile time " + (System.currentTimeMillis() - start));
-        KMerDictChunks dict = false ? KMerDictChunksBuilder.getDict(query, l) : KMerDictChunksBuilder.getDict(query, k + 7, profile);
+        KMerDictChunks dict = KMerDictChunksBuilder.getDict(query, k + 7, profile);
         new SignatureHammingMethod().runParallel(query, dict, k);
         System.out.println("Signature hamming time " + (System.currentTimeMillis() - start));
-        System.out.println();
-    }
-
-    private static void runSigWithTime(int k, int l, Sample s1, Sample s2) throws ExecutionException, InterruptedException, IOException {
-        long start;
-        start = System.currentTimeMillis();
-        KMerDict k1 = KMerDictBuilder.getDict(s1, l);
-        KMerDict k2 = KMerDictBuilder.getDict(s2, l);
-        long length = new SignatureMethod().run(s1, s2, k1, k2, k);
-        System.out.println("count " + length);
-        System.out.println("Signature time " + (System.currentTimeMillis() - start));
         System.out.println();
     }
 
@@ -381,64 +241,13 @@ public class Start {
         System.out.println();
     }
 
-    private static void runTreeWithTime(int k, int l, Sample query) throws IOException {
-        long start = System.currentTimeMillis();
-        TreeMethod.runV2(query, SequencesTreeBuilder.build(query, l), k);
-        System.out.println("Tree time " + (System.currentTimeMillis() - start));
-        System.out.println();
-    }
-
-    private static boolean isTestToRun(File file) {
-        String testsToRun = settings.getOrDefault("-testsToRun", "0-1000");
-        String testsPrefix = settings.getOrDefault("-testsPrefix", "db");
-        List<IntIntPair> ranges = new ArrayList<>();
-        for (String s : testsToRun.split(",")) {
-            if (!s.contains("-")) {
-                ranges.add(new IntIntPair(Integer.valueOf(s), Integer.valueOf(s)));
-            } else {
-                ranges.add(new IntIntPair(Integer.valueOf(s.split("-")[0]), Integer.valueOf(s.split("-")[1])));
-            }
-        }
-
-        if (!file.getName().startsWith(testsPrefix)) {
-            return false;
-        }
-        Integer testNumber = Integer.valueOf(file.getName().substring(testsPrefix.length()));
-        return ranges.stream().filter(r -> r.l <= testNumber && r.r >= testNumber).count() > 0;
-    }
-
-    private static void testLargeRelatedSamples(Path folder) throws IOException {
-        System.out.println("Start testLargeRelatedSamples");
-        loadAllFiles(folder);
-        Sample sample = allFiles.get(165);
-        Sample s1 = new Sample();
-        Sample s2 = new Sample();
-        s1.name = "left";
-        s2.name = "right";
-        s1.sequences = Arrays.copyOfRange(sample.sequences, 0, sample.sequences.length / 2);
-        s2.sequences = Arrays.copyOfRange(sample.sequences, sample.sequences.length / 2, sample.sequences.length);
-        s1.forHamming = Utils.stringsForHamming(s1.sequences);
-        s2.forHamming = Utils.stringsForHamming(s2.sequences);
-        KMerDict k1 = KMerDictBuilder.getDict(s1, 11);
-        KMerDict k2 = KMerDictBuilder.getDict(s2, 11);
-        long start = System.currentTimeMillis();
-        //System.out.println(s1.reads.size()*s2.reads.size());
-        new SignatureMethod().run(s1, s2, k1, k2, 3);
-        System.out.println("SignatureMethod time:");
-        System.out.println(System.currentTimeMillis() - start);
-        start = System.currentTimeMillis();
-        //BruteForce.run(s1,s2, 3);
-        System.out.println("BruteForce time:");
-        System.out.println(System.currentTimeMillis() - start);
-    }
-
     public static Path getOutputFilename(Sample sample, String algName) throws IOException {
-        String dir = settings.getOrDefault("-outDir", "");
+        String dir = settings.getOrDefault("-outDir", "output/");
         return preparePath((dir.equals("") ? "" : dir + "/") + sample.name + "-" + algName + "-output.txt");
     }
 
     public static Path getOutputFilename(Sample sample1, Sample sample2, String algName) throws IOException {
-        String dir = settings.getOrDefault("-outDir", "");
+        String dir = settings.getOrDefault("-outDir", "output/");
         return preparePath((dir.equals("") ? "" : dir + "/") + sample1.name + "_" + sample2.name + "-" + algName + "-output.txt");
     }
 
@@ -450,5 +259,19 @@ public class Start {
         }
         Files.createFile(path);
         return path;
+    }
+
+    private static Sample getSample(File file) throws IOException {
+        if (!file.exists()) {
+            System.out.println(String.format("Input file %s does not exists", file.getCanonicalPath()));
+            return null;
+        }
+        Sample sample;
+        if (file.isDirectory()) {
+            sample = DataReader.readSampleFromFolder(file, false);
+        } else {
+            sample = DataReader.readSampleFromFile(file);
+        }
+        return sample;
     }
 }

@@ -1,21 +1,12 @@
 package by.bsu.util;
 
-import by.bsu.model.IlluminaSNVSample;
-import by.bsu.model.PairEndRead;
 import by.bsu.model.Sample;
-import by.bsu.model.SequencesTree;
 import com.carrotsearch.hppc.LongHashSet;
 import com.carrotsearch.hppc.LongSet;
-import com.carrotsearch.hppc.ShortArrayList;
-import org.apache.commons.math3.distribution.BinomialDistribution;
 
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
-import java.util.Map;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.function.Function;
-import java.util.function.Predicate;
 
 /**
  * Just class with some useful functions
@@ -97,63 +88,6 @@ public class Utils {
             result[i++] = hashValue;
         }
         return result;
-    }
-
-    public static void fillNodeGramsAndChunks(SequencesTree.Node node, int l) {
-        long hashValue = 0;
-        String seq = node.key;
-        if (seq.length() < l) {
-            return;
-        }
-        for (int j = 0; j < l; j++) {
-            hashValue *= 4;
-            hashValue += convertLetterToDigit(seq.charAt(j));
-        }
-        if (!node.grams.containsKey(hashValue)) {
-            node.grams.put(hashValue, new ShortArrayList());
-        }
-        node.grams.get(hashValue).add((short) 0);
-        node.chunks.add(hashValue);
-        for (short j = 1; j < seq.length() - l + 1; j++) {
-            hashValue -= convertLetterToDigit(seq.charAt(j - 1)) << 2 * (l - 1);
-            hashValue <<= 2;
-            hashValue += convertLetterToDigit(seq.charAt(j + l - 1));
-            if (!node.grams.containsKey(hashValue)) {
-                node.grams.put(hashValue, new ShortArrayList());
-            }
-            node.grams.get(hashValue).add(j);
-            if (j % l == 0) {
-                node.chunks.add(hashValue);
-            }
-        }
-    }
-
-    /**
-     * The number of hits between reads' q-grams
-     */
-    public static int qHits(String s1, String s2, int q) {
-        long[] h1 = getSequenceHashesArray(s1, q);
-        long[] h2 = getSequenceHashesArray(s2, q);
-        Arrays.sort(h1);
-        Arrays.sort(h2);
-        return qHits(h1, h2);
-    }
-
-    public static int qHits(long[] h1, long[] h2) {
-        int hits = 0;
-        int i = 0, j = 0;
-        while (i < h1.length && j < h2.length) {
-            if (h1[i] == h2[j]) {
-                hits++;
-                i++;
-                j++;
-            } else if (h1[i] < h2[j]) {
-                i++;
-            } else {
-                j++;
-            }
-        }
-        return hits;
     }
 
 
@@ -253,35 +187,6 @@ public class Utils {
         return result;
     }
 
-    public static double[][] profile(IlluminaSNVSample sample, String alphabet){
-        List<PairEndRead> reads = sample.reads;
-        if (reads.size() == 0){
-            return new double[0][alphabet.length()];
-        }
-        int[][] count = new int[alphabet.length()][sample.referenceLength];
-        reads.forEach( r -> {
-            for (int i = 0; i < r.l.length(); i++) {
-                count[convertLetterToDigit(r.l.charAt(i), alphabet)][i+r.lOffset]++;
-            }
-            for (int i = 0; i < r.r.length(); i++) {
-                count[convertLetterToDigit(r.r.charAt(i), alphabet)][i+r.rOffset]++;
-            }
-        });
-        double[][] result = new double[alphabet.length()][sample.referenceLength];
-        for (int i = 0; i < count[0].length; i++) {
-            int sum = 0;
-            for (int[] aCount : count) {
-                sum += aCount[i];
-            }
-            if (sum == 0){
-                sum = 1;
-            }
-            for (int j = 0; j < count.length; j++) {
-                result[j][i] = count[j][i]/(double)sum;
-            }
-        }
-        return result;
-    }
 
     /**
      * Append missing characters to string so they have the same size
@@ -292,22 +197,6 @@ public class Utils {
         for (int i = 0; i < sequences.length; i++) {
             result[i] = sequences[i].length() < max ?
                     sequences[i] + impossibleCharacters.get(max - sequences[i].length()) :
-                    sequences[i];
-        }
-        return result;
-    }
-
-    public static String[] stringsForHamming(String[] sequences, char character) {
-        List<String> chars = new ArrayList<>();
-        chars.add("");
-        for (int i = 1; i < 3000; i++) {
-            chars.add(chars.get(i - 1) + character);
-        }
-        int max = Arrays.stream(sequences).mapToInt(String::length).max().getAsInt();
-        String[] result = new String[sequences.length];
-        for (int i = 0; i < sequences.length; i++) {
-            result[i] = sequences[i].length() < max ?
-                    sequences[i] + chars.get(max - sequences[i].length()) :
                     sequences[i];
         }
         return result;
@@ -332,20 +221,4 @@ public class Utils {
         return profile[major][i] < 0.001 ? -1 : major;
     }
 
-    public static String byteArrayToString(byte[] arr){
-        StringBuilder str = new StringBuilder();
-        for (byte b : arr) {
-            str.append((char)b);
-        }
-        return str.toString();
-    }
-
-    public static double binomialPvalue(int s, double p,int n){
-        return 1 - new BinomialDistribution(n, p).cumulativeProbability(s);
-    }
-
-    public static <T> Predicate<T> distinctByKey(Function<? super T, ?> keyExtractor) {
-        Map<Object,Boolean> seen = new ConcurrentHashMap<>();
-        return t -> seen.putIfAbsent(keyExtractor.apply(t), Boolean.TRUE) == null;
-    }
 }

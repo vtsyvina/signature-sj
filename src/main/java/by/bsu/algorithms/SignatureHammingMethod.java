@@ -41,7 +41,7 @@ public class SignatureHammingMethod {
     private Sample sample1;
     private Sample sample2;
 
-    public static boolean DEBUG = false;
+    public static boolean DEBUG = true;
     private static volatile long tasksIteration = 0;
     public static AtomicInteger coincidenceFilter = new AtomicInteger();
     public static AtomicInteger executionCount = new AtomicInteger();
@@ -106,7 +106,7 @@ public class SignatureHammingMethod {
         if (DEBUG && comps > 0) {
             System.out.printf("%s %s%n", sample1.name, sample2.name);
             System.out.println("comps = " + comps);
-            System.out.println("length = " + length);
+            System.out.println("related pairs found = " + length);
         }
         if (length > 0) {
             System.out.printf("Found %s %s. Length = %d\n", sample1.name, sample2.name, length);
@@ -119,9 +119,9 @@ public class SignatureHammingMethod {
     public long run(Sample sample, KMerDictChunks dict, int k) throws IOException {
         String chunks = dict.l == 0 ? " entropy-based chunks size" : " l=" + dict.l;
         System.out.println("Start Signature Hamming method for " + sample.name + " k=" + k + chunks);
+        System.out.println("Input size = "+sample.sequences.length);
         expandNumbers(sample.sequences.length);
         long[] iter = {0, 0};
-        int[] distances = new int[dict.sequencesLength];
         HammingDistance hammingDistance = new HammingDistance();
         StringBuilder str = new StringBuilder();
         Path path = Start.getOutputFilename(sample, "signature-hamming");
@@ -176,19 +176,19 @@ public class SignatureHammingMethod {
         if (length != 0) {
             System.out.printf("Found %s%n", sample.name);
             System.out.println("comps = " + iter[1]);
-            System.out.println("length = " + length);
+            System.out.println("related pairs found = " + length);
             System.out.println("hamming time = " + hammingTime);
             System.out.println("fill time = " + fillTime / 1000000);
             System.out.println("filter time = " + filterTime / 1000000);
             System.out.println("write time = " + writeTime / 1000000);
-            //System.out.println("distances = " + Arrays.toString(distances));
         }
         return length;
     }
 
     public Long runParallel(Sample sample, KMerDictChunks dict, int k) throws IOException {
-        String chunks = dict.l == 0 ? " entropy-based chunks size" : " l=" + dict.l;
+        String chunks = dict.l == 0 ? " entropy-based segments size" : " l=" + dict.l;
         System.out.println("Start Signature Hamming method for " + sample.name + " k=" + k + chunks);
+        System.out.println("Input size = "+sample.sequences.length);
         expandNumbers(sample.sequences.length);
         Path path = Start.getOutputFilename(sample, "signature-hamming");
         int cores = Runtime.getRuntime().availableProcessors();
@@ -240,7 +240,7 @@ public class SignatureHammingMethod {
         if (results[3] > 0) {
             System.out.printf("Found %s%n", sample.name);
             System.out.println("comparisons = " + results[1]);
-            System.out.println("length = " + results[3]);
+            System.out.println("related pairs found = " + results[3]);
         }
         return results[0];
     }
@@ -316,7 +316,7 @@ public class SignatureHammingMethod {
         List<IntIntPair> result = new ArrayList<>();
         for (int i = 0; i < dict1.chunksCount; i++) {
             long hash = dict1.sequenceChunksHashesList[seq][i];
-            if (dict2.allHashesSet.contains(hash)) {
+            if (dict2.chunksHashToSequencesMapArray[i].containsKey(hash)) {
                 result.add(new IntIntPair(i, dict2.chunksHashToSequencesMapArray[i].get(hash).length));
             }
         }
@@ -373,10 +373,10 @@ public class SignatureHammingMethod {
                 List<Integer> toCompare = new ArrayList<>();
                 int[] hits = new int[sample.sequences.length];
                 for (int i = 0; i < sortedChunks.size(); i++) {
-                    if (i <= sortedChunks.size() - k) {
+                    if (i <= sortedChunks.size() - (dict.chunksCount - k)) {
                         fillPossiblePairs(dict, hits, seq, sortedChunks, i);
                     } else {
-                        if (i - 1 == sortedChunks.size() - k) {
+                        if (i - 1 == sortedChunks.size() - (dict.chunksCount - k)) {
                             possibleSequences = AlgorithmUtils.fillPossibleSequencesFromArray(hits);
                         }
                         possibleSequences = filterPossibleSequences(dict, possibleSequences, hits, seq, k, sortedChunks, i, toCompare);

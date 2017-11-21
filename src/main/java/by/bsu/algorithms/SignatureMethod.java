@@ -1,12 +1,11 @@
 package by.bsu.algorithms;
 
+import by.bsu.distance.HammingDistance;
+import by.bsu.distance.LevenshteinDistance;
 import by.bsu.model.IntIntPair;
 import by.bsu.model.KMerDict;
 import by.bsu.model.Sample;
 import by.bsu.start.Start;
-import by.bsu.distance.HammingDistance;
-import by.bsu.distance.LevenshteinDistance;
-
 import com.carrotsearch.hppc.IntArrayList;
 import com.carrotsearch.hppc.IntIntHashMap;
 import com.carrotsearch.hppc.IntIntMap;
@@ -22,7 +21,6 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.StandardOpenOption;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
@@ -125,10 +123,10 @@ public class SignatureMethod {
 
         if (DEBUG && comps > 0) {
             System.out.printf("%s %s%n", sample1.name, sample2.name);
-            System.out.println("comps = " + comps);
-            System.out.println("reduce = " + reduce);
-            System.out.println("levenshtein = " + (comps - reduce));
-            System.out.println("length = " + length);
+            System.out.println("comparisons = " + comps);
+            System.out.println("passed hamming distance = " + reduce);
+            System.out.println("edit distance comparisons = " + (comps - reduce));
+            System.out.println("related pairs found = " + length);
         }
         if (length > 0) {
             System.out.printf("Found %s %s. Length = %d\n", sample1.name, sample2.name, length);
@@ -138,6 +136,7 @@ public class SignatureMethod {
 
     public long run(Sample sample, KMerDict dict, int k) throws IOException {
         System.out.println("Start Signature method for " + sample.name + " k=" + k + " l=" + dict.l);
+        System.out.println("Input size = "+sample.sequences.length);
         expandNumbers(sample.sequences.length);
         long[] iter = {0, 0, 0, 0};
         int[] distances = new int[264];
@@ -196,9 +195,6 @@ public class SignatureMethod {
                     if (distance.apply(s1, sample.sequences[s.value]) != -1) {
                         length++;
                         str.append(numbers.get(seq)).append(" ").append(numbers.get(s.value)).append("\n");
-                    } else if (DEBUG) {
-                        //int z = unlim.apply(sample.sequences.get(seq), sample.sequences.get(s.key));
-                        //distances[z]++;
                     }
                     l += System.nanoTime() - start;
                 }
@@ -207,25 +203,25 @@ public class SignatureMethod {
         //write the rest of computed pairs
         Files.write(path, str.toString().getBytes(), StandardOpenOption.APPEND);
         System.out.println();
-        if (length != 0) {
+        if (DEBUG && length != 0) {
             System.out.printf("Found %s%n", sample.name);
-            System.out.println("comps = " + iter[1]);
-            System.out.println("reduce = " + iter[2]);
-            System.out.println("length = " + length);
-            //System.out.println("distances = " + Arrays.toString(distances));
-            System.out.println("levenshtein = " + (iter[1] - iter[2] - iter[3]));
-            System.out.println("write = "+(write/1_000_000));
-            System.out.println("fill = "+(fill/1_000_000));
-            System.out.println("filter = "+(filter/1_000_000));
-            System.out.println("sort = "+(sort/1_000_000));
-            System.out.println("h = "+(h/1_000_000));
-            System.out.println("l = "+(l/1_000_000));
+            System.out.println("comparisons = " + iter[1]);
+            System.out.println("passed hamming distance = " + iter[2]);
+            System.out.println("edit distance comparisons = " + (iter[1] - iter[2] - iter[3]));
+            System.out.println("related pairs found = " + length);
+            System.out.println("write time = "+(write/1_000_000));
+            System.out.println("fill time = "+(fill/1_000_000));
+            System.out.println("filter time = "+(filter/1_000_000));
+            System.out.println("sort time = "+(sort/1_000_000));
+            System.out.println("h time = "+(h/1_000_000));
+            System.out.println("l time = "+(l/1_000_000));
         }
         return length;
     }
 
     public Long runParallel(Sample sample, KMerDict dict, int k) throws IOException {
         System.out.println("Start Signature method parallel for " + sample.name + " k= " + k + " l= " + dict.l);
+        System.out.println("Input size = "+sample.sequences.length);
         expandNumbers(sample.sequences.length);
         Path path = Start.getOutputFilename(sample, "signature");
         //divide sequences into parts for executor service
@@ -279,8 +275,8 @@ public class SignatureMethod {
             System.out.printf("Found %s%n", sample.name);
             System.out.println("comparisons = " + results[1]);
             System.out.println("passed hamming distance = " + results[2]);
-            System.out.println("levenshtein = " + (results[1] - results[2]));
-            System.out.println("length = " + results[3]);
+            System.out.println("edit distance comparisons = " + (results[1] - results[2]));
+            System.out.println("related pairs found = " + results[3]);
         }
         return results[0];
     }
@@ -336,7 +332,7 @@ public class SignatureMethod {
         //for each fixed position
         for (int i = 0; i < dict.chunksCount; i++) {
             long hash = dict.sequenceChunksHashesList[seq][i];
-            if (dict.allHashesSet.contains(hash)) {
+            if (dict.hashToSequencesMap.containsKey(hash)) {
                 //add tuple -> (position, amount of sequences)
                 result.add(new IntIntPair(i, dict.hashToSequencesMap.get(hash).size()));
             }
@@ -353,7 +349,7 @@ public class SignatureMethod {
         List<IntIntPair> result = new ArrayList<>();
         for (int i = 0; i < dict1.chunksCount; i++) {
             long hash = dict1.sequenceChunksHashesList[seq][i];
-            if (dict2.allHashesSet.contains(hash)) {
+            if (dict2.hashToSequencesMap.containsKey(hash)) {
                 result.add(new IntIntPair(i, dict2.hashToSequencesMap.get(hash).size()));
             }
         }
