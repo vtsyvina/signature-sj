@@ -37,10 +37,6 @@ public class Start {
 
 
     public static void main(String[] args) throws IOException, InterruptedException, ExecutionException {
-        List<String> strings = Files.readAllLines(Paths.get("output/db1-brute-hamming-output.txt"));
-        List<String> strings2 = Files.readAllLines(Paths.get("output/db1-signature-hamming-output.txt"));
-        Set<String> s1 = new HashSet<>(strings);
-        Set<String> s2 = new HashSet<>(strings2);
         String key = null;
         for (String arg : args) {
             if (arg.startsWith("-") && arg.length() > 1) {
@@ -133,8 +129,9 @@ public class Start {
 
 
     private static void runMulti(File folder, int k, int l, boolean edit) throws IOException, InterruptedException, ExecutionException {
-        if (folder.isDirectory()){
+        if (!folder.isDirectory()){
             System.out.println("Input is not a directory");
+            return;
         }
         List<Sample> samples = DataReader.readSampleList(folder, true);
         String method = edit ? "edit distance" : "hamming distance";
