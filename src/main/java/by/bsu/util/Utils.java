@@ -167,7 +167,7 @@ public class Utils {
         return profile(sample, DEFAULT_ALPHABET);
     }
     public static double[][] profile(Sample sample, String alphabet) {
-        String[] sequences = sample.sequences;
+        String[] sequences = sample.forHamming;
         if (sequences.length == 0) {
             return new double[0][alphabet.length()];
         }
@@ -175,7 +175,10 @@ public class Utils {
         int[][] count = new int[alphabet.length()][l];
         for (String s : sequences) {
             for (int i = 0; i < s.length(); i++) {
-                count[convertLetterToDigit(s.charAt(i), alphabet)][i]++;
+                int d = convertLetterToDigit(s.charAt(i), alphabet);
+                if (d != -1) {
+                    count[d][i]++;
+                }
             }
         }
         double[][] result = new double[alphabet.length()][l];

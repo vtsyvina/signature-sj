@@ -7,11 +7,11 @@ import by.bsu.algorithms.SignatureMethod;
 import by.bsu.model.KMerDict;
 import by.bsu.model.KMerDictChunks;
 import by.bsu.model.Sample;
-import by.bsu.util.tasks.CallEditSignature;
 import by.bsu.util.DataReader;
 import by.bsu.util.Utils;
 import by.bsu.util.builders.KMerDictBuilder;
 import by.bsu.util.builders.KMerDictChunksBuilder;
+import by.bsu.util.tasks.CallEditSignature;
 import by.bsu.util.tasks.CallHammingSignature;
 
 import java.io.File;
@@ -21,10 +21,8 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
@@ -77,6 +75,9 @@ public class Start {
                     break;
                 case "hamming-multi":
                     runMulti(input, k, l, false);
+                    break;
+                case "brute-edit-single":
+                    runBruteWithTime(k, input);
                     break;
                 default:
                     helpOutput(settings.get("-m"), true);
@@ -224,9 +225,10 @@ public class Start {
         System.out.println();
     }
 
-    private static void runBruteWithTime(int k, Sample query) throws IOException {
+    private static void runBruteWithTime(int k, File file) throws IOException {
+        Sample sample = getSample(file);
         long start = System.currentTimeMillis();
-        BruteForce.run(query, k);
+        BruteForce.run(sample, k);
         System.out.println("Brute force time " + (System.currentTimeMillis() - start));
         System.out.println();
     }

@@ -162,7 +162,7 @@ public class SignatureHammingMethod {
             long start = System.currentTimeMillis();
             for (Integer s : toCompare) {
                 iter[1]++;
-                int apply = hammingDistance.apply(sample.sequences[seq], sample.sequences[s]);
+                int apply = hammingDistance.apply(sample.forHamming[seq], sample.forHamming[s]);
                 if (apply <= k) {
                     length++;
                     str.append(numbers.get(seq)).append(" ").append(numbers.get(s)).append("\n");
@@ -385,7 +385,7 @@ public class SignatureHammingMethod {
                 //String h1 = sample.forHamming.get(seq);
                 for (Integer s : toCompare) {
                     iters[1]++;
-                    int apply = hammingDistance.apply(sample.sequences[seq], sample.sequences[s]);
+                    int apply = hammingDistance.apply(sample.forHamming[seq], sample.forHamming[s]);
                     if (apply <=k) {
                         iters[3]++;
                         str.append(numbers.get(seq)).append(" ").append(numbers.get(s)).append("\n");
