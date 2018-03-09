@@ -13,7 +13,7 @@ It has two input types:
 ## How to Run
 1) Copy repository to your local machine
 
-``` git clone git@github.com:vyacheslav-tsivina/sequence-comparison.git```
+``` git clone git@github.com:vyacheslav-tsivina/signature-sj.git```
 
 2) Build jar file with Maven
   ```mvn clean install```
