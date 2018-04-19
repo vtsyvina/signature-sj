@@ -53,11 +53,6 @@ public class Start {
         if (settings.get("-help") != null) {
             helpOutput(null, false);
         }
-        System.out.println("Waiting for start ('q' to exit)");
-        int c = System.in.read();
-        if (c == 113) {
-            System.exit(1);
-        }
 
         int k = Integer.parseInt(settings.getOrDefault("-k", "10"));
         int l = Integer.parseInt(settings.getOrDefault("-l", "11"));
@@ -123,7 +118,6 @@ public class Start {
         long start = System.currentTimeMillis();
         double[][] profile = Utils.profile(sample);
         KMerDictChunks dict = KMerDictChunksBuilder.getDict(sample, k + 7, profile);
-        new SignatureHammingMethod().run(sample, dict, k);
         new SignatureHammingMethod().runParallel(sample, dict, k);
         System.out.println("Total run time: " + (System.currentTimeMillis() - start) + ", ms");
     }

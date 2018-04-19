@@ -40,9 +40,4 @@ public class Sample {
     public Sample(String name, String[] sequences, int l){
         this(name, sequences);
     }
-
-    public Sample(String name, String[] sequences, String consensus) {
-        this(name, sequences);
-        this.forHamming = Utils.stringsForHamming(sequences);
-    }
 }

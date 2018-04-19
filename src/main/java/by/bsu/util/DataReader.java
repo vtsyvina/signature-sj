@@ -81,10 +81,10 @@ public class DataReader {
             }
         });
 
-        return new Sample(file.getName(), seq.stream().toArray(String[]::new));
+        return new Sample(file.getName().replaceFirst("[.][^.]+$", ""), seq.stream().toArray(String[]::new));
     }
 
     public static Sample readSampleFromFile(File file) throws IOException {
-        return new Sample(file.getName(), readList(file.toPath()));
+        return new Sample(file.getName().replaceFirst("[.][^.]+$", ""), readList(file.toPath()));
     }
 }

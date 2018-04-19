@@ -41,7 +41,7 @@ public class SignatureHammingMethod {
     private Sample sample1;
     private Sample sample2;
 
-    public static boolean DEBUG = true;
+    public static boolean DEBUG = false;
     private static volatile long tasksIteration = 0;
     public static AtomicInteger coincidenceFilter = new AtomicInteger();
     public static AtomicInteger executionCount = new AtomicInteger();
@@ -119,7 +119,7 @@ public class SignatureHammingMethod {
     public long run(Sample sample, KMerDictChunks dict, int k) throws IOException {
         String chunks = dict.l == 0 ? " entropy-based chunks size" : " l=" + dict.l;
         System.out.println("Start Signature Hamming method for " + sample.name + " k=" + k + chunks);
-        System.out.println("Input size = "+sample.sequences.length);
+        System.out.println("Input size = " + sample.sequences.length);
         expandNumbers(sample.sequences.length);
         long[] iter = {0, 0};
         HammingDistance hammingDistance = new HammingDistance();
@@ -173,22 +173,20 @@ public class SignatureHammingMethod {
         //write the rest of computed pairs
         Files.write(path, str.toString().getBytes(), StandardOpenOption.APPEND);
         System.out.println();
-        if (length != 0) {
-            System.out.printf("Found %s%n", sample.name);
-            System.out.println("comps = " + iter[1]);
-            System.out.println("related pairs found = " + length);
-            System.out.println("hamming time = " + hammingTime);
-            System.out.println("fill time = " + fillTime / 1000000);
-            System.out.println("filter time = " + filterTime / 1000000);
-            System.out.println("write time = " + writeTime / 1000000);
-        }
+        System.out.println("comps = " + iter[1]);
+        System.out.println("related pairs found = " + length);
+//            System.out.println("hamming time = " + hammingTime);
+//            System.out.println("fill time = " + fillTime / 1000000);
+//            System.out.println("filter time = " + filterTime / 1000000);
+//            System.out.println("write time = " + writeTime / 1000000);
+        System.out.println("Output is available at " + path.toAbsolutePath().toString());
         return length;
     }
 
     public Long runParallel(Sample sample, KMerDictChunks dict, int k) throws IOException {
         String chunks = dict.l == 0 ? " entropy-based segments size" : " l=" + dict.l;
         System.out.println("Start Signature Hamming method for " + sample.name + " k=" + k + chunks);
-        System.out.println("Input size = "+sample.sequences.length);
+        System.out.println("Input size = " + sample.sequences.length);
         expandNumbers(sample.sequences.length);
         Path path = Start.getOutputFilename(sample, "signature-hamming");
         int cores = Runtime.getRuntime().availableProcessors();
@@ -237,11 +235,10 @@ public class SignatureHammingMethod {
             e.printStackTrace();
         }
         System.out.println();
-        if (results[3] > 0) {
-            System.out.printf("Found %s%n", sample.name);
-            System.out.println("comparisons = " + results[1]);
-            System.out.println("related pairs found = " + results[3]);
-        }
+
+        System.out.println("comparisons = " + results[1]);
+        System.out.println("related pairs found = " + results[3]);
+        System.out.println("Output is available at " + path.toAbsolutePath().toString());
         return results[0];
     }
 
@@ -386,7 +383,7 @@ public class SignatureHammingMethod {
                 for (Integer s : toCompare) {
                     iters[1]++;
                     int apply = hammingDistance.apply(sample.forHamming[seq], sample.forHamming[s]);
-                    if (apply <=k) {
+                    if (apply <= k) {
                         iters[3]++;
                         str.append(numbers.get(seq)).append(" ").append(numbers.get(s)).append("\n");
                     }

@@ -5,7 +5,7 @@
     <modelVersion>4.0.0</modelVersion>
 
     <groupId>by.bsu</groupId>
-    <artifactId>sequence-comparison-algorithms</artifactId>
+    <artifactId>signature-sj</artifactId>
     <version>1.0-SNAPSHOT</version>
 
     <properties>
@@ -21,12 +21,6 @@
             <version>0.7.2</version>
         </dependency>
 
-        <!-- https://mvnrepository.com/artifact/com.github.samtools/htsjdk -->
-        <dependency>
-            <groupId>com.github.samtools</groupId>
-            <artifactId>htsjdk</artifactId>
-            <version>2.11.0</version>
-        </dependency>
         <!-- https://mvnrepository.com/artifact/org.apache.commons/commons-math3 -->
         <dependency>
             <groupId>org.apache.commons</groupId>
@@ -46,7 +40,7 @@
             <plugin>
                 <artifactId>maven-assembly-plugin</artifactId>
                 <configuration>
-                    <finalName>sequence-comparison</finalName>
+                    <finalName>signature-sj</finalName>
                     <archive>
                         <manifest>
                             <mainClass>by.bsu.start.Start</mainClass>
@@ -56,7 +50,7 @@
                         <descriptorRef>jar-with-dependencies</descriptorRef>
                     </descriptorRefs>
                     <appendAssemblyId>false</appendAssemblyId>
-                    <outputDirectory>../sequence-comparison</outputDirectory>
+                    <outputDirectory>./</outputDirectory>
                 </configuration>
                 <executions>
                     <execution>

@@ -204,7 +204,6 @@ public class SignatureMethod {
         Files.write(path, str.toString().getBytes(), StandardOpenOption.APPEND);
         System.out.println();
         if (DEBUG && length != 0) {
-            System.out.printf("Found %s%n", sample.name);
             System.out.println("comparisons = " + iter[1]);
             System.out.println("passed hamming distance = " + iter[2]);
             System.out.println("edit distance comparisons = " + (iter[1] - iter[2] - iter[3]));
@@ -216,6 +215,7 @@ public class SignatureMethod {
             System.out.println("h time = "+(h/1_000_000));
             System.out.println("l time = "+(l/1_000_000));
         }
+        System.out.println("Output is available at "+path.toAbsolutePath().toString());
         return length;
     }
 
@@ -272,12 +272,12 @@ public class SignatureMethod {
         }
         System.out.println();
         if (results[3] > 0) {
-            System.out.printf("Found %s%n", sample.name);
             System.out.println("comparisons = " + results[1]);
             System.out.println("passed hamming distance = " + results[2]);
             System.out.println("edit distance comparisons = " + (results[1] - results[2]));
             System.out.println("related pairs found = " + results[3]);
         }
+        System.out.println("Output is available at "+path.toAbsolutePath().toString());
         return results[0];
     }
 
