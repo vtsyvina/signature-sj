@@ -33,7 +33,7 @@ public class KMerDictChunksBuilder {
         return get(result, sample, r -> r * l, r -> l, alphabet);
     }
 
-    public static KMerDictChunks getDict(Sample sample, int l){
+    public static KMerDictChunks getDict(Sample sample, int l) {
         return getDict(sample, l, Utils.DEFAULT_ALPHABET);
     }
 
@@ -47,7 +47,7 @@ public class KMerDictChunksBuilder {
         return get(result, sample, r -> r == 0 ? 0 : chunkEnds[r - 1], r -> r == 0 ? chunkEnds[r] : chunkEnds[r] - chunkEnds[r - 1], alphabet);
     }
 
-    public static KMerDictChunks getDict(Sample sample, int chunksCount, double[][] profile){
+    public static KMerDictChunks getDict(Sample sample, int chunksCount, double[][] profile) {
         return getDict(sample, chunksCount, profile, Utils.DEFAULT_ALPHABET);
     }
 
@@ -90,7 +90,7 @@ public class KMerDictChunksBuilder {
                     }
                 }
                 int[] t = new int[tmp.size()];
-                tmp.forEach( e -> t[j[0]++] = e);
+                tmp.forEach(e -> t[j[0]++] = e);
                 result.chunksHashToSequencesMapArray[i].put(entry.getKey(), t);
             }
         }

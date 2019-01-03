@@ -3,6 +3,7 @@ package by.bsu.util;
 import by.bsu.model.Sample;
 import com.carrotsearch.hppc.LongHashSet;
 import com.carrotsearch.hppc.LongSet;
+import org.apache.commons.lang3.StringUtils;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -12,7 +13,7 @@ import java.util.List;
  * Just class with some useful functions
  */
 public class Utils {
-    private static final List<String> impossibleCharacters = new ArrayList<>();
+    private static List<String> impossibleCharacters = new ArrayList<>();
     private static final char impossibleChar = '%';
     public static final String DEFAULT_ALPHABET = "ACGT";
 
@@ -25,8 +26,13 @@ public class Utils {
     }
 
     static {
+        fillImpossible(3000);
+    }
+
+    private static void fillImpossible(int size) {
+        impossibleCharacters = new ArrayList<>();
         impossibleCharacters.add("");
-        for (int i = 1; i < 3000; i++) {
+        for (int i = 1; i < size; i++) {
             impossibleCharacters.add(impossibleCharacters.get(i - 1) + impossibleChar);
         }
     }
@@ -115,7 +121,7 @@ public class Utils {
         return '_';
     }
 
-    public static String consensus(String[] sequences){
+    public static String consensus(String[] sequences) {
         return consensus(sequences, DEFAULT_ALPHABET);
     }
 
@@ -150,22 +156,24 @@ public class Utils {
 
     /**
      * Return consensus for given profile. Put $ if all profile values equals 0
-     * @param profile sample profile
+     *
+     * @param profile  sample profile
      * @param alphabet alphabet for profile
      * @return consensus
      */
-    public static String consensus(double[][] profile, String alphabet){
+    public static String consensus(double[][] profile, String alphabet) {
         char[] majors = new char[profile[0].length];
         for (int j = 0; j < profile[0].length; j++) {
             int majorAllele = Utils.getMajorAllele(profile, j);
-            majors[j] = majorAllele == -1 ? '$' :  alphabet.charAt(majorAllele);
+            majors[j] = majorAllele == -1 ? '$' : alphabet.charAt(majorAllele);
         }
         return new String(majors);
     }
 
-    public static double[][] profile(Sample sample){
+    public static double[][] profile(Sample sample) {
         return profile(sample, DEFAULT_ALPHABET);
     }
+
     public static double[][] profile(Sample sample, String alphabet) {
         String[] sequences = sample.forHamming;
         if (sequences.length == 0) {
@@ -197,10 +205,17 @@ public class Utils {
     public static String[] stringsForHamming(String[] sequences) {
         int max = Arrays.stream(sequences).mapToInt(String::length).max().getAsInt();
         String[] result = new String[sequences.length];
-        for (int i = 0; i < sequences.length; i++) {
-            result[i] = sequences[i].length() < max ?
-                    sequences[i] + impossibleCharacters.get(max - sequences[i].length()) :
-                    sequences[i];
+        if (max > 3000) {
+            for (int i = 0; i < sequences.length; i++) {
+                    String repeat = StringUtils.repeat(impossibleChar, max - sequences[i].length());
+                    result[i] = sequences[i] + repeat;
+            }
+        } else {
+            for (int i = 0; i < sequences.length; i++) {
+                result[i] = sequences[i].length() < max ?
+                        sequences[i] + impossibleCharacters.get(max - sequences[i].length()) :
+                        sequences[i];
+            }
         }
         return result;
     }
@@ -216,7 +231,7 @@ public class Utils {
     public static int getMajorAllele(double[][] profile, int i) {
         int major = 0;
         for (int j = 1; j < profile.length; j++) {
-            if (profile[j][i] > profile[major][i]){
+            if (profile[j][i] > profile[major][i]) {
                 major = j;
             }
         }

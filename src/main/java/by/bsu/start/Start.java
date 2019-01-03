@@ -115,6 +115,7 @@ public class Start {
 
     private static void runHammingDistance(File file, int k, int l) throws IOException {
         Sample sample = getSample(file);
+        sample.sequences = sample.forHamming;
         long start = System.currentTimeMillis();
         double[][] profile = Utils.profile(sample);
         KMerDictChunks dict = KMerDictChunksBuilder.getDict(sample, k + 7, profile);
