@@ -33,7 +33,7 @@ There are several available parameters:
 - ``-in`` the input path. If not specified default ``cleaned_independent_264/AMC_P01_1b.fas`` file will be used.
   It can be relative as well as the absolute path. For single-sample, it can be either file or folder with files. If it's a folder, the tool will read all files in the given folder and concatenate them into one sample. For multi-sample version one should give a folder and tool will consider each file as a separated sample.
  - ``k`` a threshold for related sequences, so in output will be only sequences (S, Q) such that d(S, Q) <= k. 10 is a default value
- - ``l`` a length of l-mers that are used to create signatures. 11 is the default. Not used for Hamming distance (entropy based signature length is used there)
+ - ``l`` for edit distance it is the length of l-mers to create the signature, the default value is 11. For Hamming distance it is the number of chunks to create signature(the lenght of chunks will be calculated based on the entrophy). For Hamming distance the number of chunks should depend on the length of the sequences: it should be somewhat close to length/11, but can be reduced for highly conservative inputs to speedup the process.
  - ``-outDir`` an output directory. output/ is a default value.
  - ``-threads`` number of threads for parallel execution. By default number of available cores will be used.
  
