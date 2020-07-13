@@ -36,6 +36,7 @@ public class Start {
 
     public static void main(String[] args) throws IOException, InterruptedException, ExecutionException {
         String key = null;
+        Runtime runtime = Runtime.getRuntime();
         for (String arg : args) {
             if (arg.startsWith("-") && arg.length() > 1) {
                 key = arg;
@@ -80,7 +81,16 @@ public class Start {
         } else {
             helpOutput(null, false);
         }
+        long memory = runtime.totalMemory() - runtime.freeMemory();
+        System.out.println("Used memory is bytes: " + memory);
+        System.out.println("Used memory is megabytes: "
+                + bytesToMegabytes(memory));
     }
+    private static final long MEGABYTE = 1024L * 1024L;
+    public static long bytesToMegabytes(long bytes) {
+        return bytes / MEGABYTE;
+    }
+
 
     private static void helpOutput(String arg, boolean error) {
         //TODO rewrite this
@@ -116,9 +126,12 @@ public class Start {
     private static void runHammingDistance(File file, int k, int l) throws IOException {
         Sample sample = getSample(file);
         sample.sequences = sample.forHamming;
+        System.out.println("Finished reading");
         long start = System.currentTimeMillis();
         double[][] profile = Utils.profile(sample);
-        KMerDictChunks dict = KMerDictChunksBuilder.getDict(sample, k + 7, profile);
+        System.out.println("Finished profile");
+        KMerDictChunks dict = KMerDictChunksBuilder.getDict(sample, l, profile);
+        System.out.println("Finished dict");
         new SignatureHammingMethod().runParallel(sample, dict, k);
         System.out.println("Total run time: " + (System.currentTimeMillis() - start) + ", ms");
     }

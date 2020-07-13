@@ -405,6 +405,9 @@ public class SignatureMethod {
              */
             long[] iters = {0, 0, 0, 0};
             int fileWriteThreshold = Math.min(sequences.size() / 10, 400);
+            if (fileWriteThreshold == 0){
+                fileWriteThreshold = 1;
+            }
             for (Map.Entry<Integer, String> seqEntity : sequences.entrySet()) {
                 iters[0]++;
                 tasksIteration++;
