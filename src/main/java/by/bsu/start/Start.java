@@ -23,6 +23,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Properties;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
@@ -35,6 +36,7 @@ public class Start {
 
 
     public static void main(String[] args) throws IOException, InterruptedException, ExecutionException {
+        printVersion();
         String key = null;
         Runtime runtime = Runtime.getRuntime();
         for (String arg : args) {
@@ -58,6 +60,7 @@ public class Start {
         int k = Integer.parseInt(settings.getOrDefault("-k", "10"));
         int l = Integer.parseInt(settings.getOrDefault("-l", "11"));
         File input = new File(settings.getOrDefault("-in", "cleaned_independent_264/AMC_P01_1b.fas"));
+        System.out.println("k= " + k + ", l=" + l);
         if (settings.get("-m") != null) {
             switch (settings.get("-m")) {
                 case "edit-single":
@@ -86,7 +89,9 @@ public class Start {
         System.out.println("Used memory is megabytes: "
                 + bytesToMegabytes(memory));
     }
+
     private static final long MEGABYTE = 1024L * 1024L;
+
     public static long bytesToMegabytes(long bytes) {
         return bytes / MEGABYTE;
     }
@@ -126,6 +131,8 @@ public class Start {
     private static void runHammingDistance(File file, int k, int l) throws IOException {
         Sample sample = getSample(file);
         sample.sequences = sample.forHamming;
+        System.out.println("There are " + sample.sequences.length + " sequences");
+        System.out.println("Length is " + sample.sequences[0].length());
         System.out.println("Finished reading");
         long start = System.currentTimeMillis();
         double[][] profile = Utils.profile(sample);
@@ -138,14 +145,14 @@ public class Start {
 
 
     private static void runMulti(File folder, int k, int l, boolean edit) throws IOException, InterruptedException, ExecutionException {
-        if (!folder.isDirectory()){
+        if (!folder.isDirectory()) {
             System.out.println("Input is not a directory");
             return;
         }
         List<Sample> samples = DataReader.readSampleList(folder, true);
         String method = edit ? "edit distance" : "hamming distance";
-        System.out.println("Start "+method+" multi run for t=" + k);
-        System.out.println("Total number of sample = "+samples.size());
+        System.out.println("Start " + method + " multi run for t=" + k);
+        System.out.println("Total number of sample = " + samples.size());
         long start = System.currentTimeMillis();
         KMerDict[] merDicts = new KMerDict[samples.size()];
         KMerDictChunks[] chunkDicts = new KMerDictChunks[samples.size()];
@@ -162,7 +169,7 @@ public class Start {
             kmerTaskList.add(new Callable<Void>() {
                 @Override
                 public Void call() throws Exception {
-                    if (edit){
+                    if (edit) {
                         mers[index] = KMerDictBuilder.getDict(s1, l);
                     } else {
                         //TODO think about how to run with entropy-based chunks
@@ -194,7 +201,7 @@ public class Start {
         List<Callable<Long>> taskList = new ArrayList<>();
         for (int j = 0; j < samples.size(); j++) {
             for (int fIndex = j + 1; fIndex < samples.size(); fIndex++) {
-                if (edit){
+                if (edit) {
                     taskList.add(new CallEditSignature(samples.get(j), samples.get(fIndex), merDicts[j], merDicts[fIndex], k));
                 } else {
                     taskList.add(new CallHammingSignature(samples.get(j), samples.get(fIndex), chunkDicts[j], chunkDicts[fIndex], k));
@@ -208,7 +215,7 @@ public class Start {
             fut.get();
         }
         executor.shutdown();
-        System.out.println(method+" run has ended with time = " + (System.currentTimeMillis() - start));
+        System.out.println(method + " run has ended with time = " + (System.currentTimeMillis() - start));
         System.out.println();
     }
 
@@ -280,5 +287,11 @@ public class Start {
             sample = DataReader.readSampleFromFile(file);
         }
         return sample;
+    }
+
+    private static void printVersion() throws IOException {
+        final Properties properties = new Properties();
+        properties.load(Start.class.getClassLoader().getResourceAsStream("project.properties"));
+        System.out.println("Signature-SJ version: " + properties.getProperty("version"));
     }
 }

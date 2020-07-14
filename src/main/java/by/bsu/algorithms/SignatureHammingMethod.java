@@ -74,7 +74,7 @@ public class SignatureHammingMethod {
                     }
                 } else {
                     IntIntMap tmp = new IntIntHashMap(possibleSequences.size());
-                    int[] sequencesWithChunks = dict2.chunksHashToSequencesMap[chunks.get(i).l].get(chunkHash);
+                    byte[] sequencesWithChunks = dict2.chunksHashToSequencesMap[chunks.get(i).l].get(chunkHash);
                     for (IntIntCursor entry : possibleSequences) {
                         boolean isInSecondDict = sequencesWithChunks[entry.key] == 1;
                         if (isInSecondDict ||
@@ -267,7 +267,7 @@ public class SignatureHammingMethod {
     private int[] filterPossibleSequences(KMerDictChunks dict, int[] possibleSequences, int[] hits, int seq, int k, List<IntIntPair> chunks, int iter, List<Integer> toCompare) {
         int[] tmp = new int[possibleSequences.length];
         long hash = dict.sequenceChunksHashesList[seq][chunks.get(iter).l];
-        int[] sequencesWithHashSet = dict.chunksHashToSequencesMap[chunks.get(iter).l].get(hash);
+        byte[] sequencesWithHashSet = dict.chunksHashToSequencesMap[chunks.get(iter).l].get(hash);
         int last = 0;
         for (int candidate : possibleSequences) {
             boolean isInDict = sequencesWithHashSet[candidate] == 1;

@@ -23,7 +23,7 @@ public class KMerDictChunks extends AbstractKMerDict{
      *  }
      *  
      */
-    public Map<Long, int[]>[] chunksHashToSequencesMap;
+    public Map<Long, byte[]>[] chunksHashToSequencesMap;
 
     /**
      *  how each position store map where key is l-chunk and value is array of all sequences that contain this l-chunk

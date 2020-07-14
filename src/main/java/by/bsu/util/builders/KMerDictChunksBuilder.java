@@ -74,14 +74,14 @@ public class KMerDictChunksBuilder {
                 result.sequenceChunksHashesList[seq][i] = hashValue;
                 result.wholeSampleChunksHashesList[i].add(hashValue);
                 if (!result.chunksHashToSequencesMap[i].containsKey(hashValue)) {
-                    result.chunksHashToSequencesMap[i].put(hashValue, new int[sample.sequences.length]);
+                    result.chunksHashToSequencesMap[i].put(hashValue, new byte[sample.sequences.length]);
                 }
                 result.chunksHashToSequencesMap[i].get(hashValue)[seq] = 1;
                 result.allHashesSet.add(hashValue);
             }
         }
         for (int i = 0; i < result.chunksHashToSequencesMap.length; i++) {
-            for (Map.Entry<Long, int[]> entry : result.chunksHashToSequencesMap[i].entrySet()) {
+            for (Map.Entry<Long, byte[]> entry : result.chunksHashToSequencesMap[i].entrySet()) {
                 List<Integer> tmp = new ArrayList<>();
                 final int[] j = {0};
                 for (int k = 0; k < entry.getValue().length; k++) {
